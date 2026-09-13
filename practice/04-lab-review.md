@@ -1,6 +1,6 @@
 # Essay 4 — review after attempting the lab
 
-A reference solution was built and run while writing this essay: sixteen tests pass, the twelve original tests plus four new ones. It is deliberately not published. What follows is the behaviour a sound solution shows and the decisions it has to make, so you can check your own work without copying code.
+An initial reference solution was built and run while writing this essay: its recorded run passed sixteen tests, the twelve original tests plus four new ones. That historical run does not substitute for executing your revised implementation. It is deliberately not published. What follows is the behaviour a sound solution shows and the decisions it has to make, so you can check your own work without copying code.
 
 ## Behaviour a sound solution shows
 
@@ -16,13 +16,13 @@ A reference solution was built and run while writing this essay: sixteen tests p
 ## Decisions that can differ and still be right
 
 - **403 or 404 for Carol.** The reference returns 403, because Carol can already read the invoice, so a refusal reveals nothing she does not know. Returning 404 for everything is also defensible. What matters is that the choice is written down and a test pins it. A foreign tenant's invoice should still get the same 404 as a missing one.
-- **Where the permission lives.** The reference uses a table of (user, tenant) export permissions read by the service. A role in Spring Security also works if it is read from the server's own records at the time of each check. A permission copied into the job row at request time does not satisfy the revocation cases.
-- **Denied job versus deleted job.** The reference keeps the row with status DENIED, which leaves evidence of what happened. Deleting it hides the event.
+- **Where the permission lives.** The reference uses a table of (user, tenant) export permissions read by the service. This tenant-wide grant is deliberately coarser than essay 2's per-document permission. A role in Spring Security also works if it is read from the server's own records at the time of each check. A permission copied into the job row at request time does not satisfy the revocation cases.
+- **Denied job versus deleted job.** The reference keeps the row with status DENIED, which leaves evidence of what happened. Deleting it requires another durable record if the denied decision is to remain inspectable.
 
 ## Where the checks belong
 
-- **Request:** in the same access component as the tenant lookup, so the controller asks one question. A separate `if` in the controller works until someone adds a second export endpoint.
-- **Worker:** against the job's requester, read when the worker runs. The worker has no user of its own; using a worker-level permission, or trusting that the API already checked, fails the revocation test.
+- **Request:** in the same access component as the tenant lookup, so the controller asks one question. A controller check can work, but a second entry point must enforce the same rule; centralization reduces duplication without proving coverage.
+- **Worker:** against the job's requester, read when the worker runs. The worker has service credentials but no interactive user session; using a worker-level permission, or trusting that the API already checked, fails the revocation test.
 - **Download:** again against the current permission, not only job ownership. Otherwise a revoked user keeps access to everything already generated.
 
 ## Incomplete answers to look for
@@ -31,7 +31,7 @@ A reference solution was built and run while writing this essay: sixteen tests p
 - The worker checks a boolean like `approved=true` stored on the job.
 - The download checks that the job belongs to Alice, not that Alice may still export.
 - Carol's export is refused but a job row was created first.
-- New tests were written after the code and never seen failing.
+- Tests pass after the change, but were never exercised against the missing permission check. Demonstrate that the assertions detect the intended failure, rather than setup or authentication errors.
 - `ScopedRepairTest` was changed to make it pass.
 
 ## Academy labs

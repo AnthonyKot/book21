@@ -1,38 +1,39 @@
 # Essay 3 — review after attempting the worksheet
 
-There is no single correct drawing. The expected evidence is a path whose boundaries follow who can write, an identity column that has an answer for every hop, and threats tied to specific crossings with controls whose state is honest.
+A strong answer connects each threat to a specific capability, flow, decision and proposed verification. Different drawings can express the same design. Check whether yours contains enough information to follow a disputed export from its schedule to its recipient.
 
-## The hard row: who is the requester on Monday?
+## Who is the requester on Monday?
 
-No user session exists when the scheduler runs. The scheduler's service identity is not the administrator, and using its permissions would repeat the worker-credential mistake from essay 3 one component earlier. A sound answer stores the administrator who created or last changed the schedule as the originating requester, and evaluates that person's *current* tenant membership and export permission at every run. A schedule is a request that repeats; it is not a standing grant.
+The exercise selects a creator-owned schedule. Store the creator's identity when the API authenticates the scheduling request, protect that record, and evaluate the creator's current tenant membership and document permissions at each run. If the creator leaves on Sunday, Monday's run must not generate an archive. Disabling the schedule makes the outcome visible and avoids repeated failed work; reassignment needs an explicit authorized operation.
 
-Then decide what removal means. If the administrator leaves the tenant on Sunday, Monday's run must not generate. Stronger answers also disable or reassign the schedule when the membership ends, so the failure is visible rather than silent every week.
+The scheduler still has its own service identity. Its ability to create a job does not establish the creator's permission to export its contents. The worker needs an authoritative relationship between schedule, originating requester and job, rather than trusting a requester field supplied independently in a message.
 
-## Boundaries that are new
+A tenant-owned automation account is another possible product design. It would need its own grants, administration and lifecycle rules. It is not the policy selected by this exercise; recognizing it as an alternative is useful, but silently changing to it would leave the Sunday-removal case unanswered.
 
-- **The scheduler is a second writer of jobs.** Essay 3 made the job table API-write-only. The scheduler now needs to create jobs too, so the boundary moves again. A good answer limits the scheduler to creating jobs from stored schedule records, and has the worker check the schedule's originating requester, not a requester the scheduler supplies.
-- **The email provider is a third party.** It receives the recipient address and whatever the email contains. Putting a bearer download link in the email means the provider, the mailbox and anyone the email is forwarded to can hold a credential.
-- **The recipient address is an output channel chosen by a user.** An administrator can type any address, including one outside the tenant.
+## New components change the review
 
-## Threats a strong answer usually includes
+The scheduler creates jobs, so the original API-only creation rule must change. Name which fields it may create and where their authority comes from. Keep the worker's result updates separate from permission to change requester or source references. A second legitimate writer is a reason to inspect these rules, not automatic proof of a vulnerability.
 
-| Boundary | STRIDE | Threat | A fitting control |
-|---|---|---|---|
-| Scheduler → job | E | Removed or demoted administrator's schedule keeps exporting | Evaluate the stored requester's current permission at each run; disable the schedule on removal |
-| Service → email → recipient | I | Tenant documents sent to an arbitrary external address | Recipient must be a tenant user who signs in to download, or addresses restricted to verified tenant domains |
-| Email → recipient | I | Link in email is a bearer credential stored at the provider and forwardable | Link opens a sign-in-required download that applies the essay 2 current-permission check |
-| Worker → store | E | Folder gains a document the administrator may not export | Check permission per document at generation, not per folder at scheduling |
-| Browser → API | R | Nobody can show who changed the recipient address | Append-only event for schedule creation and every change |
+The email provider receives addresses and message contents. Sending a bearer storage link also gives it a credential that could be forwarded. A sign-in-required application link avoids granting access through possession alone; the download endpoint must still enforce job ownership and current document permissions.
 
-Choosing to *transfer* the email-provider risk is acceptable if you say what you transfer: the provider's handling of message contents under its contract. You cannot transfer the decision to put a bearer link in the message; that stays yours.
+The recipient address is an output chosen by the administrator. A verified tenant domain does not prove that a mailbox owner may receive this export. Under the selected policy, an email sent to someone other than the creator grants that recipient no download rights. If this makes the feature awkward, record the product question: should delivery be limited to the creator's verified address, or should a separately authorized sharing feature be designed? Do not resolve it by weakening the download check unnoticed.
 
-## Look for these incomplete answers
+## Example threats and evidence
 
-- The scheduler "runs as the administrator" without saying whose permissions are checked, or when.
-- A threat listed without the boundary where it occurs.
-- "Validate the email address" offered for a threat that is about *which* address is permitted, not whether it is well formed.
-- Controls written as sentences with no state, so a policy reads as enforcement.
-- No threat left unmitigated, which usually means none were weighed, not that all were fixed.
-- TLS to the email provider offered as the control for sending documents to the wrong recipient.
+| Scenario | Proposed control | Evidence to request |
+|---|---|---|
+| Removed creator's schedule keeps exporting | Current creator permission checked at generation | Sunday removal prevents Monday's archive; unchanged membership still permits a valid run |
+| A job producer substitutes another requester | Protected schedule/job relationship and constrained writes | Forged requester cannot redefine the job; intended producer can create valid work |
+| Forwarded email exposes document bytes | Link requires authentication, ownership and current permissions | Another recipient gets no bytes; authorized creator downloads successfully |
+| Folder gains an unauthorized document | Per-document checks under a declared batch policy | The archive excludes forbidden bytes and accurately reports whole-job failure or an explicitly partial result |
+| Recipient changes cannot be investigated | Protected events for schedule creation and changes | Events identify actor and change; application account cannot alter earlier events |
 
-The worksheet is ready for discussion when another engineer can point at any line on your drawing and find the threats that apply there. It is not evidence that a running scheduler behaves this way.
+Treat email subject lines and previews as disclosures too. A protected download does not repair sensitive contents already included in the message.
+
+## Judge the decisions, not the number of accepted risks
+
+It is reasonable to mitigate all three selected threats. It is also reasonable to document a remaining risk with a reason and accountable owner. A deferred decision must say who will resolve it and before what event; it is not automatically permission to launch.
+
+A provider contract can assign obligations for handling messages. It does not make a bearer link non-forwardable or remove the product team's responsibility for choosing what it sends.
+
+Watch for service identity substituted for user permission, a control described as verified without execution, or TLS offered as the answer to an authorized sender choosing the wrong recipient. The worksheet is ready for discussion when another engineer can explain your valid run and denied run without inventing missing policy. It does not prove a running scheduler behaves that way.

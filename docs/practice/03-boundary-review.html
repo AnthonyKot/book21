@@ -6,66 +6,53 @@
 <link rel="stylesheet" href="../assets/style.css"></head>
 <body><a class="skip" href="#main">Skip to content</a><header class="site-header"><a href="../index.html">Security Is an Engineering Job</a><nav aria-label="Book"><a href="../index.html#essays">Essays</a><a href="../about.html">About</a></nav></header>
 <main id="main"><p class="kicker">Essay 3 · Practice</p><article><h1>Essay 3 — review after attempting the worksheet</h1>
-<p>There is no single correct drawing. The expected evidence is a path whose boundaries follow who can write, an identity column that has an answer for every hop, and threats tied to specific crossings with controls whose state is honest.</p>
-<h2>The hard row: who is the requester on Monday?</h2>
-<p>No user session exists when the scheduler runs. The scheduler&#39;s service identity is not the administrator, and using its permissions would repeat the worker-credential mistake from essay 3 one component earlier. A sound answer stores the administrator who created or last changed the schedule as the originating requester, and evaluates that person&#39;s <em>current</em> tenant membership and export permission at every run. A schedule is a request that repeats; it is not a standing grant.</p>
-<p>Then decide what removal means. If the administrator leaves the tenant on Sunday, Monday&#39;s run must not generate. Stronger answers also disable or reassign the schedule when the membership ends, so the failure is visible rather than silent every week.</p>
-<h2>Boundaries that are new</h2>
-<ul>
-<li><strong>The scheduler is a second writer of jobs.</strong> Essay 3 made the job table API-write-only. The scheduler now needs to create jobs too, so the boundary moves again. A good answer limits the scheduler to creating jobs from stored schedule records, and has the worker check the schedule&#39;s originating requester, not a requester the scheduler supplies.</li>
-<li><strong>The email provider is a third party.</strong> It receives the recipient address and whatever the email contains. Putting a bearer download link in the email means the provider, the mailbox and anyone the email is forwarded to can hold a credential.</li>
-<li><strong>The recipient address is an output channel chosen by a user.</strong> An administrator can type any address, including one outside the tenant.</li>
-</ul>
-<h2>Threats a strong answer usually includes</h2>
+<p>A strong answer connects each threat to a specific capability, flow, decision and proposed verification. Different drawings can express the same design. Check whether yours contains enough information to follow a disputed export from its schedule to its recipient.</p>
+<h2>Who is the requester on Monday?</h2>
+<p>The exercise selects a creator-owned schedule. Store the creator&#39;s identity when the API authenticates the scheduling request, protect that record, and evaluate the creator&#39;s current tenant membership and document permissions at each run. If the creator leaves on Sunday, Monday&#39;s run must not generate an archive. Disabling the schedule makes the outcome visible and avoids repeated failed work; reassignment needs an explicit authorized operation.</p>
+<p>The scheduler still has its own service identity. Its ability to create a job does not establish the creator&#39;s permission to export its contents. The worker needs an authoritative relationship between schedule, originating requester and job, rather than trusting a requester field supplied independently in a message.</p>
+<p>A tenant-owned automation account is another possible product design. It would need its own grants, administration and lifecycle rules. It is not the policy selected by this exercise; recognizing it as an alternative is useful, but silently changing to it would leave the Sunday-removal case unanswered.</p>
+<h2>New components change the review</h2>
+<p>The scheduler creates jobs, so the original API-only creation rule must change. Name which fields it may create and where their authority comes from. Keep the worker&#39;s result updates separate from permission to change requester or source references. A second legitimate writer is a reason to inspect these rules, not automatic proof of a vulnerability.</p>
+<p>The email provider receives addresses and message contents. Sending a bearer storage link also gives it a credential that could be forwarded. A sign-in-required application link avoids granting access through possession alone; the download endpoint must still enforce job ownership and current document permissions.</p>
+<p>The recipient address is an output chosen by the administrator. A verified tenant domain does not prove that a mailbox owner may receive this export. Under the selected policy, an email sent to someone other than the creator grants that recipient no download rights. If this makes the feature awkward, record the product question: should delivery be limited to the creator&#39;s verified address, or should a separately authorized sharing feature be designed? Do not resolve it by weakening the download check unnoticed.</p>
+<h2>Example threats and evidence</h2>
 <div class="table-scroll" tabindex="0" role="region" aria-label="Table; scroll horizontally on small screens"><table>
 <thead>
 <tr>
-<th>Boundary</th>
-<th>STRIDE</th>
-<th>Threat</th>
-<th>A fitting control</th>
+<th>Scenario</th>
+<th>Proposed control</th>
+<th>Evidence to request</th>
 </tr>
 </thead>
 <tbody><tr>
-<td>Scheduler → job</td>
-<td>E</td>
-<td>Removed or demoted administrator&#39;s schedule keeps exporting</td>
-<td>Evaluate the stored requester&#39;s current permission at each run; disable the schedule on removal</td>
+<td>Removed creator&#39;s schedule keeps exporting</td>
+<td>Current creator permission checked at generation</td>
+<td>Sunday removal prevents Monday&#39;s archive; unchanged membership still permits a valid run</td>
 </tr>
 <tr>
-<td>Service → email → recipient</td>
-<td>I</td>
-<td>Tenant documents sent to an arbitrary external address</td>
-<td>Recipient must be a tenant user who signs in to download, or addresses restricted to verified tenant domains</td>
+<td>A job producer substitutes another requester</td>
+<td>Protected schedule/job relationship and constrained writes</td>
+<td>Forged requester cannot redefine the job; intended producer can create valid work</td>
 </tr>
 <tr>
-<td>Email → recipient</td>
-<td>I</td>
-<td>Link in email is a bearer credential stored at the provider and forwardable</td>
-<td>Link opens a sign-in-required download that applies the essay 2 current-permission check</td>
+<td>Forwarded email exposes document bytes</td>
+<td>Link requires authentication, ownership and current permissions</td>
+<td>Another recipient gets no bytes; authorized creator downloads successfully</td>
 </tr>
 <tr>
-<td>Worker → store</td>
-<td>E</td>
-<td>Folder gains a document the administrator may not export</td>
-<td>Check permission per document at generation, not per folder at scheduling</td>
+<td>Folder gains an unauthorized document</td>
+<td>Per-document checks under a declared batch policy</td>
+<td>The archive excludes forbidden bytes and accurately reports whole-job failure or an explicitly partial result</td>
 </tr>
 <tr>
-<td>Browser → API</td>
-<td>R</td>
-<td>Nobody can show who changed the recipient address</td>
-<td>Append-only event for schedule creation and every change</td>
+<td>Recipient changes cannot be investigated</td>
+<td>Protected events for schedule creation and changes</td>
+<td>Events identify actor and change; application account cannot alter earlier events</td>
 </tr>
 </tbody></table>
-</div><p>Choosing to <em>transfer</em> the email-provider risk is acceptable if you say what you transfer: the provider&#39;s handling of message contents under its contract. You cannot transfer the decision to put a bearer link in the message; that stays yours.</p>
-<h2>Look for these incomplete answers</h2>
-<ul>
-<li>The scheduler &quot;runs as the administrator&quot; without saying whose permissions are checked, or when.</li>
-<li>A threat listed without the boundary where it occurs.</li>
-<li>&quot;Validate the email address&quot; offered for a threat that is about <em>which</em> address is permitted, not whether it is well formed.</li>
-<li>Controls written as sentences with no state, so a policy reads as enforcement.</li>
-<li>No threat left unmitigated, which usually means none were weighed, not that all were fixed.</li>
-<li>TLS to the email provider offered as the control for sending documents to the wrong recipient.</li>
-</ul>
-<p>The worksheet is ready for discussion when another engineer can point at any line on your drawing and find the threats that apply there. It is not evidence that a running scheduler behaves this way.</p>
+</div><p>Treat email subject lines and previews as disclosures too. A protected download does not repair sensitive contents already included in the message.</p>
+<h2>Judge the decisions, not the number of accepted risks</h2>
+<p>It is reasonable to mitigate all three selected threats. It is also reasonable to document a remaining risk with a reason and accountable owner. A deferred decision must say who will resolve it and before what event; it is not automatically permission to launch.</p>
+<p>A provider contract can assign obligations for handling messages. It does not make a bearer link non-forwardable or remove the product team&#39;s responsibility for choosing what it sends.</p>
+<p>Watch for service identity substituted for user permission, a control described as verified without execution, or TLS offered as the answer to an authorized sender choosing the wrong recipient. The worksheet is ready for discussion when another engineer can explain your valid run and denied run without inventing missing policy. It does not prove a running scheduler behaves that way.</p>
 </article><div class="practice-actions"><button onclick="window.print()">Print this page</button><a href="../essays/03-draw-the-boundary.html">Return to essay 3</a><a href="03-boundary-worksheet.html">Back to worksheet</a></div></main><footer><span>Book 21 · Learn, practise, verify.</span><a href="https://github.com/AnthonyKot/book21">Source on GitHub</a></footer></body></html>

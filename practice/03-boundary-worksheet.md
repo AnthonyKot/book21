@@ -2,49 +2,53 @@
 
 Status: blank practice artifact. Fill this in before reading the review notes. Completing the essay's own example is not recorded as your own attempt.
 
-## Feature
+## Feature and selected policy
 
-An administrator schedules a weekly export of a folder, delivered by email to an address they enter. A scheduler service creates the job every Monday. An external email provider sends a download link. Folder contents and the administrator's permissions can change between runs.
+An administrator schedules a weekly folder export. A scheduler creates Monday's job, and an external email provider sends a download link to an address entered by the administrator. Folder contents and permissions can change between runs.
+
+For this exercise, the schedule acts on behalf of its creator. Each run requires that person's current tenant membership and per-document export permission. Download requires the authenticated job owner and current source-document permissions, as in essay 2. The recipient address does not grant download rights. Keep the job owner as the creator; sharing exports would require a separate policy.
 
 ## Drawing
 
-Sketch the path from the scheduling request to the recipient opening the link. Paper is fine; photograph it or describe it in text.
+Sketch the path from the scheduling request to the recipient opening the link. Paper or a text diagram is fine.
 
-- Components, in the order a weekly run touches them:
-- Trust boundaries (label B1, B2, …), and who can write on each side:
-- Components that did not exist in essay 3's export path:
+- Components and data flows, including job, schedule and permission records:
+- Trust boundaries, with labels you can refer to below:
+- Who can read, create, update and administer the relevant records:
+- What your drawing leaves out:
 
 ## Identity along the path
 
-| Hop | Identity present | Established by | Could the sender choose it? |
+| Operation | Service or user performing it | User whose product permission matters | Trusted source of that identity |
 |---|---|---|---|
-| Administrator's browser → API (creating the schedule) | | | |
-| Scheduler → job table / queue (Monday) | | | |
-| Queue → worker | | | |
-| Worker → document store | | | |
-| Service → email provider | | | |
-| Email → recipient | | | |
+| Create schedule | | | |
+| Create Monday's job | | | |
+| Generate archive | | | |
+| Read source bytes from storage | | | |
+| Send email | | | |
+| Authorize download | | | |
 
-- Whose permissions does Monday's job use, and when are they evaluated:
-- What happens to the schedule if the administrator leaves the tenant:
+- What happens if the creator leaves the tenant on Sunday:
+- What happens if one new folder document is not exportable by the creator:
+- What can a recipient other than the creator do with the email link:
 
-## Three threats
+## Three threats and decisions
 
-| Boundary | STRIDE letter | Threat scenario | Response (mitigate, eliminate, transfer, accept) | Control | State: policy, implemented or verified | Residual risk |
-|---|---|---|---|---|---|---|
-| | | | | | | |
-| | | | | | | |
-| | | | | | | |
+For each, describe an actor, starting capability and consequence. A control proposed on paper is not implemented or verified.
 
-## One threat you do not mitigate now
+| Boundary or component | Threat scenario and STRIDE category | Response and owner | Proposed control | Verification case | Remaining limit |
+|---|---|---|---|---|---|
+| | | | | | |
+| | | | | | |
+| | | | | | |
 
-- Threat and boundary:
-- Reason it is not mitigated yet:
-- Who owns revisiting it, and when:
+- Legitimate weekly run that must still succeed:
+- An unresolved decision, if any, and who must resolve it before which event:
+- Any risk explicitly accepted, with reason and owner (none is a valid answer):
 
 ## Your evidence
 
 - Date and time spent:
 - Assistance/hints used:
-- The row of the identity table you found hardest, and what you decided:
+- The identity row you found hardest, and what you decided:
 - Next unanswered question:

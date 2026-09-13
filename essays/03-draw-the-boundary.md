@@ -1,159 +1,161 @@
 # Draw the boundary before choosing the control
 
-Essay 2 ended with a good export contract. The API checks Alice's tenant and export permission when she asks. The worker checks her current permission again before it generates anything. The download endpoint checks once more before any bytes leave. Every rule names a principal, a resource and a decision point.
+Job 81 belongs to Alice. Its record says to export document C from Cedar. Yet the archive contains document B from Birch, and every permission check returned allow.
 
-Now a reviewer asks one question: when the worker checks "Alice's current permission", how does the worker know the job belongs to Alice?
+Here is how that can happen in a constructed implementation of our export service:
 
-The contract cannot answer. It says *what* must be decided and *when*. It does not say where the facts used by each decision come from, or who else could have written them. A worker that reads `requester=alice` from a queue message performs the check faithfully, for whichever requester the message names. If something other than the API can put a message on that queue, the check protects exactly nothing.
-
-That is the gap this essay closes. Before you pick a control, draw the path the request actually takes, mark where trust changes, and ask concrete questions at each crossing. The controls you choose afterwards will then answer a question someone can check.
-
-## Follow the request, not the boxes
-
-The export feature has six parts. Draw them in the order a request touches them:
-
-<figure class="diagram">
-<svg viewBox="0 0 720 300" width="100%" role="img" aria-label="Export path: browser to API, API writes a job record and a queue message, worker reads both and document storage, download returns through the API. A download link returns from storage to the browser. Dashed lines mark three trust boundaries.">
-<g fill="none" stroke="currentColor" stroke-width="1.5">
-<rect x="10" y="40" width="110" height="50" rx="6"/>
-<rect x="190" y="40" width="130" height="50" rx="6"/>
-<rect x="190" y="200" width="130" height="50" rx="6"/>
-<rect x="400" y="40" width="120" height="50" rx="6"/>
-<rect x="590" y="40" width="120" height="50" rx="6"/>
-<rect x="590" y="200" width="120" height="50" rx="6"/>
-<path d="M120 65 H190 M320 65 H400 M520 65 H590 M255 90 V200 M650 90 V200 M650 250 V278 H65 V90"/>
-<path d="M155 15 V285 M360 15 V130 M555 15 V285" stroke-dasharray="6 5"/>
-</g>
-<g fill="currentColor" font-family="system-ui,sans-serif" font-size="14" text-anchor="middle">
-<text x="65" y="70">Browser</text>
-<text x="255" y="70">Export API</text>
-<text x="255" y="230">Job table</text>
-<text x="460" y="70">Queue</text>
-<text x="650" y="70">Worker</text>
-<text x="650" y="230">Document store</text>
-<text x="155" y="12" font-size="12">B1</text>
-<text x="360" y="12" font-size="12">B2</text>
-<text x="555" y="12" font-size="12">B3</text>
-<text x="455" y="272" font-size="12">download link</text>
-</g>
-</svg>
-<figcaption>The export path. B1: the internet meets your API. B2: the API hands work to shared infrastructure. B3: everything to its right acts with the worker's own credential, which can read every tenant's documents. The download link crosses B3 and B1 on its way back.</figcaption>
-</figure>
-
-A **trust boundary** is a line where data or identity passes between parts that are controlled differently, so the receiving side has to decide what it will believe. The browser is controlled by whoever holds it. The queue is shared infrastructure that more than one service may be allowed to write to. The worker holds a credential that can read every tenant's documents. Each dashed line is a place where "the sender said so" stops being good enough.
-
-Boundaries are not the same as boxes. The API and the job table sit on the same side here because only the API's database account can write jobs. If an operations script also had write access to that table, a boundary would run between them too. You find boundaries by asking who can write, not by counting deployments.
-
-Now carry the identity along the path. For each hop, write down what identity is present, where it came from, and whether the sender could have chosen it:
-
-| Hop | Identity present | Established by | Could the sender choose it? |
-|---|---|---|---|
-| Browser → API | Alice | Session validated by the API | Only by stealing a session |
-| API → job table | Alice as requester, document C, job owner Alice | Written by the API after its check | No, if only the API can write |
-| API → queue | Whatever the message carries | The message body | Yes, for anyone allowed to publish |
-| Queue → worker | Worker's own service identity | Worker's credential | Not applicable: it is not Alice |
-| Worker → store | Worker's own service identity | Storage credential | Not applicable: it is not Alice |
-| Store → whoever holds the link | Nobody | Possession of the link | Yes: anyone who has it |
-
-Two rows stand out. At the queue, identity turns from a verified fact into a claim in a message. At the link, identity disappears entirely. Those are the rows where the controls from essay 2 can quietly stop meaning anything.
-
-## Ask STRIDE at each crossing
-
-STRIDE is a mnemonic from Microsoft for six kinds of thing that can go wrong. Each one is the violation of a property you already care about:
-
-| Letter | Threat | Property it breaks | Question at a crossing |
-|---|---|---|---|
-| S | Spoofing | Authentication | Can someone claim to be another principal here? |
-| T | Tampering | Integrity | Can data change between being checked and being used? |
-| R | Repudiation | Accountability | Could someone deny an action, and could you show otherwise? |
-| I | Information disclosure | Confidentiality | Can data reach someone not permitted to see it? |
-| D | Denial of service | Availability | Can someone stop legitimate users getting their exports? |
-| E | Elevation of privilege | Authorization | Can someone gain the effect of a permission they lack? |
-
-STRIDE does not find threats for you. It is a prompt you run against a specific drawing. Asked of the whole system at once, the six letters give six generic answers. Asked at B2, they give questions with names in them: can a service other than the API publish an export message? Does the worker believe the requester field in that message? Can someone fill the queue with ten thousand export jobs?
-
-Run all six at each boundary and you get more candidate threats than you will fix this sprint. That is intended. The threat model's job is to put them on the table so that choosing among them is a visible decision, not an omission.
-
-For the export path, the pass produces, among others: a forged queue message (T, E at B2), a session stolen from the browser (S at B1), a forwarded download link (I at B3), a user denying they exported a document (R), bulk job submission starving other tenants (D at B2), and a worker credential leaked from its host (E at B3). The rest of this essay works three of them through to a decision.
-
-## Threat 1: the queue message names a different requester
-
-**Scenario.** Job 81 is Alice's legitimate export of document C. A message arrives saying `{job: 81, requester: bob, document: B}`. The worker checks Bob's current permission for B, finds it, and writes Birch's document into job 81's archive. The download endpoint then checks what its own record says, that Alice owns job 81 and may export C, and hands her the archive. Who wrote those messages? Anything with publish rights on the queue: the API, but perhaps also a retry tool, a second service sharing the broker, or a developer's laptop with a leftover credential.
-
-This is tampering at B2 that becomes elevation of privilege at the download. The worker's check was never skipped. It was applied to facts that an untrusted writer chose.
-
-**The attractive control.** "Enable TLS on the queue connection." It is worth having, and it answers a different question. TLS stops a party on the network path from reading or altering a message in transit. It does nothing about a sender that is allowed to connect and simply writes false content. A control must match the crossing where the threat actually occurs.
-
-**The control that fits.** Make the message carry only the job identifier. The worker loads requester, document and owner from the job table, which only the API's database account can write, and checks the originating requester's current permission from there, never its own. Restrict publishing on the export queue to the API's service identity, authenticated with its own credential.
-
-Notice that this moves the boundary rather than removing it. The question "who can publish?" becomes "who can write the job table?" That is progress because the table has one intended writer and ordinary database permissions to enforce it, while the queue had several plausible publishers and no record of intent.
-
-**Policy or control?** "Only the API creates export jobs" is a sentence in a design document. It becomes a control when the broker's access list denies publishing to every other principal and the database grants insert on the job table to the API account alone. It becomes *verified* when a test publishes as the worker's identity and observes rejection, and a second test forges a job row through a non-API account and observes the database refuse. Record which of the three states each control is in. A threat model full of policies reads as protection while enforcing none of it.
-
-**Residual risk.** A database administrator can still write a job row. Accept that, with the reason written down: administrators are already trusted with every document, and changes to the table are audited.
-
-## Threat 2: the download link outlives the permission
-
-**Scenario.** On completion the service gives Alice a pre-signed storage URL valid for 24 hours. Anyone who has the URL can fetch the archive until then. Alice pastes it into a support ticket. Separately, an administrator revokes her export permission an hour later. Both the ticket reader and Alice can still download. The essay 2 contract said downloads require *current* permission, and nothing in this delivery path can evaluate that.
-
-This is information disclosure at B3, and the boundary table predicted it: identity disappears at the link.
-
-**Two controls, two costs.**
-
-| Option | What it enforces | What it costs |
+| Step | Facts used | Result |
 |---|---|---|
-| Download through the API: check identity, job owner and current permission, then stream | The contract as written, on every download | The API carries file traffic |
-| Check in the API, then issue a link valid for 60 seconds | Current permission at the moment the link is issued | A 60-second window in which the link is a bearer credential |
+| API accepts Alice's request | Alice may export C | Creates job 81 for Alice and C |
+| Worker receives a message | `{job: 81, requester: bob, document: B}` | Checks Bob's permission for B; generates B into archive 81 |
+| Alice downloads job 81 | Stored job says Alice owns it and may export C | Releases archive 81, containing B |
 
-Neither is wrong. The second changes the promise from "current permission at download" to "current permission within a minute of download". If you choose it, change the contract to say so. Quietly keeping the old wording while shipping the short link is exactly the gap between policy and control that this essay is about.
+The worker evaluated a real permission. The download endpoint evaluated another real permission. They disagreed about what the job meant.
 
-Choose the first for this example: exports are infrequent and documents are sensitive. **Residual risk:** a file Alice has already downloaded stays with her. Essay 2 recorded that limit; the threat model repeats it here so a reviewer does not assume otherwise.
+Essay 2 already required a server-created job record protected against untrusted modification. This implementation violates that requirement by giving a queue message authority to replace parts of the record. Our next task is to examine which components and credentials could make that replacement possible, then choose controls and evidence that address it.
 
-## Threat 3: nobody can show who exported what
+That is a useful entry into threat modeling: follow a specific failure through a design until you can explain both its opportunity and its consequence.
 
-**Scenario.** A Cedar customer says a confidential document left the company through an export. Alice says she never requested one. The service logs contain `export completed job=81` from the worker, with no requester, no document and no record of the permission decisions. And the log store accepts deletes from the same service account that writes to it.
+## Two accounts of the same job
 
-This is repudiation. Nothing was stolen through a flaw here; the failure is that you cannot establish what happened.
+Assume a compromised retry tool can publish to the export queue. It cannot change the API's stored job record. This is the attacker's starting capability, not a claim that sharing a broker automatically grants access to every queue.
 
-**The control.** The authorization events designed in essay 2 now get a location and a protection. The API and the worker each write an event for every export decision: who, which job and document, which stage, the outcome and the time. Denied attempts are recorded as well as successful ones. Events go to a store where those services can append but cannot modify or delete.
+The relevant paths in the flawed design are:
 
-**Residual risk.** The log shows that Alice's session requested the export. It does not show that Alice was at the keyboard. If her session was stolen, that is a spoofing threat at B1, handled by session controls, and the log is evidence for the investigation rather than proof of intent.
+```text
+API ──writes──> job record: 81 / Alice / C
+API ──publishes──> export queue ──delivers──> worker
+Retry tool ──can also publish──> export queue
 
-## Write the decisions down
+Worker uses message fields ──> checks Bob / B
+Worker writes B ──> archive associated with job 81
+Download API uses job record ──> checks Alice / C
+```
 
-The three threats fit one record. Keep it next to the contract from essay 2:
+This is a deliberately narrow drawing. It exposes the two sources of authority that explain the disclosure. We will add permission lookups and the repaired delivery path as we choose them. A diagram should make its omissions visible; boxes for every infrastructure service would not establish who can write the message.
 
-| Boundary | STRIDE | Threat | Response | Control and its state | Residual risk |
-|---|---|---|---|---|---|
-| B2 | T, E | Forged queue message selects requester or document | Mitigate | Message carries job ID only; job table API-write-only; queue publish API-only. Policy written, access lists pending, tests pending | DBA can write jobs: accepted, audited |
-| B3 | I | Link usable after revocation or by others | Mitigate | Download streamed through API with current check. Designed, not built | Already-downloaded copies: accepted |
-| — | R | Export cannot be attributed | Mitigate | Append-only decision events from API and worker. Designed | Stolen session: separate S threat at B1 |
-| B2 | D | Bulk jobs starve other tenants | Not chosen now | — | Revisit before launch |
+A **trust boundary** marks a change in the authority or assurances a component may rely on. At the browser boundary, authenticated identity does not make the requested document identifier authoritative. At the queue boundary, permission to publish does not necessarily include permission to redefine a job. At storage, the worker's broad read credential does not establish what Alice may receive.
 
-A threat has four possible responses: mitigate it, eliminate the feature that causes it, transfer responsibility to someone else, or accept it. Accepting is a legitimate answer when it is written down with a reason and an owner. An unlisted threat is not an accepted one; it is an unexamined one. The last row matters as much as the first three: it shows the pass considered availability and chose not to act yet.
+Ask who can read, write, execute and administer each part. Two components on the same machine can have different authority. Two services on separate machines may be under the same administrator. Placement helps describe the system; credentials and enforced permissions explain what it permits.
 
-The record also shows where evidence is missing. Every "pending" in the control column is a test someone can write.
+Keep two identities visible while following the work:
 
-## What the drawing does not tell you
+| Operation | Identity performing the operation | User whose product permission matters | Source of that user identity |
+|---|---|---|---|
+| Request an export | Authenticated Alice | Alice | API authentication result |
+| Publish a notification | API service, or the compromised retry tool | Not established by publishing alone | Message fields require a trusted origin or comparison with a protected record |
+| Generate the archive | Worker service | Original requester | In the repair: protected job record |
+| Read source bytes from storage | Worker's storage identity | Original requester still governs generation | Worker's application-level permission check |
+| Download through the API | Authenticated downloader | Downloader, who must also own the job | API authentication plus protected job and permission records |
 
-A diagram is only as true as the system it describes. If the job table later gains a second writer, the B2 control silently weakens and the diagram still looks fine. Revisit the model when a component, credential or data flow changes, not on a calendar.
+The worker does not become Alice. It performs an operation on her behalf. Likewise, a queue does not inherently destroy identity provenance. The flaw is accepting a publisher's fields as authoritative when that publisher is not trusted to choose them.
 
-STRIDE also has no scoring. It tells you what kind of harm is possible, not how likely or how costly. Choosing which three threats to work first used judgement about this product: sensitive documents, a shared queue, infrequent exports. Another product would choose differently from the same six letters.
+## Give each fact one authoritative source
+
+For this example, make the queue message carry only a job identifier. The worker loads the originating requester and exact document reference from the protected record, checks that requester's current permission, and associates the resulting archive with that same record.
+
+```text
+Queue ──job ID──> worker
+Job record ──requester + document──> worker
+Permission records ──current decision inputs──> worker
+Document store ──authorized source bytes──> worker
+Worker ──result for that job──> archive store
+```
+
+Now the retry tool can ask the worker to inspect job 81, but cannot make that job refer to Bob or B. Unknown jobs produce no export. Extra identity or document fields must be rejected or ignored; they must never override the record. Alice's legitimate export of C should still complete.
+
+Define the write permissions more precisely than “the table is protected.” The API may create the job's requester, owner and document reference. The worker may read those fields and update execution status and the result reference, but must not rewrite the authorization context. Those permissions might be enforced through separate tables, constrained database operations or a service interface. The mechanism remains to be implemented and tested.
+
+Restrict queue publishing to the intended producers as well. That reduces unwanted submissions, but it does not replace the worker's handling of job identity. A future second producer should not require trusting a second copy of the requester and document.
+
+“Enable TLS” addresses another part of the path. Correctly configured transport protection helps prevent interception and alteration in transit. It cannot make false content from an authorized publisher true.
+
+There are now two distinct evidence tasks. Infrastructure tests should exercise permitted and forbidden operations with the actual service accounts, including attempts to update protected fields. Application tests should deliver a forged message for job 81 and establish that no Birch bytes become associated with Alice's job. Include a valid message that still produces C. Testing only that one account cannot publish leaves the worker's interpretation untested.
+
+This also exposes a limit: a database administrator may be able to change the protected record. Do not silently assume that a metadata administrator is already entitled to every document. Record whether this is an accepted trust assumption or requires further separation of duties. The diagram has located a decision; it has not made it for the product owner.
+
+## Use STRIDE to widen the investigation
+
+We found one failure by tracing two inconsistent accounts of a job. STRIDE supplies six prompts for looking beyond it:
+
+| Category | Question for this export service |
+|---|---|
+| Spoofing | Can a caller act under Alice's identity? |
+| Tampering | Can someone replace the requester, source or result of a job? |
+| Repudiation | What evidence remains if someone disputes an export? |
+| Information disclosure | Can document bytes reach someone without permission? |
+| Denial of service | Can one tenant's exports prevent others from completing? |
+| Elevation of privilege | Can a caller obtain an effect available only to a more privileged identity? |
+
+Apply these prompts to processes and stores as well as crossings. A deletable audit record matters even if the initial drawing omitted the log service. Write a scenario with an actor, capability and consequence before assigning its category. A category name by itself gives an engineer little to investigate.
+
+Our forged-message scenario involves tampering that uses the worker's authority to cause an unauthorized disclosure. Choosing its single best label matters less than preserving that mechanism. Two further questions change the proposed design.
+
+## Does the download still enforce the contract?
+
+Suppose the archive store issues a signed link valid for 24 hours. Alice pastes it into a support ticket. An administrator then revokes her export permission. Assume the link remains valid and storage has no connection to the application's permission records. Both Alice and a ticket reader holding the link can fetch the archive.
+
+The access credential has changed: possession of the URL now permits retrieval. The store need not identify the person holding it. Reducing its lifetime helps limit exposure, but does not establish that the downloader is Alice or still has permission.
+
+Compare two delivery designs:
+
+| Design | Access promise | Tradeoff |
+|---|---|---|
+| API checks identity, job ownership and current permission, then streams the archive | Each download is authorized under essay 2's selected policy | API carries file traffic |
+| API checks permission, then issues a 60-second bearer link | Permission checked at issuance; a holder can subsequently use the link while valid | Forwarding and revocation exposure remain during validity |
+
+For S3 specifically, expiry is checked when the request starts; a transfer begun before expiry can continue afterwards. A 60-second link is therefore not a promise that disclosure stops after 60 seconds. [S3 presigned URL behaviour](https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-presigned-url.html)
+
+Choose API streaming for our constructed service: exports are infrequent and the current-permission requirement is retained. The repaired delivery path is:
+
+```text
+Downloader ──authenticated request──> API
+Job + permission records ──decision inputs──> API
+Archive store ──bytes after allow──> API ──bytes──> downloader
+```
+
+No bearer storage URL is released to the downloader. Already-downloaded copies remain outside this control, and revocation during an active transfer remains unresolved, as in essay 2. If the product chooses the short-link alternative, update its access promise explicitly.
+
+## What survives a disputed export?
+
+Now consider a report that Cedar's document left through an export. Alice denies requesting it. A log line says only `export completed job=81`, and the worker's logging credential can delete earlier entries.
+
+That evidence cannot distinguish several explanations: Alice requested the export, someone used her credentials, or a service manufactured the job. The absence of detail does not establish that no vulnerability was exploited.
+
+The authorization events from essay 2 need a protected destination. Record requester, job, decision stage, outcome, reason, policy revision and time; retain the protected job's source reference. Keep credentials and document contents out of the event. Application identities should append events without being able to modify or delete earlier ones.
+
+Verify both the content of representative events and the restrictions on changing them. Append-only access still cannot force a compromised application to emit truthful, complete events. A record attributing a request to Alice's account also does not prove Alice was at the keyboard. These limits belong beside the proposed control.
+
+## Leave a record someone can act on
+
+A useful review ends with decisions and missing evidence. For this fictional service, the record might begin:
+
+| Finding | Decision and owner | Evidence still needed |
+|---|---|---|
+| Message can redefine a job | Backend lead: use protected job context; constrain writers | Forged-message test, valid export, account-permission tests |
+| Bearer link bypasses download policy | API lead: stream after current authorization | Revocation and wrong-owner download tests |
+| Export decisions can be erased | Platform lead: protected event destination | Event-content checks and forbidden update/delete tests |
+| Administrator can alter job context | Product security owner: resolve trust assumption before release | Actual admin access and compensating-control review |
+| Bulk exports can starve other tenants | Service owner: decide workload limits before release | Load assumptions and an isolation test plan |
+
+These are proposed responsibilities, not evidence that anyone has accepted them. None of these controls has been executed in this design essay.
+
+Mitigation, removing the risky feature, transferring an obligation and accepting a risk are possible responses. Acceptance needs a reason and an accountable owner. An unresolved release decision is not an accepted risk merely because it appears in a table.
+
+Update the model when credentials, producers, flows or policy change. Periodic review can also catch changes that escaped that process. STRIDE does not rank business impact or establish completeness; the value is in the specific decisions it helps expose.
 
 <!--mission-->
 
 ## Practice: the export nobody clicked
 
-Use the [worksheet](../practice/03-boundary-worksheet.md). This is a design exercise; no software execution is claimed or required.
+Use the [worksheet](../practice/03-boundary-worksheet.md). An administrator schedules a weekly folder export. A scheduler creates Monday's job, and an external email provider sends a link to an address the administrator enters. Folder contents and permissions can change between runs.
 
-Change the feature: an administrator can schedule a weekly export of a folder, delivered by email to an address they enter. A scheduler service creates the job every Monday. An external email provider sends a download link. The folder's contents change between runs, and so can the administrator's permissions.
+For this exercise, choose a schedule that acts on behalf of its creator and requires that person's current permissions. Keep essay 2's job-owner download rule. These are selected product policies; a tenant-owned automation account would require a different explicit contract.
 
-Draw the path from the scheduling request to the recipient opening the email. Mark every trust boundary and say who can write on each side. Fill in the identity column for each hop; the hard row is "who is the requester when the scheduler creates Monday's job?" Then choose three threats, each with a STRIDE letter, the boundary where it occurs, a response, a control stated as policy, implemented or verified, and its residual risk. Include one threat you deliberately do not mitigate, with the reason.
+Draw the path through scheduling, generation and download. Distinguish service identity from originating user at each relevant hop. Choose three threat scenarios, then state the response, owner, proposed control, verification case and remaining limit. Include one legitimate weekly run and one where the creator leaves the tenant on Sunday. Identify an unresolved decision if you find one; there is no quota of risks you must accept.
 
-Try it before opening the [review notes](../practice/03-boundary-review.md).
+Try it before opening the [review notes](../practice/03-boundary-review.md). If stuck, identify who supplies Monday's requester. Next ask who can change that record. Finally ask whether a permitted email address also establishes permission to download.
 
-If stuck, start with the identity column. Next, ask which component would still act if the administrator were removed from the tenant on Sunday. Finally, look at the email address field and ask who it lets the administrator send tenant documents to.
+Completion means another engineer can follow a threat to its proposed control and evidence, without guessing which facts are trusted. This is design practice, not proof of a running scheduler.
 
-Completion means another engineer can point at a line on your drawing and find the threats that apply there, and can tell from your record which controls exist and which are still sentences.
-
-Source note: primary sources inspected on 13 September 2026. STRIDE categories and the properties they violate follow Microsoft's [Threat Modeling Tool threat page](https://learn.microsoft.com/en-us/azure/security/develop/threat-modeling-tool-threats) and OWASP's [Threat Modeling Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Threat_Modeling_Cheat_Sheet.html), which also gives the four threat responses. ASVS 5.0.0 requirements [8.3.3](https://github.com/OWASP/ASVS/blob/v5.0.0/5.0/en/0x17-V8-Authorization.md) (originating subject's permissions), [13.2.1–13.2.2](https://github.com/OWASP/ASVS/blob/v5.0.0/5.0/en/0x22-V13-Configuration.md) (authenticated, least-privilege backend communication) and [16.2.1, 16.3.2, 16.4.2](https://github.com/OWASP/ASVS/blob/v5.0.0/5.0/en/0x25-V16-Security-Logging-and-Error-Handling.md) (log metadata, logged authorization decisions, protected logs) correspond to the three controls. The export service, boundaries, traces and threat record are original constructed examples.
+Source note: inspected on 13 September 2026. STRIDE terminology follows Microsoft's [threat categories](https://learn.microsoft.com/en-us/azure/security/develop/threat-modeling-tool-threats); review structure and risk responses draw on OWASP's [Threat Modeling Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Threat_Modeling_Cheat_Sheet.html). ASVS 5.0.0 [V8](https://github.com/OWASP/ASVS/blob/v5.0.0/5.0/en/0x17-V8-Authorization.md), [V13](https://github.com/OWASP/ASVS/blob/v5.0.0/5.0/en/0x22-V13-Configuration.md) and [V16](https://github.com/OWASP/ASVS/blob/v5.0.0/5.0/en/0x25-V16-Security-Logging-and-Error-Handling.md) provide related authorization, service-communication and logging requirements. The service, attack trace and decisions are original constructed examples; the diagrams show selected flows rather than a complete deployment.

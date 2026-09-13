@@ -4,12 +4,14 @@ Status: blank practice artifact. Fill it in as you work. The lab source is [labs
 
 ## The change
 
-- Add an export permission that is separate from tenant membership.
+- Add a tenant-wide export permission separate from tenant membership. This is a first extension, coarser than essay 2's per-document grant.
 - Add Carol, a Cedar member without export permission. Alice and Bob keep export permission in their own tenants.
 - Enforce the permission wherever an export is requested, generated or downloaded.
 - Keep every test in `ScopedRepairTest` passing.
 
-## Decide the policy before the code
+Keep the selected revocation rule: revocation before generation prevents content creation; revocation after completion prevents a new download. Choose the response codes and job states that express it.
+
+## Record the policy before the code
 
 - Where the permission is stored, and who can change it:
 - Carol requests an export of C-1001. Response status and why that status (she can already read the invoice):

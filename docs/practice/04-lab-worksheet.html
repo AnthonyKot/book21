@@ -9,12 +9,13 @@
 <p>Status: blank practice artifact. Fill it in as you work. The lab source is <a href="https://github.com/AnthonyKot/book21/tree/main/labs/04-wrong-invoice">labs/04-wrong-invoice</a>; start from <code>lab.lookup=scoped</code>, which is where essay 4 leaves it.</p>
 <h2>The change</h2>
 <ul>
-<li>Add an export permission that is separate from tenant membership.</li>
+<li>Add a tenant-wide export permission separate from tenant membership. This is a first extension, coarser than essay 2&#39;s per-document grant.</li>
 <li>Add Carol, a Cedar member without export permission. Alice and Bob keep export permission in their own tenants.</li>
 <li>Enforce the permission wherever an export is requested, generated or downloaded.</li>
 <li>Keep every test in <code>ScopedRepairTest</code> passing.</li>
 </ul>
-<h2>Decide the policy before the code</h2>
+<p>Keep the selected revocation rule: revocation before generation prevents content creation; revocation after completion prevents a new download. Choose the response codes and job states that express it.</p>
+<h2>Record the policy before the code</h2>
 <ul>
 <li>Where the permission is stored, and who can change it:</li>
 <li>Carol requests an export of C-1001. Response status and why that status (she can already read the invoice):</li>

@@ -6,55 +6,58 @@
 <link rel="stylesheet" href="../assets/style.css"></head>
 <body><a class="skip" href="#main">Skip to content</a><header class="site-header"><a href="../index.html">Security Is an Engineering Job</a><nav aria-label="Book"><a href="../index.html#essays">Essays</a><a href="../about.html">About</a></nav></header>
 <main id="main"><p class="kicker">Essay 4 · Find and repair application failures</p><article><h1>A valid user can still read the wrong invoice</h1>
-<p>Alice works for Cedar Dental. She signs in to the document service, opens invoice C-1001 and sees her company&#39;s bill. Then she changes the last part of the address to B-2001, an identifier she saw in a forwarded email:</p>
-<pre><code>$ curl -u alice:alice-pass localhost:8081/invoices/B-2001
-{&quot;id&quot;:&quot;B-2001&quot;,&quot;tenantId&quot;:&quot;birch&quot;,&quot;customer&quot;:&quot;Birch Legal&quot;,&quot;amountCents&quot;:990000}  [HTTP 200]
+<p>In our local fixture, Alice belongs to Cedar Dental. She requests invoice C-1001 and receives Cedar&#39;s bill. Now suppose she obtains B-2001 from a forwarded email and requests that identifier instead:</p>
+<pre><code>$ curl -sS -w &#39;\n[HTTP %{http_code}]\n&#39; -u alice:alice-pass localhost:8081/invoices/B-2001
+{&quot;id&quot;:&quot;B-2001&quot;,&quot;tenantId&quot;:&quot;birch&quot;,&quot;customer&quot;:&quot;Birch Legal&quot;,&quot;amountCents&quot;:990000}
+[HTTP 200]
 </code></pre>
-<p>That is another company&#39;s invoice. Nothing about the request was unusual. Alice&#39;s password was correct, her session was valid, and the identifier was well formed. Spring Security did exactly what it was configured to do: the same request without credentials gets <code>401</code>. The service established <em>who</em> was asking and never asked <em>whether this invoice is theirs</em>.</p>
-<p>This essay reproduces that failure in a small Spring Boot service, repairs it, and follows the same question into the two places developers usually forget: the export worker and the download of a finished export. The lab is in <a href="https://github.com/AnthonyKot/book21/tree/main/labs/04-wrong-invoice">labs/04-wrong-invoice</a>. It runs locally with synthetic tenants and an in-memory database.</p>
+<p>That is another company&#39;s invoice. Nothing about the request was unusual. Alice&#39;s HTTP Basic credentials were valid, and the identifier was well formed. Spring Security did exactly what it was configured to do: the same request without credentials gets <code>401</code>. The service established <em>who</em> was asking and never asked <em>whether this invoice is theirs</em>.</p>
+<p>This essay reproduces that failure in a small Spring Boot service, repairs it, and follows the same question into two further places where the policy must hold: the export worker and the download of a finished export. The lab is in <a href="https://github.com/AnthonyKot/book21/tree/main/labs/04-wrong-invoice">labs/04-wrong-invoice</a>. It runs locally with synthetic tenants and an in-memory database.</p>
+<p>The starting policy is intentionally smaller than essay 2&#39;s: membership permits reading and exporting any invoice in the same tenant; a finished export also belongs to its requester. The worked repair implements that policy. The exercise adds a separate export permission and revocation cases. This lets us inspect tenant isolation before combining it with another rule.</p>
+<p>To follow along, use Java 21 or later and Maven; run <code>mvn test</code> in the lab directory. Its <a href="https://github.com/AnthonyKot/book21/blob/main/labs/04-wrong-invoice/README.html">README</a> gives the exact commands for starting the vulnerable and repaired versions. The examples below use synthetic data only.</p>
 <h2>Authentication is not ownership</h2>
-<p>In essay 3 the browser-to-API crossing was the first trust boundary. Two different things cross it together. One is the session, which the API validates and can believe. The other is the identifier in the path, which is only the caller&#39;s choice of object. A valid session does not turn that choice into a right.</p>
+<p>In essay 3 the browser-to-API crossing was the first trust boundary. Two different things cross it together. One is the authentication evidence: HTTP Basic credentials in this lab, or a session in another design. The API validates it to establish a principal. The other is the identifier in the path, which is only the caller&#39;s choice of object. Authentication does not turn that choice into a right.</p>
 <p>The failure has a name, insecure direct object reference or IDOR: the application uses input from the user to fetch an object directly, without checking that the user may have it. PortSwigger classes it as horizontal privilege escalation, reaching resources of another user of the same kind rather than functions reserved for a higher role.</p>
 <p>Here is the code that answered Alice:</p>
 <pre><code class="language-java">public Optional&lt;Invoice&gt; invoiceFor(String username, String invoiceId) {
     return invoices.findById(invoiceId);
 }
 </code></pre>
-<p>The method receives the username and ignores it. Nobody writes that deliberately. It arrives by a shorter route: a controller that calls <code>repository.findById(id)</code> because every Spring Data repository already has that method, and the endpoint&#39;s test only ever used an invoice that belonged to the test user.</p>
+<p>The method receives the username and ignores it. A happy-path test using Alice and C-1001 would not expose the omission: both a scoped and an unscoped lookup return the expected invoice. The discriminating input is a real invoice belonging to someone else. A random nonexistent identifier tests absence, not this boundary.</p>
 <h2>Why the list was already right</h2>
-<p>The same service has a list endpoint, and it never leaked:</p>
+<p>The same fixture has a list endpoint that already filters by tenant. Its response is abbreviated here:</p>
 <pre><code>$ curl -u alice:alice-pass localhost:8081/invoices
 [{&quot;id&quot;:&quot;C-1001&quot;,...},{&quot;id&quot;:&quot;C-1002&quot;,...}]
 </code></pre>
-<p>Its query is <code>findByTenantId(tenantOf(user))</code>. A list <em>needs</em> a filter; without one it returns every row, which somebody notices in the first demo. A lookup by identifier returns one plausible row either way, so the missing condition is invisible when you test with your own data. That asymmetry is why &quot;the list is scoped&quot; is weak evidence that the detail endpoint is.</p>
+<p>Its query is <code>findByTenantId(tenantOf(user))</code>. An unfiltered list can expose the mismatch immediately by including both companies. A lookup by identifier returns one plausible row either way, so the missing condition remains invisible when you test only with your own data. The two endpoints call different repository methods. Evidence about one does not establish the behaviour of the other.</p>
 <p>Making identifiers unguessable does not change the question either. Replace <code>B-2001</code> with a random UUID and the flaw is still there; you have only made the identifier harder to find. Identifiers leak through emails, exports, shared screens, logs and other endpoints. PortSwigger&#39;s Academy has a lab built around exactly this: user accounts identified by GUIDs that turn up elsewhere in the application.</p>
-<h2>Put the owner in the query</h2>
+<h2>Put the tenant condition in the lookup</h2>
 <p>There are three common places to add the missing check:</p>
 <div class="table-scroll" tabindex="0" role="region" aria-label="Table; scroll horizontally on small screens"><table>
 <thead>
 <tr>
 <th>Where</th>
 <th>How</th>
-<th>What goes wrong</th>
+<th>What must hold</th>
 </tr>
 </thead>
 <tbody><tr>
-<td>After loading</td>
-<td>Load by ID, then compare <code>invoice.tenantId()</code> with the user&#39;s tenant</td>
-<td>Works, but every caller must remember the comparison, and the foreign row is already in memory</td>
+<td>Service code after loading</td>
+<td>Load by ID, compare the row&#39;s tenant with the user&#39;s tenant</td>
+<td>Deny before releasing data or performing an unauthorized effect; callers use this service</td>
 </tr>
 <tr>
-<td>Framework annotation</td>
-<td><code>@PostAuthorize</code> on the method, checking the returned object</td>
-<td>Same load-then-check shape; the rule lives far from the query</td>
+<td>Method security</td>
+<td>Use <code>@PostAuthorize</code> to check a returned object</td>
+<td>Method security is enabled and the call is intercepted; the method has not already performed an unauthorized effect</td>
 </tr>
 <tr>
 <td>In the query</td>
-<td>Look up by ID <em>and</em> tenant</td>
-<td>The foreign row is never loaded, so there is nothing to forget to discard</td>
+<td>Look up by ID and trusted tenant</td>
+<td>Callers use the scoped lookup and supply a tenant established by trusted code</td>
 </tr>
 </tbody></table>
-</div><p>The lab uses the third:</p>
+</div><p>Each approach can centralize a rule, and each can be bypassed by a caller using a different path. The lab uses the third because tenant equality fits directly in the query and the lookup does not retrieve a foreign row:</p>
 <pre><code class="language-java">public Optional&lt;Invoice&gt; invoiceFor(String username, String invoiceId) {
     return invoices.findByIdAndTenantId(invoiceId, users.tenantOf(username));
 }
@@ -63,30 +66,31 @@
 <pre><code>unscoped: SELECT ... FROM &quot;INVOICE&quot; WHERE &quot;INVOICE&quot;.&quot;ID&quot; = ?
 scoped:   SELECT ... FROM &quot;INVOICE&quot; WHERE &quot;INVOICE&quot;.&quot;ID&quot; = ? AND (&quot;INVOICE&quot;.&quot;TENANT_ID&quot; = ?)
 </code></pre>
-<p>Where the tenant comes from matters as much as the condition. <code>users.tenantOf(username)</code> reads the service&#39;s own user table, keyed by the name Spring Security authenticated. It does not read a <code>tenant</code> parameter or an <code>X-Tenant-Id</code> header, both of which the caller controls. A scoped query fed a tenant the attacker chose is the original flaw with extra steps.</p>
-<p>The other two options are not wrong. A team that already uses method security consistently may prefer the annotation. What matters is the property, not the syntax: every path that loads an invoice for a user applies the user&#39;s tenant.</p>
+<p>Where the tenant comes from matters as much as the condition. <code>users.tenantOf(username)</code> reads the service&#39;s own user table, keyed by the name Spring Security authenticated. It does not read a <code>tenant</code> parameter or an <code>X-Tenant-Id</code> header, both of which the caller controls. Accepting an attacker-selected tenant without validating membership would defeat the condition. A product where users can switch among several tenants needs an explicit check on that selection; this fixture gives each user one tenant.</p>
+<p>The other two options are not wrong. A team that already uses method security consistently may prefer the annotation. The property is that a user receives an invoice only when the tenant condition holds. The choice of syntax does not establish that every caller enforces it.</p>
 <h2>Refuse the same way as a missing invoice</h2>
-<p>With the repair, Alice&#39;s request for B-2001 returns <code>404</code>, with the same empty body as a request for an invoice that does not exist. That is a choice. A <code>403</code> would be honest about the refusal, but it would also confirm to Alice that B-2001 exists. For identifiers from another tenant, the lab chooses not to say. A test pins the choice so nobody changes it by accident:</p>
+<p>With the repair, Alice&#39;s request for B-2001 returns <code>404</code>, with the same empty body as a request for an invoice that does not exist. That is a choice. Returning <code>403</code> for an existing foreign invoice and <code>404</code> for a missing one would distinguish existence. A <code>403</code> by itself does not necessarily reveal that distinction. For identifiers from another tenant, the lab chooses not to say. A test pins the choice so nobody changes it by accident:</p>
 <pre><code class="language-java">var foreign = call(&quot;alice&quot;, &quot;GET&quot;, &quot;/invoices/B-2001&quot;);
 var missing = call(&quot;alice&quot;, &quot;GET&quot;, &quot;/invoices/X-9999&quot;);
 assertThat(foreign.statusCode()).isEqualTo(404);
+assertThat(missing.statusCode()).isEqualTo(404);
 assertThat(foreign.body()).isEqualTo(missing.body());
 </code></pre>
 <p>This makes the status and body indistinguishable. It does not make timing indistinguishable, and the lab does not measure that.</p>
 <h2>The worker has no session</h2>
-<p>Exports run later, in a worker. The worker has no HTTP request, no session and no user. It knows who asked only from the job row the API wrote, which is why essay 3 made that row the thing to protect.</p>
-<p>The vulnerable version fails here in two ways. First, the API&#39;s own check used the unscoped lookup, so Alice&#39;s <code>POST /exports?invoiceId=B-2001</code> was accepted and the worker produced Birch&#39;s invoice. Second, and more instructive, the worker also used the unscoped lookup. The lab&#39;s reproduction test inserts a queued row naming Alice and B-2001 directly, the way a retry tool, a migration or a second producer could, and runs the worker:</p>
+<p>Exports run later, in a worker. It has no interactive user request or session. It still runs with the application&#39;s database access; it knows who asked only from the job row the API wrote, which is why essay 3 made that row the thing to protect.</p>
+<p>The vulnerable version fails here in two ways. First, the API&#39;s own check used the unscoped lookup, so Alice&#39;s <code>POST /exports?invoiceId=B-2001</code> was accepted and the worker produced Birch&#39;s invoice. Second, and more instructive, the worker also used the unscoped lookup. The lab&#39;s reproduction test inserts a queued row naming Alice and B-2001 directly, then runs the worker. This isolates the worker&#39;s behaviour if inconsistent job data reaches it; it does not demonstrate an attacker obtaining database write access:</p>
 <pre><code>worker: queued row alice/B-2001 -&gt; DONE      (unscoped)
 worker: queued row alice/B-2001 -&gt; DENIED    (scoped)
 </code></pre>
-<p>The repaired worker calls the same <code>invoiceFor(job.requester(), job.invoiceId())</code> as the controller. It checks the original requester&#39;s tenant as it is <em>now</em>, not a flag saying the API once approved the job. A check at the front door does not travel with the work; it has to be made again where the work happens.</p>
+<p>The repaired worker calls the same <code>invoiceFor(job.requester(), job.invoiceId())</code> as the controller. It checks the original requester&#39;s tenant as it is <em>now</em>, not a flag saying the API once approved the job. The selected policy requires a current check at generation. A historical acceptance decision would not establish that permission still holds.</p>
 <h2>A second identifier: the export job</h2>
 <p>A finished export is fetched with <code>GET /exports/{jobId}</code>. That is another object reached by an identifier from the path, and job numbers are sequential:</p>
 <pre><code>bob   GET  /exports/2   -&gt; 200 {&quot;requester&quot;:&quot;alice&quot;,&quot;invoiceId&quot;:&quot;C-1001&quot;,...,&quot;content&quot;:&quot;C-1001,Cedar Dental,120000&quot;}
 </code></pre>
-<p>The repair looks up the job by ID <em>and</em> requester, then re-applies the invoice lookup, so a job whose source invoice the user can no longer see is not downloadable either. After the repair Bob gets <code>404</code>. Every new identifier the service hands out is a new place to ask the same question.</p>
+<p>The repair looks up the job by ID <em>and</em> requester, then re-applies the invoice lookup, so a job whose source invoice the user can no longer see is not downloadable either. After the repair Bob gets <code>404</code>. The invoice identifier and job identifier therefore require related but different checks: tenant membership for the source, and requester ownership for the result.</p>
 <h2>Prove the repair, and prove the proof</h2>
-<p>The lab has two test classes that send the same real HTTP requests to a running instance:</p>
+<p>The lab has two test classes exercising the vulnerable and repaired versions. Endpoint cases use real HTTP; worker cases invoke the worker directly so the test controls when it runs:</p>
 <div class="table-scroll" tabindex="0" role="region" aria-label="Table; scroll horizontally on small screens"><table>
 <thead>
 <tr>
@@ -126,19 +130,19 @@ worker: queued row alice/B-2001 -&gt; DENIED    (scoped)
 <td>Works</td>
 </tr>
 </tbody></table>
-</div><p>Two rows keep the repair honest. The legitimate reads and exports must keep working, or &quot;deny everything&quot; would pass. And the repair tests must fail against the vulnerable code, or they prove nothing. Running <code>ScopedRepairTest</code> with the unscoped lookup gives four failures, exactly the four security tests, while the two legitimate-path tests still pass. A regression test you have never seen fail is a guess.</p>
+</div><p>Two rows keep the repair honest. The legitimate reads and exports must keep working, or &quot;deny everything&quot; would pass. We also need evidence that the security assertions distinguish the repair from the known flaw. Running <code>ScopedRepairTest</code> with the unscoped lookup gives four failures, exactly the four security tests, while the two legitimate-path tests still pass. That negative control supports a specific claim: these assertions detect these defects. It does not establish coverage of every authorization path.</p>
 <h2>What this repair does not cover</h2>
-<p>The repair makes one component correct. It does not stop the next developer from adding an endpoint that calls <code>invoices.findById</code> directly. PortSwigger&#39;s prevention advice points the same way: use one application-wide mechanism, deny by default, and test access controls. For this lab that means keeping repository access behind <code>InvoiceAccess</code>. Enforcing that with a static-analysis rule is a job for essay 12.</p>
-<p>It also does not cover lookups by other keys (invoice number, search, bulk endpoints), native SQL, caches keyed only by invoice ID, or support tools that act across tenants on purpose. Each needs the same question asked of its own path.</p>
-<p>And tenant membership is not the whole policy. In essay 2, exporting needed an export permission as well as membership. The lab does not model it yet. That is your task.</p>
+<p>The tests support the repaired behaviour for the cases shown. The access component does not stop the next developer from adding an endpoint that calls <code>invoices.findById</code> directly. PortSwigger&#39;s prevention advice points the same way: use one application-wide mechanism, deny by default, and test access controls. For this lab that means routing single-invoice and job access through <code>InvoiceAccess</code>; the list retains its separate tenant-scoped query and needs its own regression coverage. Essay 12 will investigate how a static-analysis rule can detect bypasses, including its misses.</p>
+<p>The demonstration also does not cover lookups by other keys (invoice number, search, bulk endpoints), native SQL, caches keyed only by invoice ID, or support tools that act across tenants on purpose. Each needs the same question asked of its own path.</p>
+<p>The deployment boundary is also simplified. Controller and worker share one process and database access. This lab tests application authorization; it does not implement essay 3&#39;s separate service credentials or restrictions on job-field updates. Likewise, re-reading permission does not make the check and its later effect atomic. Concurrency remains a separate problem.</p>
 <hr>
 
 <h2>Practice: permission changes while the export waits</h2>
 <p>Use the <a href="../practice/04-lab-worksheet.html">lab worksheet</a>. This is an executable exercise: you will change the Spring Boot lab and run its tests.</p>
-<p>Add an export permission, separate from membership. A new Cedar user, Carol, can read Cedar invoices but has no export permission. Alice has it. Decide and enforce what happens when Alice&#39;s permission is revoked after her export is queued but before the worker runs, and after it completes but before she downloads it. Write the tests first, watch them fail, then make them pass without breaking <code>ScopedRepairTest</code>.</p>
+<p>Add a tenant-wide export permission, separate from membership. This first extension is coarser than essay 2&#39;s per-document permission; record that difference. A new Cedar user, Carol, can read Cedar invoices but has no export permission. Alice has it. Retain essay 2&#39;s revocation policy: revocation before generation prevents generation, and revocation after completion prevents a new download. Choose the refusal responses and job states that express those outcomes. Write the tests first, watch them fail, then make them pass without breaking <code>ScopedRepairTest</code>.</p>
 <p>Then solve two PortSwigger Academy labs without the published solution, and note which hints you used: <a href="https://portswigger.net/web-security/access-control/lab-user-id-controlled-by-request-parameter-with-unpredictable-user-ids">User ID controlled by request parameter, with unpredictable user IDs</a> and <a href="https://portswigger.net/web-security/access-control/lab-insecure-direct-object-references">Insecure direct object references</a>. Both are Apprentice level. For each, write one sentence naming the missing check and where it belongs.</p>
 <p>Try the worksheet before opening the <a href="../practice/04-lab-review.html">review notes</a>.</p>
-<p>If stuck, first decide the policy in a sentence, before touching code. Next, list every place that currently calls <code>invoiceFor</code>; each is a candidate for the new check. Finally, remember the worker runs as nobody: the permission to check is the job&#39;s requester&#39;s, read at the moment the worker runs.</p>
-<p>Completion means your tests show a refused export for Carol, a denied job after revocation, a blocked download after revocation, and Alice&#39;s normal export still working, and you can explain why each check sits where it does.</p>
-<p>Source note: primary sources inspected on 13 September 2026. Definitions and prevention guidance follow PortSwigger&#39;s <a href="https://portswigger.net/web-security/access-control">access control</a> and <a href="https://portswigger.net/web-security/access-control/idor">IDOR</a> pages. ASVS 5.0.0 requirement <a href="https://github.com/OWASP/ASVS/blob/v5.0.0/5.0/en/0x17-V8-Authorization.html">8.2.2</a> asks for data-specific access restricted to consumers with explicit permission, and 8.3.1 for enforcement at a trusted service layer. The lab, its data and its outputs are original; test runs, curl traces and SQL logs were executed on Java 21.0.12 with Spring Boot 4.1.1 and are recorded with the lab.</p>
+<p>If stuck, first decide the policy in a sentence, before touching code. Next, list every place that currently calls <code>invoiceFor</code>; each is a candidate for the new check. Finally, distinguish the worker&#39;s database credentials from the originating user&#39;s product permission. The latter must be read when the worker runs.</p>
+<p>Completion means your tests show Carol can still read but cannot export, a denied job after revocation, a blocked download after revocation, and Alice&#39;s normal export still working, and you can explain why each check sits where it does.</p>
+<p>Source note: primary sources inspected on 13 September 2026. Definitions and prevention guidance follow PortSwigger&#39;s <a href="https://portswigger.net/web-security/access-control">access control</a> and <a href="https://portswigger.net/web-security/access-control/idor">IDOR</a> pages. ASVS 5.0.0 requirement <a href="https://github.com/OWASP/ASVS/blob/v5.0.0/5.0/en/0x17-V8-Authorization.html">8.2.2</a> asks for data-specific access restricted to consumers with explicit permission, and 8.3.1 for enforcement at a trusted service layer. The lab, its data and its outputs are original; test runs, curl traces and SQL logs were executed on Java 21.0.12 with Spring Boot 4.1.1 and are recorded in the authoring evidence. The repository contains the executable tests and run instructions. The method-security comparison follows Spring Security&#39;s <a href="https://docs.spring.io/spring-security/reference/7.1/servlet/authorization/method-security.html">method authorization reference</a>; the lab itself uses explicit service code.</p>
 </article><nav class="pager" aria-label="Adjacent essays"><a href="03-draw-the-boundary.html">← Essay 3</a><a href="../index.html">Back to the book →</a></nav></main><footer><span>Book 21 · Learn, practise, verify.</span><a href="https://github.com/AnthonyKot/book21">Source on GitHub</a></footer></body></html>

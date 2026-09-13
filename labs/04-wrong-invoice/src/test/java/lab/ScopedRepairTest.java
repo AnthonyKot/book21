@@ -27,6 +27,7 @@ class ScopedRepairTest extends LabHttp {
         var foreign = call("alice", "GET", "/invoices/B-2001");
         var missing = call("alice", "GET", "/invoices/X-9999");
         assertThat(foreign.statusCode()).isEqualTo(404);
+        assertThat(missing.statusCode()).isEqualTo(404);
         assertThat(foreign.body()).isEqualTo(missing.body());
     }
 
