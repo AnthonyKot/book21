@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scheduled export boundary worksheet · Book 21</title><meta name="description" content="Scheduled export boundary worksheet for essay 3.">
+<meta property="og:title" content="Scheduled export boundary worksheet"><meta property="og:description" content="Scheduled export boundary worksheet for essay 3.">
+<meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
+<link rel="stylesheet" href="../assets/style.css"></head>
+<body><a class="skip" href="#main">Skip to content</a><header class="site-header"><a href="../index.html">Security Is an Engineering Job</a><nav aria-label="Book"><a href="../index.html#essays">Essays</a><a href="../about.html">About</a></nav></header>
+<main id="main"><p class="kicker">Essay 3 · Practice</p><article><h1>Essay 3 — scheduled export boundary worksheet</h1>
+<p>Status: blank practice artifact. Fill this in before reading the review notes. Completing the essay&#39;s own example is not recorded as your own attempt.</p>
+<h2>Feature</h2>
+<p>An administrator schedules a weekly export of a folder, delivered by email to an address they enter. A scheduler service creates the job every Monday. An external email provider sends a download link. Folder contents and the administrator&#39;s permissions can change between runs.</p>
+<h2>Drawing</h2>
+<p>Sketch the path from the scheduling request to the recipient opening the link. Paper is fine; photograph it or describe it in text.</p>
+<ul>
+<li>Components, in the order a weekly run touches them:</li>
+<li>Trust boundaries (label B1, B2, …), and who can write on each side:</li>
+<li>Components that did not exist in essay 3&#39;s export path:</li>
+</ul>
+<h2>Identity along the path</h2>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Table; scroll horizontally on small screens"><table>
+<thead>
+<tr>
+<th>Hop</th>
+<th>Identity present</th>
+<th>Established by</th>
+<th>Could the sender choose it?</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Administrator&#39;s browser → API (creating the schedule)</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Scheduler → job table / queue (Monday)</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Queue → worker</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Worker → document store</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Service → email provider</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Email → recipient</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+</div><ul>
+<li>Whose permissions does Monday&#39;s job use, and when are they evaluated:</li>
+<li>What happens to the schedule if the administrator leaves the tenant:</li>
+</ul>
+<h2>Three threats</h2>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Table; scroll horizontally on small screens"><table>
+<thead>
+<tr>
+<th>Boundary</th>
+<th>STRIDE letter</th>
+<th>Threat scenario</th>
+<th>Response (mitigate, eliminate, transfer, accept)</th>
+<th>Control</th>
+<th>State: policy, implemented or verified</th>
+<th>Residual risk</th>
+</tr>
+</thead>
+<tbody><tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+</div><h2>One threat you do not mitigate now</h2>
+<ul>
+<li>Threat and boundary:</li>
+<li>Reason it is not mitigated yet:</li>
+<li>Who owns revisiting it, and when:</li>
+</ul>
+<h2>Your evidence</h2>
+<ul>
+<li>Date and time spent:</li>
+<li>Assistance/hints used:</li>
+<li>The row of the identity table you found hardest, and what you decided:</li>
+<li>Next unanswered question:</li>
+</ul>
+</article><div class="practice-actions"><button onclick="window.print()">Print this page</button><a href="../essays/03-draw-the-boundary.html">Return to essay 3</a><a href="03-boundary-review.html">Review after your attempt →</a></div></main><footer><span>Book 21 · Learn, practise, verify.</span><a href="https://github.com/AnthonyKot/book21">Source on GitHub</a></footer></body></html>
