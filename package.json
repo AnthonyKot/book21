@@ -1,0 +1,7 @@
+{
+  "name": "book21",
+  "private": true,
+  "type": "module",
+  "scripts": {"build": "node site/build.mjs", "check": "node site/check.mjs"},
+  "dependencies": {"marked": "16.2.1"}
+}

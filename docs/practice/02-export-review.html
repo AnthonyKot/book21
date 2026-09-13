@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Export contract review · Book 21</title><meta name="description" content="Export contract review for essay 2.">
+<meta property="og:title" content="Export contract review"><meta property="og:description" content="Export contract review for essay 2.">
+<meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
+<link rel="stylesheet" href="../assets/style.css"></head>
+<body><a class="skip" href="#main">Skip to content</a><header class="site-header"><a href="../index.html">Security Is an Engineering Job</a><nav aria-label="Book"><a href="../index.html#essays">Essays</a><a href="../about.html">About</a></nav></header>
+<main id="main"><p class="kicker">Essay 2 · Practice</p><article><h1>Essay 2 — review after attempting the worksheet</h1>
+<p>There is no single batch policy required by the exercise. The expected evidence is consistency between the chosen rule, its effects and its traces.</p>
+<p>Under an all-or-nothing policy, loss of C2 permission before generation prevents the batch from producing a downloadable archive, even if C1 remains permitted. If C2 is revoked after the complete archive was generated, denying a later download protects the selected current-permission rule. Deleting or retaining a protected internal archive is a separate lifecycle decision; neither may make it publicly accessible.</p>
+<p>Under a partial-result policy, generation may include C1 alone. Record which items were actually included and make the partial result explicit without disclosing another tenant&#39;s protected metadata. If the archive was already generated with C2 inside it, changing its status or hiding C2&#39;s filename does not remove C2&#39;s bytes. Deny that download or produce a newly authorized archive; explain its identity and contents.</p>
+<p>A correct allowed case still returns the intended documents to the intended requester. A permission-service outage must not be treated as permission to use the worker&#39;s broader storage access. A different user possessing the job identifier fails the example&#39;s job-owner rule even if they can authenticate.</p>
+<p>Look for these incomplete answers:</p>
+<ul>
+<li>“Authenticated” without a resource/action permission.</li>
+<li>“Check at request time” without a rule for subsequent changes.</li>
+<li>“Deny” measured solely by HTTP status despite later disclosure.</li>
+<li>“Partial success” without specifying the actual contents and client-visible meaning.</li>
+<li>“Recheck” without acknowledging the check/use ordering problem.</li>
+<li>“Log it” offered as a replacement for preventing the disclosure.</li>
+</ul>
+<p>The worksheet is ready for discussion when its outcomes can be derived from the written policy. It is not proof of implementation correctness. Retain uncertainty about concurrent revocation or active transfers if those semantics have not yet been designed.</p>
+</article><div class="practice-actions"><button onclick="window.print()">Print this page</button><a href="../essays/02-security-requirement.html">Return to essay 2</a><a href="02-export-contract.html">Back to worksheet</a></div></main><footer><span>Book 21 · Learn, practise, verify.</span><a href="https://github.com/AnthonyKot/book21">Source on GitHub</a></footer></body></html>
