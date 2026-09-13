@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A signed token answers only the question you validate · Book 21</title><meta name="description" content="Reject a valid token intended for another API, then examine purpose, account recovery and the limits of local verification.">
+<meta property="og:title" content="A signed token answers only the question you validate"><meta property="og:description" content="Reject a valid token intended for another API, then examine purpose, account recovery and the limits of local verification.">
+<meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
+<link rel="stylesheet" href="../assets/style.css"></head>
+<body><a class="skip" href="#main">Skip to content</a><header class="site-header"><a href="../index.html">Security Is an Engineering Job</a><nav aria-label="Book"><a href="../index.html#essays">Essays</a><a href="../about.html">About</a></nav></header>
+<main id="main"><p class="kicker">Essay 5 · Find and repair application failures</p><article><h1>A signed token answers only the question you validate</h1>
+<p>A billing service receives an access token for Alice. Later, someone controlling that service presents the token to our document API. The API checks the signature, recognizes the issuer, confirms that the token has not expired, and returns Cedar&#39;s invoice.</p>
+<p>The token was not forged. It was used at the wrong destination.</p>
+<p>This constructed case adds an authentication boundary to essay 4&#39;s tenant check. The invoice still belongs to Alice&#39;s tenant, so the resource lookup allows it. What failed earlier was the decision to accept this credential for the document API at all. A correct object-authorization check cannot compensate for every mistake in establishing the requester.</p>
+<p>The <a href="https://github.com/AnthonyKot/book21/tree/main/labs/05-token-boundary">local Spring Boot lab</a> demonstrates the failure and its repair. It reuses Cedar, Birch and the invoice boundary, but narrows the application to a read endpoint. There is no database, export worker or real identity provider in this fixture. That keeps the question visible: what must this API establish before it treats a token as Alice&#39;s credential?</p>
+<h2>The claim that nobody read</h2>
+<p>The relevant payload fields in the billing token are:</p>
+<pre><code class="language-json">{
+  &quot;iss&quot;: &quot;https://issuer.example.test&quot;,
+  &quot;sub&quot;: &quot;alice&quot;,
+  &quot;aud&quot;: [&quot;billing-api&quot;],
+  &quot;token_use&quot;: &quot;api-access&quot;
+}
+</code></pre>
+<p>This is an excerpt, not a complete token. The fixture also supplies issuance, not-before and expiration times. Its RSA signature is produced with the same synthetic issuer key used for legitimate document tokens.</p>
+<p><code>iss</code> identifies the issuer. <code>sub</code> identifies the subject within that issuer&#39;s identity system. <code>aud</code> names the intended recipient or recipients. Our document API expects <code>document-api</code>; the token says <code>billing-api</code>.</p>
+<p>Suppose the billing service is compromised after receiving Alice&#39;s token legitimately. The attacker has the token, not the signing key. Altering its audience would invalidate the signature, but alteration is unnecessary if the document API never evaluates that audience. The API accepts the original, correctly signed statement and gives it a meaning the issuer did not assign.</p>
+<p>RFC 8725 describes this class of substitution and requires recipient validation where an issuer serves multiple applications. The important observation in our example is that the distinguishing evidence was present in the token throughout. <a href="https://www.rfc-editor.org/rfc/rfc8725.html#section-3.9">JWT best practices, sections 2.7 and 3.9</a></p>
+<h2>Separate four questions</h2>
+<p>A signed JWT in the compact format used here has a header, a payload and a signature. Decoding the first two makes their contents readable; it does not verify them. The signature protects integrity under a particular key and algorithm. It does not encrypt the payload or make every claim suitable for every application.</p>
+<p>Follow the receiving path as four decisions:</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Table; scroll horizontally on small screens"><table>
+<thead>
+<tr>
+<th>Decision</th>
+<th>What the document API needs to establish</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Cryptographic verification</td>
+<td>Signature verifies under a key trusted for this issuer, using an allowed algorithm</td>
+</tr>
+<tr>
+<td>Token acceptance</td>
+<td>Issuer, recipient, time limits and required claims fit this API&#39;s token profile</td>
+</tr>
+<tr>
+<td>Local identity</td>
+<td>The validated issuer and subject correspond to a recognized account</td>
+</tr>
+<tr>
+<td>Resource authorization</td>
+<td>That account may perform this action on this invoice now</td>
+</tr>
+</tbody></table>
+</div><p>Here a <em>token profile</em> means the claims and validation rules the application agrees to accept. The presence of a claim in a standard does not make it mandatory in every JWT application. Our profile explicitly requires an expiration and a nonempty subject, as well as the expected audience.</p>
+<p>A signature check is meaningful only after deciding which key is trusted. The lab supplies one public key directly and permits RS256. It does not take a key or a key-fetching URL from the caller&#39;s token. Real deployments may use configured issuer metadata and key sets; those introduce trust and rotation decisions that this fixture does not exercise.</p>
+<p>Similarly, <code>alice</code> alone is not a universal account identifier. This lab accepts exactly one issuer, then maps its subject into the local tenant directory. A multi-issuer system must preserve the issuer-subject relationship rather than treating equal subject strings as the same person.</p>
+<h2>Reproduce the wrong acceptance</h2>
+<p>Use Java 21 and Maven. The <a href="https://github.com/AnthonyKot/book21/blob/main/labs/05-token-boundary/README.html">lab README</a> contains the setup and commands. Run <code>mvn test</code> first, then start the service with audience checking disabled:</p>
+<pre><code class="language-sh">mvn -q package -DskipTests
+java -jar target/token-boundary-1.0.jar --lab.audience-check=false
+</code></pre>
+<p>The fixture binds to loopback on port 8082. Its unauthenticated <code>/lab/tokens/{kind}</code> endpoint dispenses synthetic tokens for this exercise. That endpoint is deliberately not an authentication service to deploy; it lets you obtain each counterexample without building a login system. Signing keys exist only in memory and change on restart.</p>
+<p>In another terminal:</p>
+<pre><code class="language-sh">billing_token=$(curl -fsS http://127.0.0.1:8082/lab/tokens/billing)
+curl -sS -w &#39;\n[HTTP %{http_code}]\n&#39; \
+  -H &quot;Authorization: Bearer $billing_token&quot; \
+  http://127.0.0.1:8082/api/invoices/C-1001
+</code></pre>
+<p>The vulnerable mode returns Cedar&#39;s invoice with <code>200</code>. Restart with <code>--lab.audience-check=true</code>, obtain a new token from the restarted fixture, and repeat the request. It returns <code>401</code>. A <code>valid</code> token from <code>/lab/tokens/valid</code> still receives <code>200</code> for C-1001 and <code>404</code> for Birch&#39;s B-2001.</p>
+<p>The restart instruction matters: a token signed before restart will fail under the new key. Reusing it would produce a denial for the wrong reason and would not demonstrate audience enforcement.</p>
+<h2>Add a condition without removing the others</h2>
+<p>The decoder in both modes starts from the fixture&#39;s trusted public key. Its validation list retains issuer and timestamp checks:</p>
+<pre><code class="language-java">checks.add(JwtValidators.createDefaultWithIssuer(TokenFixtures.ISSUER));
+checks.add(new JwtClaimValidator&lt;Instant&gt;(&quot;exp&quot;, value -&gt; value != null));
+checks.add(new JwtClaimValidator&lt;String&gt;(&quot;sub&quot;,
+        value -&gt; value != null &amp;&amp; !value.isBlank()));
+</code></pre>
+<p>The repaired mode adds:</p>
+<pre><code class="language-java">checks.add(new JwtClaimValidator&lt;List&lt;String&gt;&gt;(&quot;aud&quot;,
+        audiences -&gt; audiences != null
+                &amp;&amp; audiences.contains(TokenFixtures.AUDIENCE)));
+</code></pre>
+<p>The expected audience is application configuration, not a request parameter. A missing audience must also fail. Comparing only with the first list element would impose a different policy from checking that this API is one of the intended recipients.</p>
+<p>Finally, the list becomes the decoder&#39;s validator:</p>
+<pre><code class="language-java">decoder.setJwtValidator(new DelegatingOAuth2TokenValidator&lt;&gt;(checks));
+</code></pre>
+<p>Read that operation carefully when reviewing a patch. Installing an audience-only validator could discard the issuer and timestamp checks previously used by the decoder. Our change composes the required checks explicitly. The tests keep the other rejection cases present so that adding one control cannot silently remove them.</p>
+<p>Spring Security 7.1.1 documents both custom validators and Boot&#39;s audience configuration. This lab declares its own decoder to expose the mechanism; the code shown is not a claim that Spring automatically selects this application&#39;s audience. Its default timestamp validation allows 60 seconds of clock skew, so expired and future fixtures are placed ten minutes outside the accepted interval. Boundary tests would need a controlled clock. <a href="https://docs.spring.io/spring-security/reference/7.1/servlet/oauth2/resource-server/jwt.html">Spring resource-server JWT validation</a></p>
+<h2>What the executed cases establish</h2>
+<p>The two test classes each run thirteen cases against a real HTTP server:</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Table; scroll horizontally on small screens"><table>
+<thead>
+<tr>
+<th>Credential or request</th>
+<th>Audience check off</th>
+<th>Audience check on</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Valid document token, Cedar invoice</td>
+<td>200</td>
+<td>200</td>
+</tr>
+<tr>
+<td>Valid document token, Birch invoice</td>
+<td>404</td>
+<td>404</td>
+</tr>
+<tr>
+<td>Billing audience</td>
+<td>200: flaw reproduced</td>
+<td>401</td>
+</tr>
+<tr>
+<td>Missing audience</td>
+<td>200: flaw reproduced</td>
+<td>401</td>
+</tr>
+<tr>
+<td>Missing bearer token</td>
+<td>401</td>
+<td>401</td>
+</tr>
+<tr>
+<td>Expired</td>
+<td>401</td>
+<td>401</td>
+</tr>
+<tr>
+<td>Not yet valid</td>
+<td>401</td>
+<td>401</td>
+</tr>
+<tr>
+<td>Wrong issuer</td>
+<td>401</td>
+<td>401</td>
+</tr>
+<tr>
+<td>Wrong signing key</td>
+<td>401</td>
+<td>401</td>
+</tr>
+<tr>
+<td>Missing expiration</td>
+<td>401</td>
+<td>401</td>
+</tr>
+<tr>
+<td>Missing subject</td>
+<td>401</td>
+<td>401</td>
+</tr>
+<tr>
+<td>Blank subject</td>
+<td>401</td>
+<td>401</td>
+</tr>
+<tr>
+<td>Unknown local subject</td>
+<td>403</td>
+<td>403</td>
+</tr>
+</tbody></table>
+</div><p>The unknown subject passes the token checks but has no account in this application. Its <code>403</code> is an application decision, distinct from the <code>401</code> for an unacceptable credential. These statuses describe the fixture&#39;s policy; they are not a universal map for every authentication deployment.</p>
+<p>For the negative control, run the repair assertions with audience checking disabled. Exactly the billing-audience and missing-audience assertions fail; the other eleven pass. That result shows the tests can distinguish this missing check while retaining legitimate access and the existing rejection cases.</p>
+<p>This is narrower than proving a complete token implementation. We have not tested remote key discovery, rotation, every malformed claim, every algorithm, or a compromised issuer. The lab&#39;s tenant lookup still matters after authentication. Issuing Alice a document token does not let her read Birch&#39;s invoice.</p>
+<h2>A reset token asks a different question</h2>
+<p>Now obtain the <code>reset</code> fixture. It has the document audience, but its signed <code>token_use</code> claim is <code>password-reset</code>. The audience-repaired API still accepts it. This is the deliberately unfinished boundary for your practice.</p>
+<p>Audience answers where a token is intended to be accepted. Within that destination, different operations may need different credentials. Our hypothetical issuer has reused an audience across recovery and ordinary API access. The API must distinguish their purposes, or the issuer and consumers must adopt separate profiles that prevent the overlap.</p>
+<p><code>token_use</code> is an application-specific claim in this fixture, not a universal JWT field with automatic framework enforcement. A different system might distinguish token kinds through an explicit type, separate audiences or keys, or a defined protocol profile. The requirement is that a credential for one operation cannot silently become a credential for another.</p>
+<p>Account recovery has another binding to inspect. Consider this illustrative, unexecuted review fragment:</p>
+<pre><code class="language-text">validateResetToken(request.token)
+changePassword(request.username, request.newPassword)
+</code></pre>
+<p>Even a valid reset token is insufficient if the changed account comes from an unrelated form field. The recovery operation must bind the authorized subject to the account whose password changes. A token issued for Alice must not reset Bob, however the request spells its username.</p>
+<p>Expiry also does not imply single use. Two requests can present the same valid credential before it expires. A recovery implementation needs a consumption rule and enforcement that prevents both from succeeding, including concurrent attempts. That is an additional state-transition problem; adding a purpose validator to our read-only API does not implement it. <a href="https://cheatsheetseries.owasp.org/cheatsheets/Forgot_Password_Cheat_Sheet.html">OWASP recovery guidance</a></p>
+<h2>A credential can remain valid after the account changes</h2>
+<p>A signed token records claims issued at a particular time. Local verification does not, by itself, tell the API that Alice logged out, changed her password or lost a permission afterwards.</p>
+<p>Compare a server-side session whose record the service checks on each request: disabling that record can affect the next lookup. A self-contained token can avoid that lookup, but then immediate revocation requires another mechanism or a different promise. Short expiration bounds some exposure; it does not mean the token was revoked at the moment of the account change.</p>
+<p>Decide which events must affect access and when. Current account checks, a credential version, token denylisting or an issuer-mediated status check are possible design ingredients with different availability and state costs. The lab implements none of those revocation mechanisms. It uses stateless bearer authentication, while invoice authorization is evaluated separately against local tenant data.</p>
+<p>This distinction connects back to the export worker. Preserving an old valid token would not establish the current document permission required by essay 2. Authentication evidence and the product&#39;s current access decision have different lifetimes.</p>
+<hr>
+
+<h2>Practice: keep recovery credentials out of the API</h2>
+<p>Use the <a href="../practice/05-token-worksheet.html">worksheet</a>. Keep audience checking enabled. Add a <code>PurposeRepairTest</code> class extending <code>TokenHttp</code>, configured like <code>AudienceRepairTest</code>. Write tests showing that <code>reset</code> and <code>no-purpose</code> tokens are refused by the invoice API, while <code>valid</code> still works and every existing repair test remains intact. First observe the new assertions fail because the API accepts those tokens, then implement the purpose rule in the validation path.</p>
+<p>Write a separate recovery review: trace a reset credential to the account it may change, its permitted effect and its consumption record. Specify the outcomes for Alice&#39;s token paired with Bob&#39;s username, a second use, two simultaneous uses, and ordinary API use. This part is a design artifact; no recovery endpoint exists in the lab.</p>
+<p>Then attempt two independent Academy labs: <a href="https://portswigger.net/web-security/jwt/lab-jwt-authentication-bypass-via-unverified-signature">JWT authentication bypass via unverified signature</a> and <a href="https://portswigger.net/web-security/authentication/other-mechanisms/lab-password-reset-broken-logic">Password reset broken logic</a>. The first tests a more basic missing boundary than our audience case; the second changes the credential format and workflow. Record hints or solution use as assistance.</p>
+<p>If stuck, compare the claims of <code>valid</code> and <code>reset</code>. Next locate the list of validators, not the invoice controller. For the recovery review, underline which value determines the account being changed. Try the work before opening the <a href="../practice/05-token-review.html">review notes</a>.</p>
+<p>Completion means your evidence distinguishes an acceptable API credential from a recovery credential, preserves legitimate reads, and explains which recovery guarantees you have specified but not implemented.</p>
+<p>Source note: inspected on 13 September 2026. Claim meanings and signed-token representation follow <a href="https://www.rfc-editor.org/rfc/rfc7519.html">RFC 7519, sections 3–4</a>. Issuer/subject binding and separation of token kinds follow <a href="https://www.rfc-editor.org/rfc/rfc8725.html">RFC 8725, sections 3.8–3.12</a>. Framework behaviour was checked against Spring Security 7.1.1 and executed on Spring Boot 4.1.1, Java 21.0.12 and Maven 3.9.16. The tokens, issuer, service, attack scenario and recovery fragment are original synthetic examples. The Academy assignments were inspected, not completed on the reader&#39;s behalf.</p>
+</article><nav class="pager" aria-label="Adjacent essays"><a href="04-wrong-invoice.html">← Essay 4</a><a href="../index.html">Back to the book →</a></nav></main><footer><span>Book 21 · Learn, practise, verify.</span><a href="https://github.com/AnthonyKot/book21">Source on GitHub</a></footer></body></html>
