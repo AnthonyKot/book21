@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The browser brings authority to the request · Book 21</title><meta name="description" content="Trace a forged form and an injected script through one browser session, and repair each at its actual boundary.">
+<meta property="og:title" content="The browser brings authority to the request"><meta property="og:description" content="Trace a forged form and an injected script through one browser session, and repair each at its actual boundary.">
+<meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
+<link rel="stylesheet" href="../assets/style.css"></head>
+<body><a class="skip" href="#main">Skip to content</a><header class="site-header"><a href="../index.html">Security Is an Engineering Job</a><nav aria-label="Book"><a href="../index.html#essays">Essays</a><a href="../about.html">About</a></nav></header>
+<main id="main"><p class="kicker">Essay 6 · Find and repair application failures</p><article><h1>The browser brings authority to the request</h1>
+<p>Alice signs in to Cedar&#39;s document service and opens an invoice. In another tab, she visits an untrusted page. That page submits a form to the document service. The service receives Alice&#39;s session cookie, finds that she may approve C-1001, and records the approval.</p>
+<p>Nobody stole her password. The tenant check worked. Alice never chose to approve the invoice.</p>
+<p>This constructed case changes the question from the previous two essays. We already asked whether the credential belongs at this API and whether its holder may access this resource. A browser session adds another question: what caused this authenticated request to happen?</p>
+<p>The <a href="https://github.com/AnthonyKot/book21/tree/main/labs/06-browser-authority">local lab</a> follows that question through a forged form and an injected script. Both produce the same unauthorized intention using Alice&#39;s legitimate authority. They cross different boundaries, so they require different repairs.</p>
+<h2>The cookie travels without the password</h2>
+<p>The Spring application uses form login and a server-side session. Alice signs in with synthetic credentials, <code>alice</code> / <code>local-only</code>. The browser stores a <code>JSESSIONID</code> cookie and sends it on subsequent matching requests. The application resolves that identifier to its session; the request does not need to contain the password again.</p>
+<p>Our application runs at <code>http://127.0.0.1:8083</code>. A second local server, representing the untrusted page, runs at <code>http://127.0.0.1:8084</code>. These are different <strong>origins</strong> because their ports differ. They are nevertheless <strong>same-site</strong>: changing this port does not change the scheme and site used for the SameSite decision. Origin and site answer different questions. <a href="https://developer.mozilla.org/en-US/docs/Web/Security/Defenses/Same-origin_policy#definition_of_an_origin">Origin definition</a>, <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Set-Cookie#samesitesamesite-value">SameSite cookie behavior</a></p>
+<p>For a domain name, the site normally uses the scheme and registrable domain. An IP address has no registrable domain, so the site uses its scheme and exact host instead: here, <code>http</code> and <code>127.0.0.1</code>. <a href="https://html.spec.whatwg.org/multipage/browsers.html#site">HTML site algorithm</a></p>
+<p>The lab explicitly sets the session cookie to <code>HttpOnly</code> and <code>SameSite=Strict</code>. Chromium still sends it during our same-site forged submission. Strict constrains cross-site sending; it does not mean “only requests initiated by this origin.” Cookies also have no port isolation. The fixture on 8084 neither logs nor uses cookie values, but it is not a model of a separately cookie-isolated attacker host.</p>
+<p>That limitation matters. This experiment isolates a cross-origin write, not the full deployment behavior of hostile sibling domains. A production sibling-host case also depends on domain scoping and the surrounding topology. Do not turn these two loopback ports into a claim that every unrelated website receives a Strict cookie.</p>
+<p>The relevant request is ordinary form data:</p>
+<pre><code class="language-http">POST /api/approve HTTP/1.1
+Host: 127.0.0.1:8083
+Origin: http://127.0.0.1:8084
+Sec-Fetch-Site: same-site
+Cookie: JSESSIONID=&lt;Alice&#39;s synthetic session&gt;
+Content-Type: application/x-www-form-urlencoded
+
+invoice=C-1001
+</code></pre>
+<p>The server can recognize Alice and authorize the invoice while still missing the forged initiation. That is the failure called cross-site request forgery, or CSRF. The historical name does not restrict the mechanism to requests that modern cookie rules classify as cross-site.</p>
+<h2>Watch the write before interpreting the console</h2>
+<p>From the lab directory, use Java 21, Maven and Node.js. The README contains full setup, including the pinned browser dependency. First run:</p>
+<pre><code class="language-sh">mvn test
+mvn -q package -DskipTests
+npm ci
+npx playwright install chromium --only-shell
+npm run test:browser
+</code></pre>
+<p>The browser runner starts and stops its own application and untrusted-page servers. Leave ports 8083 and 8084 free. For manual exploration, start the deliberately vulnerable configuration:</p>
+<pre><code class="language-sh">java -jar target/browser-authority-1.0.jar \
+  --lab.csrf=false --lab.safe-render=false
+</code></pre>
+<p>In another terminal run <code>node attacker.mjs</code>. Sign in at port 8083, then visit port 8084 in the same browser and press <strong>Submit forged approval</strong>. The form navigates to a response with <code>&quot;approved&quot;:true</code>. Its button represents the attacker causing submission; no interaction with the trusted approval form is required. An attacker-controlled page could submit automatically.</p>
+<p>Now inspect the automated simple-fetch case. It sends the same form body from port 8084 using <code>credentials: &#39;include&#39;</code>. In vulnerable mode the browser refuses to expose the response to that page&#39;s JavaScript, yet the subsequent state check finds the invoice approved. A console CORS error and a successful server-side effect coexist.</p>
+<p>CORS controls when browser code can access a cross-origin response. Some requests additionally require a successful preflight before the actual request is sent. Our form-shaped POST does not need that preflight. Our separate fetch using JSON and a custom header does: without permission, Chromium sends no approval POST. This is why “CORS stops requests” is too imprecise to guide a repair. Ask which request shape was sent and whether the state changed. <a href="https://fetch.spec.whatwg.org/#http-cors-protocol">Fetch CORS protocol</a></p>
+<p>This application grants no cross-origin response access. If a product needs such access, authorize specific trusted origins and credential use deliberately. Reflecting arbitrary origins while permitting credentials can expose authenticated responses, including material intended to protect actions. CORS is also a browser restriction, not an authorization check against arbitrary HTTP clients. <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS#requests_with_credentials">CORS and credentials</a></p>
+<h2>Give the form evidence the foreign page cannot supply</h2>
+<p>Restart with CSRF protection enabled and rendering still unsafe:</p>
+<pre><code class="language-sh">java -jar target/browser-authority-1.0.jar \
+  --lab.csrf=true --lab.safe-render=false
+</code></pre>
+<p>Sign in again; restart discards the in-memory session. The forged form now receives <code>403</code>, and the invoice remains unapproved. Alice&#39;s own approval button still succeeds.</p>
+<p>The vulnerable configuration explicitly disabled Spring Security&#39;s CSRF filter. The repair keeps its default protection:</p>
+<pre><code class="language-java">if (csrf) http.csrf(Customizer.withDefaults());
+else http.csrf(c -&gt; c.disable());
+</code></pre>
+<p>The <code>else</code> branch exists only to reproduce the flaw. A real repair would remove that escape hatch. Spring Security 7.1.1 stores the expected token in the session by default and validates protected unsafe requests. Our page receives a <code>CsrfToken</code> and places its value in a hidden <code>_csrf</code> input. The legitimate form submits that additional evidence; the foreign form supplies neither a valid token nor a way to read one. Missing and invalid tokens are both rejected. <a href="https://docs.spring.io/spring-security/reference/servlet/exploits/csrf.html">Spring CSRF handling</a></p>
+<p>The session cookie and CSRF token have different jobs. The cookie identifies the session and travels automatically when applicable. The token is supplied through the application&#39;s page and returned explicitly with the action. It is not proof of a human decision, and it does not replace the invoice permission check. The lab continues to return <code>404</code> for B-2001 even when the request has a valid CSRF token.</p>
+<p>Keep state changes off safe methods too. The lab rejects <code>GET /api/approve</code> with <code>405</code> and leaves the state unchanged. Moving approval into a GET handler to make a failing form “work” would change the security property beneath the filter.</p>
+<h2>The second page is already inside</h2>
+<p>With CSRF protection enabled, open the invoice page with an attacker-controlled <code>note</code> parameter. The vulnerable renderer does this:</p>
+<pre><code class="language-js">const note = new URLSearchParams(location.search).get(&#39;note&#39;) || &#39;&#39;;
+document.getElementById(&#39;note&#39;).innerHTML = note;
+</code></pre>
+<p>The application intends to display a note. <code>innerHTML</code> instead asks the browser to interpret that string as HTML. The runnable test supplies an image element with an error handler. When its image fails to load, the handler fetches <code>/csrf</code>, reads the token, and posts the approval with that token attached.</p>
+<p>All those operations run in the document application&#39;s origin. The script does not need to read <code>JSESSIONID</code>; the browser attaches it to the same-origin fetches. In the executed CSRF-only mode, the cookie is HttpOnly, the forged foreign form is denied, and the injected script still approves C-1001.</p>
+<p>This is DOM-based cross-site scripting, or XSS: untrusted URL data reaches an HTML-parsing sink in page JavaScript. Blocking the foreign form did not remove that sink. The script now has access to the page&#39;s own ability to read the token and initiate actions.</p>
+<p>A popup would establish that some JavaScript executed. This test establishes a more specific consequence: the injected code reaches the protected business action. It does not steal data, contact an external receiver or establish what a different application would expose.</p>
+<p>For a plain-text note, the repair is:</p>
+<pre><code class="language-js">document.getElementById(&#39;note&#39;).textContent = note;
+</code></pre>
+<p>The final mode, <code>--lab.csrf=true --lab.safe-render=true</code>, displays the payload literally. No injected image exists, the approval state stays false, and Alice&#39;s own form still works. Text containing angle brackets and ampersands remains readable. We changed the interpretation at the rendering boundary instead of trying to enumerate malicious strings. <a href="https://developer.mozilla.org/en-US/docs/Web/API/Node/textContent">DOM text insertion</a></p>
+<p>That repair has a context. <code>textContent</code> fits text inside an ordinary display element. It is not a URL policy, a SQL binding mechanism or permission to put untrusted strings inside executable script. If the product requires rich HTML, use an appropriate maintained sanitizer and a deliberately limited markup policy; escaping everything would change the feature. A carefully deployed Content Security Policy can add protection, but this lab intentionally has no CSP so the sink repair is tested directly. <a href="https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html">OWASP XSS prevention guidance</a></p>
+<h2>Three boundaries, three observations</h2>
+<p>The same browser ran six scenarios in each configuration:</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Table; scroll horizontally on small screens"><table>
+<thead>
+<tr>
+<th>Observation</th>
+<th>Both flaws present</th>
+<th>CSRF repaired only</th>
+<th>Both guided repairs</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Foreign form</td>
+<td>200; approved</td>
+<td>403; unchanged</td>
+<td>403; unchanged</td>
+</tr>
+<tr>
+<td>Form-shaped fetch from foreign origin</td>
+<td>Response blocked; approved</td>
+<td>Response blocked; unchanged</td>
+<td>Response blocked; unchanged</td>
+</tr>
+<tr>
+<td>JSON/custom-header fetch</td>
+<td>Preflight prevents POST</td>
+<td>Preflight prevents POST</td>
+<td>Preflight prevents POST</td>
+</tr>
+<tr>
+<td>Note containing executable markup</td>
+<td>Script approves</td>
+<td>Script approves</td>
+<td>Literal text; unchanged</td>
+</tr>
+<tr>
+<td>Ordinary note</td>
+<td>HTML interpreted</td>
+<td>HTML interpreted</td>
+<td>Text preserved</td>
+</tr>
+<tr>
+<td>Alice&#39;s own approval form</td>
+<td>Succeeds</td>
+<td>Succeeds</td>
+<td>Succeeds</td>
+</tr>
+</tbody></table>
+</div><p>The Java suites separately exercise twelve HTTP cases. Running the six repair assertions with CSRF disabled produces exactly two failures: missing and invalid tokens are accepted. Running the six final browser assertions against both vulnerable switches produces four failures. These negative controls establish that the tests distinguish the repaired behavior from the flaws.</p>
+<p>This is a synthetic, session-local invoice flag, not a production approval workflow. There is one account, no database, no concurrency model and no claim of browser-wide coverage. The executed browser is pinned Chromium; Safari and Firefox were not tested. Loopback HTTP also does not verify production TLS or Secure-cookie deployment. The intentionally unfinished summary page remains a separate practice boundary even in the guided repaired mode.</p>
+<p>The professional skill is tracing authority to its enforcement point. Server-side permission decides which invoice Alice may approve. CSRF protection constrains how a session-authenticated action may be initiated. Safe rendering prevents note data from acquiring the page&#39;s scripting authority. Each can work while another boundary fails.</p>
+<hr>
+
+<h2>Practice: keep the formatting, remove the interpretation</h2>
+<p>The lab&#39;s <code>/summary?title=...</code> page builds a bold title by concatenating input inside <code>&lt;strong&gt;</code> markup. Repair it while preserving one real <code>strong</code> element and the exact supplied title as text. Keep both guided repairs enabled. Add browser evidence for executable input and for ordinary punctuation, then run the existing suite to check the approval path still works.</p>
+<p>Use the <a href="../practice/06-browser-worksheet.html">worksheet</a> before the <a href="../practice/06-browser-review.html">review guide</a>. The authoring reference was built and executed privately; the public project deliberately leaves this task unsolved.</p>
+<p>Budget 10–12 hours: two for reading and prediction, four for reproduction and repair, two for evidence and explanation, and two to four for independent transfer. Stay within the established 10–15-hour week; carry an unfinished task forward instead of adding study debt. Attempt <strong>CSRF vulnerability with no defenses</strong> and <strong>DOM XSS in document.write sink using source location.search</strong> in PortSwigger Academy, linked in the worksheet. Record any hints or AI assistance.</p>
+<p>For employment, explain the defect and repair as a focused code-review conversation. For consulting, describe the exact pages, browser and actions assessed, the retest evidence and the untested scope. Both routes need a claim another engineer can verify. Neither route gains evidence of mastery merely because the supplied tests pass.</p>
+</article><nav class="pager" aria-label="Adjacent essays"><a href="05-token-boundary.html">← Essay 5</a><a href="../index.html">Back to the book →</a></nav></main><footer><span>Book 21 · Learn, practise, verify.</span><a href="https://github.com/AnthonyKot/book21">Source on GitHub</a></footer></body></html>

@@ -1,0 +1,1 @@
+{"name":"book21-browser-authority-lab","private":true,"type":"module","scripts":{"test:browser":"node browser-check.mjs"},"devDependencies":{"playwright":"1.61.1"}}

@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Browser authority worksheet · Book 21</title><meta name="description" content="Browser authority worksheet for essay 6.">
+<meta property="og:title" content="Browser authority worksheet"><meta property="og:description" content="Browser authority worksheet for essay 6.">
+<meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
+<link rel="stylesheet" href="../assets/style.css"></head>
+<body><a class="skip" href="#main">Skip to content</a><header class="site-header"><a href="../index.html">Security Is an Engineering Job</a><nav aria-label="Book"><a href="../index.html#essays">Essays</a><a href="../about.html">About</a></nav></header>
+<main id="main"><p class="kicker">Essay 6 · Practice</p><article><h1>Browser authority worksheet</h1>
+<p>Work only against the synthetic <a href="https://github.com/AnthonyKot/book21/tree/main/labs/06-browser-authority">essay 6 lab</a> and your assigned Academy instances. Start with the <a href="../essays/06-browser-authority.html">essay</a>. Reserve 10–12 hours within your 10–15-hour study week; carry work forward if setup takes longer. These are planning allowances, not measured learner completion times.</p>
+<p>Before executing, predict these separately for a form POST, a form-shaped credentialed fetch and a JSON/custom-header fetch from port 8084:</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Table; scroll horizontally on small screens"><table>
+<thead>
+<tr>
+<th>Question</th>
+<th>Prediction</th>
+<th>Observed evidence</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Does the browser send the approval POST?</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Does it attach the session cookie?</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Can the initiating page&#39;s script read the response?</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Does the invoice become approved?</td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+</div><p>Record the origins, whether the request is same-site, the cookie flags and the configuration. Explain why a CORS console error alone does not answer the last question. Do not put real cookie values into your report.</p>
+<p>Reproduce all three modes. For CSRF-only mode, explain how the injected script obtains a token without reading the HttpOnly cookie. Identify the exact source, sink and resulting authority. Retain the failing and passing test summaries and one request trace with session values redacted.</p>
+<h2>Changed task: a bold summary title</h2>
+<p>With both guided repairs enabled, inspect <code>/summary?title=...</code>. Its title comes from the URL and must appear as literal text inside exactly one <code>strong</code> element. Users need to write <code>&lt;</code>, <code>&gt;</code>, <code>&amp;</code> and quotes without losing characters. They do not need to supply their own markup.</p>
+<ol>
+<li>Predict what the current renderer does with an image error handler embedded in the title.</li>
+<li>Run <code>npm run test:browser -- --practice</code> and explain the failure. A changed title is the input; the ordinary approval remains the protected effect.</li>
+<li>Repair the rendering boundary. Keep CSRF protection, the trusted page&#39;s form and the resource check.</li>
+<li>Rebuild the JAR; rerun the practice checks and all existing tests. Add a test with a different markup shape or an assertion ruling out extra child elements. Verify that your new test fails against the old renderer.</li>
+<li>Explain what the fix does not establish about rich HTML, URLs, another page or another browser engine.</li>
+</ol>
+<p>Keep a short evidence record: date, versions, time spent, reproduction, patch, allowed/denied outcomes, help used and remaining uncertainty. AI-written code and supplied checks are assisted evidence. Neither reading this worksheet nor passing its tests establishes independent mastery.</p>
+<details><summary>Hint 1 — find the interpretation</summary>
+
+<p>Trace <code>title</code> from <code>location.search</code> into the DOM assignment. Determine which operation treats the combined string as markup.</p>
+</details>
+<details><summary>Hint 2 — preserve structure separately</summary>
+
+<p>Create the required formatting element as structure. Insert the untrusted title through a text-only operation. Avoid concatenating it into the HTML string.</p>
+</details>
+<details><summary>Hint 3 — inspect the resulting DOM</summary>
+
+<p>Check the title element&#39;s exact text, its children and the server-side approval flag. Absence of an alert is weak evidence. The negative control should fail because a security property is violated, not because the server failed to start.</p>
+</details>
+
+<h2>Independent transfer</h2>
+<p>Attempt these without a solution tab first:</p>
+<ul>
+<li><a href="https://portswigger.net/web-security/csrf/lab-no-defenses">CSRF vulnerability with no defenses</a>: describe the source of the victim&#39;s request authority and the evidence needed by a repaired action.</li>
+<li><a href="https://portswigger.net/web-security/cross-site-scripting/dom-based/lab-document-write-sink">DOM XSS in document.write sink using source location.search</a>: find the changed sink; explain why the local <code>textContent</code> repair cannot simply be assumed to exist there.</li>
+</ul>
+<p>Use the authorized Academy lab environment only. Lab pages were checked while authoring; completion by the reader has not been reported. If you use hints, walkthroughs or AI, label that attempt assisted and retry a changed case later.</p>
+<p>Write a five-sentence handover. For employment, address the engineer reviewing your patch. For consulting, address the owner of a narrowly scoped assessment and include the retest and exclusions. Do not present a local fixture as a comprehensive product assessment.</p>
+<p>Then compare with the <a href="06-browser-review.html">review guide</a>.</p>
+</article><div class="practice-actions"><button onclick="window.print()">Print this page</button><a href="../essays/06-browser-authority.html">Return to essay 6</a><a href="06-browser-review.html">Review after your attempt →</a></div></main><footer><span>Book 21 · Learn, practise, verify.</span><a href="https://github.com/AnthonyKot/book21">Source on GitHub</a></footer></body></html>
