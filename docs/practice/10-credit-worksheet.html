@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Credit invariant worksheet · Book 21</title><meta name="description" content="Credit invariant worksheet for essay 10.">
+<meta property="og:title" content="Credit invariant worksheet"><meta property="og:description" content="Credit invariant worksheet for essay 10.">
+<meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
+<link rel="stylesheet" href="../assets/style.css"></head>
+<body><a class="skip" href="#main">Skip to content</a><header class="site-header"><a href="../index.html">Security Is an Engineering Job</a><nav aria-label="Book"><a href="../index.html#essays">Essays</a><a href="../about.html">About</a></nav></header>
+<main id="main"><p class="kicker">Essay 10 · Practice</p><article><h1>Credit invariant worksheet</h1>
+<p>Use after <a href="../essays/10-valid-requests.html">essay 10</a>. Keep the <a href="10-credit-review.html">review guide</a> closed for your first attempt.</p>
+<ul>
+<li>Date, repository revision and Java/database versions:</li>
+<li>Available time this week (10–15 hours total):</li>
+<li>Assistance used:</li>
+</ul>
+<h2>Predict before running</h2>
+<p>For one 1000-cent credit, fill the final state and response predictions.</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Table; scroll horizontally on small screens"><table>
+<thead>
+<tr>
+<th>Schedule</th>
+<th>Vulnerable claim</th>
+<th>Conditional claim</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>A finishes before B starts</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Both read unused; A commits first</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Both read unused; B commits first</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Both read unused; both gates released</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Two distinct credits</td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+</div><p>Why can both transactions be atomic while the one-use rule fails? Which observation becomes stale? Why does one final applied flag fail to reveal the duplicate effect?</p>
+<h2>Retain the guided evidence</h2>
+<p>Follow the <a href="https://github.com/AnthonyKot/book21/blob/main/labs/10-valid-requests/README.html">lab README</a>. Run the two ordered curl demonstrations in each mode. Save statuses and final balance/applied count. Do not reset while requests are in flight.</p>
+<p>Run the negative control. Record which tests fail and distinguish assertion failures from setup errors. Explain why nine tests still pass after the repair is removed.</p>
+<h2>Change the execution path</h2>
+<p>The worker uses the conditional claim but lacks the service transaction. Run <code>python3 demo.py --worker</code> and then:</p>
+<pre><code class="language-sh">mvn -Dtest=WorkerExercise test
+</code></pre>
+<p>Repair <code>CreditWorker.apply</code> while preserving conditional claiming. Required behavior:</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Table; scroll horizontally on small screens"><table>
+<thead>
+<tr>
+<th>Case</th>
+<th>Required state/effect</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Ordinary credit</td>
+<td>Balance 1000; one applied credit</td>
+</tr>
+<tr>
+<td>Sequential duplicate</td>
+<td>Conflict; no second increment</td>
+</tr>
+<tr>
+<td>Two workers observe unused</td>
+<td>One success, one conflict; balance 1000</td>
+</tr>
+<tr>
+<td>Failure immediately after claim</td>
+<td>Balance 0; credit still unused</td>
+</tr>
+<tr>
+<td>Failure after balance update</td>
+<td>Both writes rolled back</td>
+</tr>
+<tr>
+<td>Retry after rolled-back failure</td>
+<td>Succeeds once; balance 1000</td>
+</tr>
+</tbody></table>
+</div><p>The tests use the Spring-managed worker; do not wrap the tests themselves in a transaction that hides a missing production boundary. Do not swallow exceptions or return success without applying a credit. After repair:</p>
+<pre><code class="language-sh">mvn &#39;-Dtest=*Test,WorkerExercise&#39; test
+</code></pre>
+<p>Default Maven naming excludes this exercise; the combined command runs 30 cases. Remove your transaction boundary temporarily in a separate copy and verify that the relevant failure tests expose partial commits again.</p>
+<h2>Independent transfer</h2>
+<p>Attempt only the authorized hosted environments:</p>
+<ul>
+<li><a href="https://portswigger.net/web-security/race-conditions/lab-race-conditions-limit-overrun">Limit overrun race conditions</a>. Identify the checked limit, the vulnerable interval and the business effect. Contrast exploratory timing with our deterministic regression seam.</li>
+<li><a href="https://portswigger.net/web-security/race-conditions/lab-race-conditions-multi-endpoint">Multi-endpoint race conditions</a>. Explain why inspecting one endpoint in isolation misses the interleaving. Draw only the observed steps; avoid inventing hidden implementation details.</li>
+</ul>
+<p>Record hints and assistance. If a lab is unavailable, leave its result pending; a local changed task may support practice but is not hosted completion.</p>
+<h2>Handover</h2>
+<p>Write a short engineering review separating conditional claiming, rollback and response-replay semantics. For consulting, add scope, database version, schedules tested, failure points and exclusions. Label the case synthetic. Retain your patch and traces.</p>
+<p>Record elapsed time, remaining gap and a delayed check: next week, explain why <code>@Transactional</code> alone did not repair the first implementation, and why the conditional statement alone did not repair the worker. A supplied passing solution does not establish independent mastery.</p>
+</article><div class="practice-actions"><button onclick="window.print()">Print this page</button><a href="../essays/10-valid-requests.html">Return to essay 10</a><a href="10-credit-review.html">Review after your attempt →</a></div></main><footer><span>Book 21 · Learn, practise, verify.</span><a href="https://github.com/AnthonyKot/book21">Source on GitHub</a></footer></body></html>

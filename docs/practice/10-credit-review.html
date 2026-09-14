@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Credit invariant review · Book 21</title><meta name="description" content="Credit invariant review for essay 10.">
+<meta property="og:title" content="Credit invariant review"><meta property="og:description" content="Credit invariant review for essay 10.">
+<meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
+<link rel="stylesheet" href="../assets/style.css"></head>
+<body><a class="skip" href="#main">Skip to content</a><header class="site-header"><a href="../index.html">Security Is an Engineering Job</a><nav aria-label="Book"><a href="../index.html#essays">Essays</a><a href="../about.html">About</a></nav></header>
+<main id="main"><p class="kicker">Essay 10 · Practice</p><article><h1>Credit invariant review</h1>
+<p>Compare after attempting the <a href="10-credit-worksheet.html">worksheet</a>.</p>
+<h2>Hint 1: separate the two obligations</h2>
+<p>The conditional write prevents a second successful claimant. The transaction keeps the claim and balance effect together. Both are needed for this operation. A failure after an autocommitted claim can consume a credit even though the balance never changed.</p>
+<h2>Hint 2: inspect the invoked boundary</h2>
+<p>Compare <code>CreditService.apply</code> and <code>CreditWorker.apply</code>. Both call <code>CreditOperation</code>, but only one establishes a transaction in the starter. The repair should cover the whole operation. If you use Spring’s annotation, ensure the actual call passes through a managed transactional proxy; constructing a worker yourself or relying on self-invocation changes that behavior. <a href="https://docs.spring.io/spring-framework/reference/data-access/transaction/declarative/annotations.html">Spring transaction invocation rules</a></p>
+<h2>Hint 3: test failure through the real bean</h2>
+<p>The injected unchecked exception must escape the transaction boundary. After either failure point, read committed state from outside that call and expect no claim and no balance increase. Then retry. Preserve the conditional predicate and the conflict behavior under overlap. Do not add a transaction to the test as a substitute for fixing the worker.</p>
+<h2>Evidence to expect</h2>
+<p>The starter passes ordinary application, duplicate rejection and overlapping-worker claiming. It fails rollback after the claim, rollback after the balance and retry after failure: three failures, three passes. The private reference passes all 30 combined tests. Restoring the missing-transaction version provides the counterexample again.</p>
+<p>For the guided negative control, only the three overlap tests fail. The transaction still rolls back synthetic failures, and sequential replay sees the committed flag. Those passing tests are useful evidence about different properties; they are not evidence that the overlap is safe.</p>
+<p>The application uses a single local H2 database with pooled connections. No distributed queue, external payment, response-replay protocol, crash recovery or general schedule coverage is established. A final state endpoint made of two queries is not an atomic snapshot during active writes. Interpret the lab’s state only after all tested requests complete.</p>
+</article><div class="practice-actions"><button onclick="window.print()">Print this page</button><a href="../essays/10-valid-requests.html">Return to essay 10</a><a href="10-credit-worksheet.html">Back to worksheet</a></div></main><footer><span>Book 21 · Learn, practise, verify.</span><a href="https://github.com/AnthonyKot/book21">Source on GitHub</a></footer></body></html>

@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Two valid requests can violate one business rule · Book 21</title><meta name="description" content="Reproduce a one-use credit race with controlled request ordering, repair the database claim, and preserve rollback in a later worker.">
+<meta property="og:title" content="Two valid requests can violate one business rule"><meta property="og:description" content="Reproduce a one-use credit race with controlled request ordering, repair the database claim, and preserve rollback in a later worker.">
+<meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
+<link rel="stylesheet" href="../assets/style.css"></head>
+<body><a class="skip" href="#main">Skip to content</a><header class="site-header"><a href="../index.html">Security Is an Engineering Job</a><nav aria-label="Book"><a href="../index.html#essays">Essays</a><a href="../about.html">About</a></nav></header>
+<main id="main"><p class="kicker">Essay 10 · Find and repair application failures</p><article><h1>Two valid requests can violate one business rule</h1>
+<p>Request A belongs to Alice. It names her tenant’s unused credit. The service checks the credit, marks it applied and adds 1,000 cents to the tenant balance.</p>
+<p>Request B belongs to Alice too. It names the same credit and passes the same checks. After both requests finish, the credit is marked applied once, but the balance has increased by 2,000 cents.</p>
+<p>There is no forged identity, foreign object or injected expression in this constructed case. The problem is the interval between a correct observation and the write that relies on it. A fact that was true when each request checked it is not permission for both requests to perform the effect.</p>
+<h2>Write the rule about the result</h2>
+<p>The fictional document service now applies a one-use credit to a tenant account. Credit <code>C-1001</code> belongs to Cedar and is worth 1,000 cents. Its rule is:</p>
+<blockquote>
+<p>A committed application of this credit may increase Cedar’s balance by 1,000 cents at most once. If the application fails before committing, neither the claim nor its balance effect should remain.</p>
+</blockquote>
+<p>These are two related obligations. One prevents duplicate application. The other prevents partial application. Treating both as “use a transaction” hides the distinction we need to test.</p>
+<p>The <a href="https://github.com/AnthonyKot/book21/tree/main/labs/10-valid-requests">local lab</a> stores an <code>applied</code> flag in a credit row and a balance in an account row. All amounts are integer cents. Alice is the only synthetic account, and Cedar is selected server-side. A second Cedar credit tests that legitimate independent applications remain possible; a Birch credit tests rejection of a foreign identifier. This remains a small fixture, not a general authorization system or a payment service.</p>
+<p>The initial implementation looks reasonable when read as one request:</p>
+<pre><code class="language-text">BEGIN
+read credit where id = supplied id and tenant = Cedar
+reject if missing or already applied
+mark credit applied
+increment Cedar balance by the credit amount
+COMMIT
+</code></pre>
+<p>It uses bound SQL parameters. It checks the tenant. It even wraps the operation in a Spring transaction at <code>READ_COMMITTED</code>. All of that is retained in the vulnerable version.</p>
+<h2>Keep both requests alive</h2>
+<p>A sequential test passes. Apply C-1001 once and receive <code>200</code>; apply it again after the first call finishes and receive <code>409</code>. The second call sees the committed <code>applied=true</code> flag and stops.</p>
+<p>An overlapping schedule asks a different question:</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Table; scroll horizontally on small screens"><table>
+<thead>
+<tr>
+<th>Step</th>
+<th>Request A</th>
+<th>Request B</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>Reads <code>applied=false</code></td>
+<td></td>
+</tr>
+<tr>
+<td>2</td>
+<td>Pauses before writing</td>
+<td>Reads <code>applied=false</code></td>
+</tr>
+<tr>
+<td>3</td>
+<td>Marks applied, adds 1,000, commits</td>
+<td>Still holds its earlier observation</td>
+</tr>
+<tr>
+<td>4</td>
+<td></td>
+<td>Marks applied, adds 1,000, commits</td>
+</tr>
+</tbody></table>
+</div><p>The second unconditional update is allowed to set an already-true flag to true again. Its balance update still runs. Looking only at the final flag would miss the duplicate effect; inspecting the final balance exposes it.</p>
+<p>That is a race condition in the business operation. PortSwigger calls this family a limit-overrun race: multiple requests pass a limit check before the relevant state change prevents further use. The exact schedule here is our own controlled experiment. <a href="https://portswigger.net/web-security/race-conditions">Race-condition mechanism</a></p>
+<p>The lab uses H2 2.4.240. Under its read-committed behavior, connections see committed data and their own changes; an ordinary read does not reserve the observed business condition for that request’s later write. This experiment does not read uncommitted data. Both requests see the genuinely unused credit before either changes it. <a href="https://h2database.com/html/advanced.html#transaction_isolation">H2 transaction isolation and MVCC</a></p>
+<p>A transaction gives the operation a commit/rollback boundary. It does not, at this isolation level and with these statements, make the earlier <code>SELECT</code> an exclusive right to apply the credit. The observed duplicate is compatible with both transactions committing all their own writes.</p>
+<h2>Stop measuring luck</h2>
+<p>A useful regression should not depend on whether two requests happen to arrive within a few milliseconds. The fixture provides a pause immediately after the initial read. Request A and request B each signal arrival, then wait on separate latches. Once both have arrived, the driver releases the selected first request, waits for its HTTP response, and releases the second.</p>
+<p>This does not manufacture a new database operation. It holds two real HTTP requests at a point their ordinary execution already passes through. The pause expands the vulnerable interval and makes the tested order explicit. It is demonstration instrumentation, not an estimate of exploit success in a deployed service. Java’s <code>CountDownLatch</code> supplies the wait/release mechanism. <a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/concurrent/CountDownLatch.html">Latch contract</a></p>
+<p>From the lab directory, with Java 21, Maven, Python 3 and curl available:</p>
+<pre><code class="language-sh">mvn test
+mvn -q package -DskipTests
+java -jar target/valid-requests-1.0.jar \
+  --lab.conditional=false --lab.gates=true
+</code></pre>
+<p>In another terminal:</p>
+<pre><code class="language-sh">python3 demo.py --first A
+python3 demo.py --first B
+</code></pre>
+<p>The <a href="https://github.com/AnthonyKot/book21/blob/main/labs/10-valid-requests/README.html">README</a> explains the fixture headers and ordinary curl request. The script executes curl against loopback port 8091, using <code>alice</code> / <code>local-only</code>, a session cookie and a CSRF token. It resets the synthetic database before each schedule. Run demonstrations sequentially; resetting while requests are active invalidates the experiment.</p>
+<p>Both schedules produce statuses <code>[200,200]</code>, <code>balanceCents:2000</code> and <code>appliedCredits:1</code>. Neither request needs an invalid parameter. Reverse the order and the same rule fails.</p>
+<p>The instrumentation defaults to off. Enable it only for the lab; ordinary calls omit lane and fault headers. A missing CSRF token is still rejected, and a foreign or unknown credit still receives <code>404</code>. The race exists despite those independent controls.</p>
+<h2>Put the condition in the write</h2>
+<p>The repaired operation changes the claim statement:</p>
+<pre><code class="language-sql">UPDATE credit
+SET applied = TRUE
+WHERE id = ? AND tenant = ? AND applied = FALSE
+</code></pre>
+<p>It then checks the update count:</p>
+<pre><code class="language-java">int changed = jdbc.update(sql, id, &quot;cedar&quot;);
+if (changed != 1) {
+    throw new ResponseStatusException(CONFLICT);
+}
+</code></pre>
+<p><code>JdbcTemplate.update</code> reports the number of affected rows. Here, the credit ID is a primary key, so a successful claim affects exactly one row. A request whose condition no longer matches must not continue to the balance increment. <a href="https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/jdbc/core/JdbcTemplate.html">JdbcTemplate update contract</a></p>
+<p>The initial read is still present to obtain the fixed amount and reject obvious invalid requests. It is no longer the final authority to apply the credit. That decision is made by the conditional write against the database’s current row state. There is no API changing the fixture’s amount concurrently; a product allowing that would need to define how amount changes participate in the operation.</p>
+<p>Stop and restart with <code>--lab.conditional=true --lab.gates=true</code>, then run both schedules again. Now the first committed claimant receives <code>200</code>; the other receives <code>409</code>. The final balance is 1,000 and only one credit is applied. The guided tests also release both waiters without choosing a winner and require one success and one conflict.</p>
+<p>A second distinct credit still works. Applying C-1001 and C-1002 produces a 2,000-cent balance and two applied credits. The rule limits each credit, not the account’s total activity.</p>
+<p>A lock around Java code could serialize callers sharing that lock. It would not automatically coordinate another process or a different code path. This repair places the decision where the shared row is changed. Our test uses one application process and multiple database connections; it does not claim a tested multi-instance deployment. Other designs can use database locks or uniqueness constraints, but their exact transaction behavior also needs verification.</p>
+<h2>Keep the claim and effect together</h2>
+<p>The conditional update is only half the operation. After it succeeds, the service increments the balance:</p>
+<pre><code class="language-sql">UPDATE account
+SET balance_cents = balance_cents + ?
+WHERE tenant = ?
+</code></pre>
+<p>Both statements remain inside the service transaction. A synthetic exception after the claim must restore <code>applied=false</code> and balance zero. Another exception after the balance update must restore both values too. The guided tests execute both failure points, then retry and verify a successful single application.</p>
+<p>Spring’s ordinary declarative rollback policy rolls back for unchecked exceptions. The fixture uses an <code>IllegalStateException</code> and lets it escape the transactional method. Checked exceptions and caught exceptions require deliberate treatment; the presence of an annotation should not replace an executed failure test. <a href="https://docs.spring.io/spring-framework/reference/data-access/transaction/declarative/rolling-back.html">Spring rollback rules</a></p>
+<p>All twenty-four guided cases pass: twelve per implementation, including the reproduction tests that expect the vulnerability. Remove the conditional predicate under the repair assertions:</p>
+<pre><code class="language-sh">mvn -Dtest=CreditRepairTest -Dtest.conditional=false test
+</code></pre>
+<p>The three overlap tests fail, while nine others pass. Sequential replay, tenant checks and rollback still work. That negative control explains why the original test suite could look reassuring while missing the business-rule failure.</p>
+<h2>A successful response is another boundary</h2>
+<p>Suppose the database commits, but the caller loses the response. This service returns <code>409</code> when that caller retries the consumed credit. It preserves the one-use effect; it does not replay the original successful response. An idempotency-key protocol would need a defined scope, request matching and durable result handling. None is implemented or claimed here.</p>
+<p>The balance is a database write in the same transaction. An email, external payment or message sent elsewhere would not be reversed by rolling back these rows. Coordinating such effects needs a separate design and failure experiment. Do not infer “exactly once everywhere” from one conditional update.</p>
+<p>The evidence is also database-specific. These statements were run on the pinned H2 version at <code>READ_COMMITTED</code>. Porting to a different engine requires tests of its isolation, affected-row behavior, lock failures and retry policy. The lab does not enumerate every schedule, simulate a broken connection, measure throughput or verify a deadlock-recovery strategy. Its state endpoint uses separate queries, so the driver interprets state only after requests finish.</p>
+<hr>
+
+<h2>Practice: the worker claims a credit, then fails</h2>
+<p>A later worker reuses the conditional operation but loses the enclosing transaction. Run <code>python3 demo.py --worker</code> with gates enabled. After an injected failure immediately following the claim, the starter reports balance zero and one applied credit. Its retry receives <code>409</code>. No duplicate occurred, yet the business rule still failed: the credit was consumed without its promised effect.</p>
+<p>Repair <code>CreditWorker.apply</code> so the claim and balance change share a rollback boundary. Retain conditional claiming. Verify failures after each write, a retry after failure, ordinary application and overlapping workers. The HTTP adapter is synchronous; direct worker tests use the Spring-managed bean on separate threads, not a simulated queue.</p>
+<p>Use the <a href="../practice/10-credit-worksheet.html">worksheet</a> before the <a href="../practice/10-credit-review.html">review guide</a>. The starter fails three of six exercise tests; the private reference passes all thirty combined cases. Default <code>mvn test</code> excludes <code>WorkerExercise</code>. After repairing it, run <code>mvn &#39;-Dtest=*Test,WorkerExercise&#39; test</code>.</p>
+<p>Plan 10–12 hours within the established 10–15-hour week: two for reading and prediction, four for controlled reproduction and repair, two for evidence, and two to four for the named Academy transfer tasks. Carry unfinished work forward and record assistance. For employment, explain which invariant each test protects. For consulting, report the schedules, database and failure points actually assessed, together with the external effects left outside scope.</p>
+</article><nav class="pager" aria-label="Adjacent essays"><a href="09-file-consumer.html">← Essay 9</a><a href="../index.html">Back to the book →</a></nav></main><footer><span>Book 21 · Learn, practise, verify.</span><a href="https://github.com/AnthonyKot/book21">Source on GitHub</a></footer></body></html>
