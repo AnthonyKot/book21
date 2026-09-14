@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Query grammar worksheet · Book 21</title><meta name="description" content="Query grammar worksheet for essay 7.">
+<meta property="og:title" content="Query grammar worksheet"><meta property="og:description" content="Query grammar worksheet for essay 7.">
+<meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
+<link rel="stylesheet" href="../assets/style.css"></head>
+<body><a class="skip" href="#main">Skip to content</a><header class="site-header"><a href="../index.html">Security Is an Engineering Job</a><nav aria-label="Book"><a href="../index.html#essays">Essays</a><a href="../about.html">About</a></nav></header>
+<main id="main"><p class="kicker">Essay 7 · Practice</p><article><h1>Query grammar worksheet</h1>
+<p>Start with the <a href="../essays/07-query-grammar.html">essay</a> and <a href="https://github.com/AnthonyKot/book21/tree/main/labs/07-query-grammar">local lab</a>. Work only on synthetic fixtures or your assigned Academy instances. Reserve 10–12 hours inside the 10–15-hour week; these are planning allowances, not measured learner times.</p>
+<p>Before running the attack, write the complete SQL after the title is concatenated. Mark the opening and closing string quotes, the tenant parameter, the new Boolean operator and the comment. Explain whether the tenant check was removed or whether its effect was changed.</p>
+<p>Record the returned IDs and HTTP status for ordinary Office, O&#39;Brien and both attack titles, before and after binding. The actual SQL result matters more than seeing a database error. Preserve the failing negative-control summary as well as the passing suite. The test harness prints only synthetic paths and response bodies.</p>
+<p>Explain these distinctions in your own words:</p>
+<ul>
+<li>Which argument is bound in the vulnerable branch, and which becomes SQL text?</li>
+<li>Why does the fixed branch return an empty result for the attack rather than 400?</li>
+<li>Why is a bound ID insufficient in <code>/api/unscoped/B-2001</code>?</li>
+<li>Why does <code>%</code> alone return no records, and what would need reconsideration if search became <code>LIKE</code>?</li>
+</ul>
+<h2>Changed task: a bounded sort vocabulary</h2>
+<p><code>InvoiceRepository.sorted</code> currently puts caller-supplied text after <code>ORDER BY</code>. Implement this contract:</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Table; scroll horizontally on small screens"><table>
+<thead>
+<tr>
+<th>Request</th>
+<th>Expected result</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>No sort parameter, or <code>sort=</code></td>
+<td>C-1001, C-1002, C-1003</td>
+</tr>
+<tr>
+<td><code>sort=id</code></td>
+<td>C-1001, C-1002, C-1003</td>
+</tr>
+<tr>
+<td><code>sort=title</code></td>
+<td>C-1003, C-1002, C-1001</td>
+</tr>
+<tr>
+<td><code>sort=amount</code></td>
+<td>C-1002, C-1003, C-1001</td>
+</tr>
+<tr>
+<td>Unknown key</td>
+<td>400</td>
+</tr>
+<tr>
+<td><code>sort=amount DESC</code></td>
+<td>400</td>
+</tr>
+</tbody></table>
+</div><p>Spring&#39;s <code>@RequestParam(defaultValue=&quot;id&quot;)</code> applies to absent and empty values, so <code>sort=</code> uses the default rather than becoming a rejected key. <a href="https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/bind/annotation/RequestParam.html">Spring RequestParam contract</a></p>
+<p>All results must remain Cedar-only. Valid choices are ascending and use ID as the final tie-breaker. The supplied data has distinct titles and amounts, so the existing cases do not verify ties.</p>
+<p>First run <code>mvn -Dtest=SortRepairExercise test</code>. Expect four passes and two failures. The expression currently executes; the unknown column currently becomes a database error. They must instead be rejected as invalid input.</p>
+<p>Choose where invalid input becomes HTTP 400. You can validate at the web boundary with <code>ResponseStatusException(HttpStatus.BAD_REQUEST)</code>, or throw a specific invalid-sort exception from the repository and map it to 400 in the controller. A plain unchecked exception is not automatically a client-error response. Keep this translation explicit.</p>
+<p>Repair the code and run <code>mvn &#39;-Dtest=*Test,SortRepairExercise&#39; test</code>. Do not “repair” it by always sorting by ID, removing the tenant predicate, or treating the requested column name as a bound string value. The legitimate-order assertions should catch a change that stops honoring the feature.</p>
+<p>Add one independent regression: an unapproved expression with another shape, a whitespace/case policy check, or tied values requiring the ID tie-breaker. State its expected behavior first and show its meaningful failure on the original or deliberately regressed implementation. If adding rows, isolate that fixture so you do not silently change the other tests&#39; expectations.</p>
+<details><summary>Hint 1 — classify the input</summary>
+
+<p>A title is a comparison value. A sort key chooses query structure. Trace whether the caller&#39;s actual characters need to enter the SQL text at all.</p>
+</details>
+<details><summary>Hint 2 — separate the public key from SQL</summary>
+
+<p>Use a finite mapping or switch whose outputs are fixed column expressions written by the application. Reject the unmatched case before calling the database. Continue binding the tenant.</p>
+</details>
+<details><summary>Hint 3 — inspect both outcomes</summary>
+
+<p>Check 400 for unsupported choices and the exact ID order for valid choices. Empty or unordered results do not preserve the feature. A SQL error is not the intended validation response.</p>
+</details>
+
+<h2>Independent transfer</h2>
+<p>Attempt the following PortSwigger Academy labs without opening their solutions first:</p>
+<ul>
+<li><a href="https://portswigger.net/web-security/sql-injection/lab-retrieve-hidden-data">SQL injection vulnerability in WHERE clause allowing retrieval of hidden data</a>.</li>
+<li><a href="https://portswigger.net/web-security/sql-injection/lab-login-bypass">SQL injection vulnerability allowing login bypass</a>.</li>
+</ul>
+<p>Explain the condition whose meaning changed in each. Use only the assigned training instance. These assignments were inspected while authoring; no completion by the reader is claimed. Record hints, walkthroughs and AI use as assistance; retry a changed case later when necessary.</p>
+<p>Keep the evidence pack small: versions, original query, reproduction, patch, allowed/denied behavior, negative control, time spent and remaining scope. For employment, write a focused patch explanation. For consulting, add the assessed endpoint scope and retest limits. Do not call this a complete application assessment.</p>
+<p>Compare with the <a href="07-query-review.html">review guide</a> after your attempt.</p>
+</article><div class="practice-actions"><button onclick="window.print()">Print this page</button><a href="../essays/07-query-grammar.html">Return to essay 7</a><a href="07-query-review.html">Review after your attempt →</a></div></main><footer><span>Book 21 · Learn, practise, verify.</span><a href="https://github.com/AnthonyKot/book21">Source on GitHub</a></footer></body></html>

@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Input becomes dangerous when it changes the grammar · Book 21</title><meta name="description" content="Trace a title into a SQL predicate, repair its binding, and distinguish injection prevention from tenant authorization.">
+<meta property="og:title" content="Input becomes dangerous when it changes the grammar"><meta property="og:description" content="Trace a title into a SQL predicate, repair its binding, and distinguish injection prevention from tenant authorization.">
+<meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
+<link rel="stylesheet" href="../assets/style.css"></head>
+<body><a class="skip" href="#main">Skip to content</a><header class="site-header"><a href="../index.html">Security Is an Engineering Job</a><nav aria-label="Book"><a href="../index.html#essays">Essays</a><a href="../about.html">About</a></nav></header>
+<main id="main"><p class="kicker">Essay 7 · Find and repair application failures</p><article><h1>Input becomes dangerous when it changes the grammar</h1>
+<p>The query already has a tenant condition. The tenant comes from the authenticated account, not a request parameter. The repository even uses a JDBC operation that creates a prepared statement.</p>
+<p>Alice can still make it return Birch&#39;s invoice.</p>
+<p>The mistake is in the other condition: the application builds the title comparison by joining SQL text and a search string. A title is supposed to narrow the result. One particular title instead adds an alternative way for every row to qualify.</p>
+<p>This constructed case follows Cedar&#39;s invoice service into a database. Essay 4 established which rows Alice should be allowed to read. Essay 6 followed text becoming executable browser content. Here the interpretation changes in a SQL parser: data supplied for a comparison becomes part of the instructions that define the comparison.</p>
+<p>The <a href="https://github.com/AnthonyKot/book21/tree/main/labs/07-query-grammar">local Java/Spring lab</a> uses H2 and four synthetic rows. Its purpose is small enough to inspect: preserve exact-title search inside Alice&#39;s tenant, regardless of the characters in the requested title.</p>
+<h2>Read the assembled query</h2>
+<p>The database contains:</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Table; scroll horizontally on small screens"><table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Tenant</th>
+<th>Title</th>
+<th align="right">Amount</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>C-1001</td>
+<td>cedar</td>
+<td>Office</td>
+<td align="right">300</td>
+</tr>
+<tr>
+<td>C-1002</td>
+<td>cedar</td>
+<td>O&#39;Brien</td>
+<td align="right">100</td>
+</tr>
+<tr>
+<td>C-1003</td>
+<td>cedar</td>
+<td>100% sample</td>
+<td align="right">200</td>
+</tr>
+<tr>
+<td>B-2001</td>
+<td>birch</td>
+<td>Private</td>
+<td align="right">900</td>
+</tr>
+</tbody></table>
+</div><p>Amounts are invented integer fixture values. The search endpoint takes a title, while the server maps authenticated <code>alice</code> to <code>cedar</code>. For an ordinary request, the vulnerable repository constructs:</p>
+<pre><code class="language-sql">SELECT id, tenant_id, title, amount FROM invoice
+WHERE tenant_id = ? AND title = &#39;Office&#39; ORDER BY id
+</code></pre>
+<p>It supplies <code>cedar</code> separately for the first parameter. The title, however, is already inside the SQL string:</p>
+<pre><code class="language-java">String sql = COLUMNS
+    + &quot; WHERE tenant_id = ? AND title = &#39;&quot; + title + &quot;&#39; ORDER BY id&quot;;
+return jdbc.query(sql, ROW, tenant);
+</code></pre>
+<p><code>COLUMNS</code> is a fixed select list and table name. <code>ROW</code> maps a returned row into an invoice record. The interesting operation is the concatenation before <code>jdbc.query</code> runs. Only the tenant occupies a parameter slot. The title has been allowed to contribute characters to the SQL program itself.</p>
+<p>Now submit this title, including the opening apostrophe:</p>
+<pre><code class="language-text">&#39; OR 1=1 --
+</code></pre>
+<p>The resulting SQL is:</p>
+<pre><code class="language-sql">SELECT id, tenant_id, title, amount FROM invoice
+WHERE tenant_id = ? AND title = &#39;&#39; OR 1=1 -- &#39; ORDER BY id
+</code></pre>
+<p>The first apostrophe closes the string literal the application opened. <code>OR 1=1</code> introduces another condition. The two hyphens begin a line comment, so the application&#39;s closing quote and ordering clause no longer contribute syntax.</p>
+<p>For these non-null fixture values, the condition behaves as:</p>
+<pre><code class="language-text">(tenant matches AND title is empty) OR true
+</code></pre>
+<p>The tenant condition is still present. It simply no longer constrains the whole result. All four rows qualify, including B-2001. Since the comment also removes <code>ORDER BY</code>, the reproduction must not depend on their returned order. H2&#39;s grammar defines the Boolean operators and line comments used here; the executed lab pins H2 to 2.4.240. <a href="https://h2database.com/html/grammar.html">H2 SQL grammar</a></p>
+<p>This is SQL injection. Authentication did not fail, and Alice did not choose another tenant through the API. The application gave a title the ability to change how the database combined its conditions.</p>
+<h2>Make the observation yourself</h2>
+<p>The <a href="https://github.com/AnthonyKot/book21/blob/main/labs/07-query-grammar/README.html">lab README</a> contains the complete setup. With Java 21 and Maven available, run from the lab directory:</p>
+<pre><code class="language-sh">mvn test
+mvn -q package -DskipTests
+java -jar target/query-grammar-1.0.jar --lab.bind-title=false
+</code></pre>
+<p>The application binds to loopback port 8085. It uses one synthetic Basic-auth account and an in-memory database; it does not require a database service or a browser session. The username and password are only fixture credentials. This HTTP setup is not a production authentication recommendation.</p>
+<p>In another terminal:</p>
+<pre><code class="language-sh">curl -sS -u alice:local-only --get \
+  --data-urlencode &quot;title=&#39; OR 1=1 -- &quot; \
+  -w &#39;\n[HTTP %{http_code}]\n&#39; \
+  http://127.0.0.1:8085/api/search
+</code></pre>
+<p>The vulnerable mode returns <code>200</code> with four invoice records. <code>--data-urlencode</code> transports the title in the query string. URL encoding does not repair the SQL boundary: the web layer decodes the request before handing the title to the repository.</p>
+<p>Compare an ordinary title containing an apostrophe:</p>
+<pre><code class="language-sh">curl -sS -u alice:local-only --get \
+  --data-urlencode &quot;title=O&#39;Brien&quot; \
+  -w &#39;\n[HTTP %{http_code}]\n&#39; \
+  http://127.0.0.1:8085/api/search
+</code></pre>
+<p>That request produces <code>500</code> with a generic error body. The application assembled a malformed string literal. A real title and an attack therefore reveal the same architectural problem: the application has not kept value characters separate from SQL syntax. Rejecting all apostrophes would exclude a legitimate invoice without addressing every possible query-building mistake.</p>
+<p>The error handler hides database details from the response. That is useful error handling, but the earlier attack succeeded without needing an error message.</p>
+<h2>Bind the value before it becomes syntax</h2>
+<p>Stop the application and restart it with <code>--lab.bind-title=true</code>, which is also the default. The repaired branch reads:</p>
+<pre><code class="language-java">return jdbc.query(
+    COLUMNS + &quot; WHERE tenant_id = ? AND title = ? ORDER BY id&quot;,
+    ROW, tenant, title);
+</code></pre>
+<p>Both values now occupy parameter slots. The program defines the comparison and its Boolean structure; the caller supplies a title value. In this position, apostrophes, comment markers and <code>OR</code> are characters to compare, not instructions to parse as an additional predicate.</p>
+<p>The same attack now returns <code>200</code> with <code>[]</code>: no Cedar invoice has that exact title. O&#39;Brien returns C-1002. Office still returns C-1001. The successful repair preserves the search operation instead of treating every unusual string as an invalid request.</p>
+<p>Spring Framework 7.0.9 documents this separation between query text and bound arguments. Java&#39;s <code>PreparedStatement</code> API exposes parameter setters for the same purpose. The lab uses Spring&#39;s argument-binding overload rather than manually opening a connection and setting each parameter. <a href="https://docs.spring.io/spring-framework/reference/data-access/jdbc/core.html">Spring JDBC queries</a>, <a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.sql/java/sql/PreparedStatement.html">Java 21 PreparedStatement</a></p>
+<p>This explains why the vulnerable branch could use a prepared statement and remain injectable. Preparation receives the SQL text it is given. If that text already contains the caller&#39;s new predicate, preparing it does not recover the application&#39;s intended query. A review must trace which input goes into an argument slot and which input becomes SQL text; searching for the class name alone cannot establish safety.</p>
+<p>Nor should a fix put quotation marks around a placeholder. In the repaired query, <code>title = ?</code> asks for a parameter. Writing <code>title = &#39;?&#39;</code> asks for comparison with a literal question mark. Parameter binding is an API contract, not string replacement performed wherever a question mark happens to appear.</p>
+<h2>Verify the behavior that matters</h2>
+<p>The two HTTP test classes each exercise eleven cases:</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Table; scroll horizontally on small screens"><table>
+<thead>
+<tr>
+<th>Case</th>
+<th>Title concatenated</th>
+<th>Title bound</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Office</td>
+<td>C-1001</td>
+<td>C-1001</td>
+</tr>
+<tr>
+<td>Unknown title</td>
+<td>Empty result</td>
+<td>Empty result</td>
+</tr>
+<tr>
+<td>Birch&#39;s ordinary title</td>
+<td>Empty result</td>
+<td>Empty result</td>
+</tr>
+<tr>
+<td>O&#39;Brien</td>
+<td>500</td>
+<td>C-1002</td>
+</tr>
+<tr>
+<td>Exact <code>100% sample</code>, then <code>%</code> alone</td>
+<td>C-1003, then empty</td>
+<td>C-1003, then empty</td>
+</tr>
+<tr>
+<td>Always-true injected predicate</td>
+<td>All four rows</td>
+<td>Empty result</td>
+</tr>
+<tr>
+<td>Injected predicate targeting B-2001</td>
+<td>B-2001</td>
+<td>Empty result</td>
+</tr>
+<tr>
+<td>No authentication</td>
+<td>401</td>
+<td>401</td>
+</tr>
+<tr>
+<td>Scoped lookup of C-1001</td>
+<td>C-1001</td>
+<td>C-1001</td>
+</tr>
+<tr>
+<td>Scoped lookup of B-2001</td>
+<td>404</td>
+<td>404</td>
+</tr>
+<tr>
+<td>Deliberately unscoped lookup of B-2001</td>
+<td>B-2001</td>
+<td>B-2001</td>
+</tr>
+</tbody></table>
+</div><p>The normal suite passes in both configurations because the reproduction class intentionally asserts the flaw. Run the repair assertions against the vulnerable branch:</p>
+<pre><code class="language-sh">mvn -Dtest=QueryRepairTest -Dtest.bind-title=false test
+</code></pre>
+<p>Exactly three tests fail: the two injections still return records, and the apostrophe still produces an error. Eight pass. That negative control establishes that the repair assertions detect this faulty branch rather than merely exercising a server that starts successfully.</p>
+<p>The percent test also records a feature decision. This endpoint uses equality, so <code>%</code> has no wildcard role. If the feature later changes to <code>LIKE</code>, a bound pattern can still contain pattern-language metacharacters. The team must decide whether users are submitting a pattern or literal text and implement that contract. Binding protects the SQL structure; it does not choose every operator&#39;s intended semantics.</p>
+<p>The final table row is deliberately uncomfortable. <code>/api/unscoped/B-2001</code> uses a bound ID but omits the tenant predicate:</p>
+<pre><code class="language-sql">SELECT id, tenant_id, title, amount FROM invoice WHERE id = ?
+</code></pre>
+<p>Nothing has changed the grammar. The query faithfully performs an insufficiently restricted lookup. Parameterization cannot invent the missing authorization condition. The adjacent scoped endpoint returns <code>404</code> for the same foreign ID. Keep this distinction when writing a finding: an injection repair and an access-control repair establish different properties.</p>
+<h2>The caller sometimes chooses structure</h2>
+<p>A search value fits a parameter slot. A request to sort by amount is different: it chooses a column or expression used by the query. The lab&#39;s <code>/api/sorted</code> endpoint binds the tenant but concatenates the <code>sort</code> parameter into <code>ORDER BY</code>. This is the changed practice boundary.</p>
+<p>Do not assume that <code>ORDER BY ?</code> with the value <code>&quot;amount&quot;</code> means “order by the amount column.” A bound value does not become an identifier. The safe design is to expose a small vocabulary and map each accepted key to a fixed fragment owned by the program. Unsupported keys should fail as invalid requests rather than becoming SQL.</p>
+<p>That is a suitable use of an allow-list. The title can contain ordinary punctuation; the sort key has a deliberately finite vocabulary. They need different input contracts. OWASP&#39;s SQL guidance distinguishes parameterized values from structural choices such as identifiers and sort directions. <a href="https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html">SQL injection prevention</a></p>
+<p>The broader lesson is about an interpreter boundary. Last essay&#39;s HTML sink and this essay&#39;s SQL concatenation both let supplied text change a program&#39;s meaning. Their repairs are specific to their consumers. HTML text insertion is not SQL parameterization; SQL parameterization is not a shell or template defense. In another interpreter, first identify what is data, what is executable structure, and which API actually preserves that separation.</p>
+<p>This lab does not establish safety for every query or database. It tests H2, one driver configuration and a small read-only HTTP surface. Its bootstrap database account is not a least-privilege production role. Restricting database privileges can reduce consequences, but even a read-only account can disclose records it may select. The unscoped endpoint and unfinished sorting path remain deliberate flaws after the guided title repair.</p>
+<hr>
+
+<h2>Practice: give the caller three sort choices</h2>
+<p>Repair <code>/api/sorted</code> so it accepts exactly <code>id</code>, <code>title</code> and <code>amount</code>, ascending, with ID as the final tie-breaker. Missing or empty input defaults to <code>id</code>; unknown keys and expressions such as <code>amount DESC</code> must return <code>400</code>. Retain tenant binding and verify the actual order of legitimate results.</p>
+<p>Use the <a href="../practice/07-query-worksheet.html">worksheet</a>, then the <a href="../practice/07-query-review.html">review guide</a>. The public starter includes explicit exercise checks; the privately executed reference passes them without publishing the solution as your completed work.</p>
+<p>Allow 10–12 hours within the 10–15-hour study week: two for reading and tracing the query, four for reproduction and repair, two for evidence, and two to four for independent transfer. Carry unfinished work forward. The worksheet names two authorized Academy labs; record hints, supplied tests and AI assistance separately from your own discoveries.</p>
+<p>For employment, explain why the original prepared-statement call was insufficient and show the regression evidence in a code review. For consulting, state the endpoints and query paths assessed, the retest results and the remaining authorization gap. Both routes require a precise account of what the fix establishes.</p>
+</article><nav class="pager" aria-label="Adjacent essays"><a href="06-browser-authority.html">← Essay 6</a><a href="../index.html">Back to the book →</a></nav></main><footer><span>Book 21 · Learn, practise, verify.</span><a href="https://github.com/AnthonyKot/book21">Source on GitHub</a></footer></body></html>
