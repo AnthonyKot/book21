@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A fetch endpoint borrows the server’s network access · Book 21</title><meta name="description" content="Trace an approved URL through a forbidden redirect, verify that the internal service receives no request, and safely restore one allowed hop.">
+<meta property="og:title" content="A fetch endpoint borrows the server’s network access"><meta property="og:description" content="Trace an approved URL through a forbidden redirect, verify that the internal service receives no request, and safely restore one allowed hop.">
+<meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
+<link rel="stylesheet" href="../assets/style.css"></head>
+<body><a class="skip" href="#main">Skip to content</a><header class="site-header"><a href="../index.html">Security Is an Engineering Job</a><nav aria-label="Book"><a href="../index.html#essays">Essays</a><a href="../about.html">About</a></nav></header>
+<main id="main"><p class="kicker">Essay 8 · Find and repair application failures</p><article><h1>A fetch endpoint borrows the server&#39;s network access</h1>
+<p>The document service refuses a URL for an internal report. The same service returns that report when the request starts at an approved partner address.</p>
+<p>The partner responds with a redirect. The HTTP client follows it.</p>
+<p>This constructed case has a destination check, an authenticated caller and an ordinary GET request. No SQL expression or script changes meaning. Instead, the application lets another response decide where its next request goes. The check authorized the starting point; the client treated that as permission to continue somewhere else.</p>
+<p>The <a href="https://github.com/AnthonyKot/book21/tree/main/labs/08-fetch-authority">local lab</a> adds a partner-document fetch to the fictional service. Its rule is narrow: Alice may fetch from one configured partner origin. She may not use this feature to reach the synthetic internal-report origin. Both are local fixtures, so the entire failure can be reproduced without touching an actual private network or cloud service.</p>
+<h2>Follow the second request</h2>
+<p>Three listeners run on loopback:</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Table; scroll horizontally on small screens"><table>
+<thead>
+<tr>
+<th>Listener</th>
+<th>Role</th>
+<th align="right">Default port</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Spring API</td>
+<td>Authenticates Alice and fetches a submitted URL</td>
+<td align="right">8086</td>
+</tr>
+<tr>
+<td>Partner fixture</td>
+<td>Returns a document or a fixed redirect</td>
+<td align="right">8087</td>
+</tr>
+<tr>
+<td>Internal fixture</td>
+<td>Returns a synthetic report and counts requests</td>
+<td align="right">8088</td>
+</tr>
+</tbody></table>
+</div><p>The word <em>internal</em> describes the destination the policy forbids. It is not a claim that this fixture is unreachable from your terminal. All three listeners are on your machine; there is no firewall separating the test client from the internal listener. What the experiment proves is that the fetch feature can be induced to cross its intended destination boundary.</p>
+<p>An ordinary call asks the API to retrieve:</p>
+<pre><code class="language-text">http://127.0.0.1:8087/document
+</code></pre>
+<p>The partner returns <code>PARTNER-INVOICE-C-1001</code>. Now ask for <code>/to-internal</code> on the same approved origin. Its response is:</p>
+<pre><code class="language-http">HTTP/1.1 302 Temporary Redirect
+Location: http://127.0.0.1:8088/report
+</code></pre>
+<p>The status line above is what the JDK fixture actually emits. RFC 9110 names code 302 “Found”; the fixture’s reason phrase does not turn it into code 307. The relevant protocol fields here are the numeric status code and Location. A redirect supplies a new target URI, which may be on another origin. <a href="https://www.rfc-editor.org/rfc/rfc9110.html#section-10.2.2">HTTP redirection and Location</a></p>
+<p>In vulnerable mode, the outgoing client follows that response. The internal listener returns <code>INTERNAL-SYNTHETIC-REPORT</code>, and the API passes the text back to Alice. The call to the internal listener was issued by the server-side HTTP client, not by Alice&#39;s browser.</p>
+<p>That is server-side request forgery, or SSRF. The requester influences what the application contacts using the application&#39;s outbound connectivity. In a real deployment, that connectivity can differ from the caller&#39;s: services may be reachable from a workload that are not reachable from the public internet. Our local fixture demonstrates the request path, not that real-world network separation.</p>
+<p>Unlike essay 6&#39;s forged browser action, this failure does not depend on the browser attaching a session cookie or allowing a cross-origin response to be read. The Java client is making the second request. Changing a browser CORS policy would not constrain that client&#39;s destination.</p>
+<h2>A plausible check that stops too early</h2>
+<p>The service parses the supplied text into a <code>URI</code>. Its initial policy requires the exact configured scheme, host and port, and rejects user information and fragments:</p>
+<pre><code class="language-java">if (!&quot;http&quot;.equals(uri.getScheme())
+        || !&quot;127.0.0.1&quot;.equals(uri.getHost())
+        || uri.getPort() != partner.getPort()
+        || uri.getRawUserInfo() != null
+        || uri.getRawFragment() != null) {
+    throw denied();
+}
+</code></pre>
+<p>This is deliberately a loopback policy. Copying its HTTP/private-address choices into a public URL fetcher would not produce an appropriate production policy.</p>
+<p>Parsing matters because the URL&#39;s visible text is not its destination. A hostname containing an approved string need not be that host, and user information is a separate component. The lab rejects a hostname with an added suffix and a URL containing <code>alice@</code> before either fixture receives a request. It also rejects malformed URIs. It uses the same parsed URI for validation and request construction rather than validating one representation and sending another. <a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/net/URI.html">Java 21 URI components</a></p>
+<p>Those checks all remain in the vulnerable mode. Its mistake is this client configuration:</p>
+<pre><code class="language-java">.followRedirects(HttpClient.Redirect.ALWAYS)
+</code></pre>
+<p>The application calls <code>allowed(url)</code> once. Automatic following happens afterwards, inside the HTTP client, without calling that application policy again.</p>
+<p>Java also offers <code>Redirect.NORMAL</code>, but its name does not mean “stay inside my approved destinations.” It excludes HTTPS-to-HTTP redirects, not every change of host or port. The lab makes the setting explicit so it cannot be mistaken for a framework default. <a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.net.http/java/net/http/HttpClient.Redirect.html">Java redirect policies</a></p>
+<h2>Reproduce the borrowed access</h2>
+<p>Use Java 21 and Maven, following the <a href="https://github.com/AnthonyKot/book21/blob/main/labs/08-fetch-authority/README.html">README</a>. From the lab directory:</p>
+<pre><code class="language-sh">mvn test
+mvn -q package -DskipTests
+java -jar target/fetch-authority-1.0.jar --lab.follow-redirects=true
+</code></pre>
+<p>The one process starts all three listeners. Leave ports 8086–8088 free. Its synthetic account is <code>alice</code> / <code>local-only</code>; Basic authentication over loopback HTTP is only a fixture convenience.</p>
+<p>In another terminal:</p>
+<pre><code class="language-sh">curl -sS -u alice:local-only --get \
+  --data-urlencode &#39;url=http://127.0.0.1:8087/to-internal&#39; \
+  -w &#39;\n[HTTP %{http_code}]\n&#39; \
+  http://127.0.0.1:8086/api/fetch
+</code></pre>
+<p>Expect <code>200</code> and the synthetic internal report. Then inspect:</p>
+<pre><code class="language-sh">curl -sS -u alice:local-only \
+  http://127.0.0.1:8086/lab/targets
+</code></pre>
+<p>After that one fetch, <code>internalHits</code> is one. This endpoint reads counters; it does not issue another fetch. A direct attempt to fetch the internal URL receives <code>403</code> without increasing the counter.</p>
+<p>The difference is decisive: the initial destination check blocks the obvious request, but the redirect reaches the same forbidden listener. An allowed entry point has become a way to select a disallowed destination.</p>
+<p>The fixtures also record whether they received an Authorization header. That flag remains false. The outbound request is newly constructed and does not copy Alice&#39;s API credential. SSRF can therefore matter even when no credential is forwarded: the server&#39;s ability to contact the destination is already useful authority. Copying credentials or sensitive request bodies could add consequences, but this lab does neither.</p>
+<h2>Repair the promised feature first</h2>
+<p>Stop and restart with <code>--lab.follow-redirects=false</code>, also the default. The repaired client uses:</p>
+<pre><code class="language-java">.followRedirects(HttpClient.Redirect.NEVER)
+</code></pre>
+<p>The service still validates the initial URI. It then accepts only an upstream <code>200</code>; a redirect becomes <code>502</code> at the API. This status means that the upstream response did not satisfy this fetch operation&#39;s contract. An initially forbidden URL still produces <code>403</code> before contact.</p>
+<p>The approved <code>/document</code> continues to work. <code>/to-internal</code> now returns <code>502</code>, and <code>internalHits</code> remains zero. A redirect from <code>/to-document</code> to the partner&#39;s own document is also rejected. That is an intentional limitation: the guided feature promises direct document retrieval, not redirect support.</p>
+<p>Disabling automatic redirection is a documented SSRF defense because it prevents a later location from bypassing an earlier input check. When the product needs redirects, each additional destination needs its own decision before connection. <a href="https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html">OWASP SSRF prevention</a></p>
+<p>Do not replace the hit assertion with “the response did not contain the report.” A server can make an unwanted request and then discard its response. The internal service may already have recorded an event or performed work. This fixture&#39;s internal request only increments a synthetic counter and returns text; no destructive internal action is modeled. Checking the counter nevertheless distinguishes no contact from contact whose result was hidden.</p>
+<h2>What the tests establish</h2>
+<p>Each configuration runs eleven HTTP cases:</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Table; scroll horizontally on small screens"><table>
+<thead>
+<tr>
+<th>Case</th>
+<th>Automatic following</th>
+<th>No following</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Direct partner document</td>
+<td>200; one partner hit</td>
+<td>Same</td>
+</tr>
+<tr>
+<td>Direct internal target</td>
+<td>403; no fixture hit</td>
+<td>Same</td>
+</tr>
+<tr>
+<td>Partner redirects internally</td>
+<td>200; one internal hit</td>
+<td>502; zero internal hits</td>
+</tr>
+<tr>
+<td>Partner redirects to its document</td>
+<td>200; two partner hits</td>
+<td>502; one partner hit</td>
+</tr>
+<tr>
+<td>Wrong scheme</td>
+<td>403; no fixture hit</td>
+<td>Same</td>
+</tr>
+<tr>
+<td>User information in URL</td>
+<td>403; no fixture hit</td>
+<td>Same</td>
+</tr>
+<tr>
+<td>Fragment present</td>
+<td>403; no fixture hit</td>
+<td>Same</td>
+</tr>
+<tr>
+<td>Host with added suffix</td>
+<td>403; no fixture hit</td>
+<td>Same</td>
+</tr>
+<tr>
+<td>Malformed URI</td>
+<td>403; no fixture hit</td>
+<td>Same</td>
+</tr>
+<tr>
+<td>Partner returns an error</td>
+<td>502</td>
+<td>Same</td>
+</tr>
+<tr>
+<td>No API authentication</td>
+<td>401; no partner hit</td>
+<td>Same</td>
+</tr>
+</tbody></table>
+</div><p>The tests use actual HTTP listeners with random ports. Counters reset between sequential cases. Twenty-two cases pass because the reproduction class intentionally expects the vulnerable behavior.</p>
+<p>Run the repair tests while re-enabling following:</p>
+<pre><code class="language-sh">mvn -Dtest=RedirectRepairTest -Dtest.follow=true test
+</code></pre>
+<p>Exactly the two redirect tests fail; nine pass. The control shows that direct-destination validation alone does not satisfy the repair assertions. It also keeps ordinary partner access working in both modes.</p>
+<h2>A hostname check is not an egress boundary</h2>
+<p>The fixture admits one literal address and port. It does not resolve caller-selected domain names. Extending that code to hostnames introduces DNS: the address checked during validation must correspond to the destination actually used for connection. A separate check followed by independent client resolution can observe different answers. IPv4 and IPv6 both matter. This lab neither reproduces nor repairs DNS rebinding. <a href="https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html#domain-name">OWASP domain and address validation</a></p>
+<p>Network controls provide a separate enforcement point. A deployment can restrict the workload&#39;s outgoing connections, often through network policy or a controlled egress proxy, so application mistakes do not make every reachable service available. The allowed set must follow the feature&#39;s real requirements. A service legitimately calling a private partner endpoint cannot use “reject every private address” as its whole policy. No firewall or proxy policy is installed or tested by this lab.</p>
+<p>There is also a smaller product question: does the user need to supply a complete URL? If the feature only retrieves documents from one integration, an integration key and document identifier may let the server construct a much narrower request. That changes what the caller can choose. It still needs document authorization and careful URL construction; an identifier is not automatically safe merely because it is no longer called a URL.</p>
+<p>Finally, destination safety is not resource safety. The client configures two-second connection and request timeouts, but the lab buffers fixed small responses without a streaming byte limit. It does not test stalled bodies, decompression, concurrency limits or a complete elapsed-time budget. A production design must account for those separately. The runnable example establishes the redirect boundary, not a general-purpose safe fetching library.</p>
+<hr>
+
+<h2>Practice: permit one redirect without delegating the decision</h2>
+<p>The partner now needs one relative <code>302</code> redirect to its document. Extend <code>/api/follow-one</code> with automatic following still disabled. Resolve Location against the current URI, validate the resolved destination before sending, permit at most one additional request, and require a final <code>200</code>. Refuse forbidden destinations and further redirects with <code>502</code>; preserve the initial <code>403</code> rule.</p>
+<p>Use the <a href="../practice/08-fetch-worksheet.html">worksheet</a> before the <a href="../practice/08-fetch-review.html">review guide</a>. The starter denies all redirects, so its legitimate-relative-redirect test fails. The private reference passes all twenty-seven cases. Removing its redirected-destination check makes the internal-target test fail and records a real internal hit. This checks both the useful extension and the boundary it must retain.</p>
+<p>Default <code>mvn test</code> runs only the twenty-two guided cases: <code>OneHopExercise</code> is deliberately outside its default naming filter. After your repair, run <code>mvn &#39;-Dtest=*Test,OneHopExercise&#39; test</code> to include all twenty-seven cases.</p>
+<p>Plan 10–12 hours within the established 10–15-hour week: two for reading and prediction, four for the local repair, two for evidence, and two to four for the named Academy transfer tasks. Carry unfinished work forward and record hints or AI assistance.</p>
+<p>For employment, explain why checking the initial URL was insufficient and show the no-contact regression. For consulting, specify the fetch path, redirect behavior and destinations assessed, alongside the DNS and network controls you did not verify. Neither route needs a claim that a small local demonstration proves the whole network safe.</p>
+</article><nav class="pager" aria-label="Adjacent essays"><a href="07-query-grammar.html">← Essay 7</a><a href="../index.html">Back to the book →</a></nav></main><footer><span>Book 21 · Learn, practise, verify.</span><a href="https://github.com/AnthonyKot/book21">Source on GitHub</a></footer></body></html>

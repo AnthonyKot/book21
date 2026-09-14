@@ -12,5 +12,5 @@ for(const file of pages){const html=fs.readFileSync(file,'utf8');
   if(!target.startsWith(root+path.sep)||!fs.existsSync(target))throw Error(`Broken link: ${file} -> ${href}`);
  }
 }
-if(pages.length!==21)throw Error(`Expected twenty-one pages, got ${pages.length}`);
-console.log('Checked twenty-one pages, headings, local destinations and private-path exclusions.');
+if(pages.length!==24)throw Error(`Expected twenty-four pages, got ${pages.length}`);
+console.log('Checked twenty-four pages, headings, local destinations and private-path exclusions.');

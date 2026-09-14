@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fetch authority worksheet · Book 21</title><meta name="description" content="Fetch authority worksheet for essay 8.">
+<meta property="og:title" content="Fetch authority worksheet"><meta property="og:description" content="Fetch authority worksheet for essay 8.">
+<meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
+<link rel="stylesheet" href="../assets/style.css"></head>
+<body><a class="skip" href="#main">Skip to content</a><header class="site-header"><a href="../index.html">Security Is an Engineering Job</a><nav aria-label="Book"><a href="../index.html#essays">Essays</a><a href="../about.html">About</a></nav></header>
+<main id="main"><p class="kicker">Essay 8 · Practice</p><article><h1>Fetch authority worksheet</h1>
+<p>Read the <a href="../essays/08-fetch-authority.html">essay</a> and run the <a href="https://github.com/AnthonyKot/book21/tree/main/labs/08-fetch-authority">local lab</a>. Use only its synthetic listeners and assigned Academy instances. Do not probe workplace networks or cloud metadata services.</p>
+<p>Before running a request, record:</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Table; scroll horizontally on small screens"><table>
+<thead>
+<tr>
+<th>Question</th>
+<th>Prediction</th>
+<th>Observation</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Who supplies the initial URL?</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Which component sends the outbound request?</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Who supplies the redirected destination?</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>When does the destination policy run?</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Did the internal fixture receive a request?</td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+</div><p>Compare direct partner content, a direct forbidden URL, a redirect internally and a relative partner redirect in both configurations. Retain status, body and counter changes. Counters are cumulative during manual work; compare before/after or restart. The test harness resets them between sequential cases.</p>
+<p>Explain why a 502 response alone cannot prove no internal contact. Explain why the incoming Basic credential is not necessary for this SSRF effect, and verify that the outgoing request does not copy it. Distinguish the policy-forbidden internal fixture from actual network isolation: your terminal can reach it directly.</p>
+<h2>Changed task: follow one approved 302</h2>
+<p>Keep <code>lab.follow-redirects=false</code>. Extend <code>/api/follow-one</code>; leave the guided <code>/api/fetch</code> behavior intact.</p>
+<ol>
+<li>Validate the initial URI with the existing policy; invalid initial input remains 403.</li>
+<li>Fetch once. A 200 succeeds. A 302 may supply one additional destination.</li>
+<li>Resolve Location against the first URI, including a relative path. Validate the resolved URI BEFORE contact.</li>
+<li>Permit only one additional request. Require its response to be 200. A further redirect, forbidden target, missing/invalid Location or upstream failure becomes 502.</li>
+<li>Never forward incoming cookies, Authorization or arbitrary caller headers.</li>
+</ol>
+<p>Run <code>mvn -Dtest=OneHopExercise test</code> before repair. One test fails because the legitimate relative redirect is not supported; four pass. After repair, <code>mvn &#39;-Dtest=*Test,OneHopExercise&#39; test</code> should pass all 27 cases.</p>
+<p>The supplied tests cover direct success, relative success, forbidden internal redirect, a loop and a chain requiring two redirects. Add a changed regression, such as an absolute allowed Location, a user-info-bearing Location, a missing Location or another redirect status. State the expected behavior before coding it. Use only fixture-generated local destinations. Keep the fixture from becoming an open redirect to arbitrary outside addresses.</p>
+<p>Demonstrate that removing your redirect validation makes the no-internal-contact property fail. A meaningful negative control records an actual internal hit, not merely a failed compilation or unavailable server. Do not claim independent discovery from implementing supplied hints.</p>
+<details><summary>Hint 1 — the first permission expires at the redirect</summary>
+
+<p>The existing validator already describes the approved origin. The redirect response provides a new input to that same decision. Letting the HTTP client follow automatically skips your opportunity to decide.</p>
+</details>
+<details><summary>Hint 2 — resolve, then validate</summary>
+
+<p>Use URI resolution against the original URI. A Location may be relative; a string prefix check is not a substitute for inspecting the resolved scheme, host and port. Map a rejected upstream location to the specified 502 response.</p>
+</details>
+<details><summary>Hint 3 — a loop is a request budget problem</summary>
+
+<p>One initial request and at most one follow-up are enough for this contract. Do not recurse until something returns 200. Check both server hit counts and final status.</p>
+</details>
+
+<h2>Independent transfer</h2>
+<p>Attempt without opening solutions first:</p>
+<ul>
+<li><a href="https://portswigger.net/web-security/ssrf/lab-basic-ssrf-against-localhost">Basic SSRF against the local server</a>.</li>
+<li><a href="https://portswigger.net/web-security/ssrf/lab-ssrf-filter-bypass-via-open-redirection">SSRF with filter bypass via open redirection vulnerability</a>.</li>
+</ul>
+<p>Use only the assigned Academy instances and record hints or AI assistance. These are verified assignments, not completed reader work. Explain where each application borrows authority and which check a redirect crosses.</p>
+<p>Plan 10–12 hours inside the 10–15-hour week. Keep an evidence pack with versions, commands, allowed/denied requests, counter changes, patch, negative control and untested limits. If interrupted, record the next command and continue later.</p>
+<p>For employment, write a concise code-review explanation. For consulting, delimit the assessed fetch workflow and explicitly exclude untested DNS, proxy, firewall and workload-resource controls. Compare your work with the <a href="08-fetch-review.html">review guide</a> after attempting it.</p>
+</article><div class="practice-actions"><button onclick="window.print()">Print this page</button><a href="../essays/08-fetch-authority.html">Return to essay 8</a><a href="08-fetch-review.html">Review after your attempt →</a></div></main><footer><span>Book 21 · Learn, practise, verify.</span><a href="https://github.com/AnthonyKot/book21">Source on GitHub</a></footer></body></html>
