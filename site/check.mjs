@@ -5,12 +5,13 @@ function walk(dir){return fs.readdirSync(dir,{withFileTypes:true}).flatMap(e=>e.
 const pages=walk(root).filter(f=>f.endsWith('.html'));
 for(const file of pages){const html=fs.readFileSync(file,'utf8');
  if((html.match(/<h1\b/g)||[]).length!==1)throw Error(`Expected one h1: ${file}`);
- if(/\/home\/diablo|file:\/\/|\.md["#]/.test(html))throw Error(`Private or unconverted path: ${file}`);
+ if(/\/home\/diablo|\.md["#]/.test(html))throw Error(`Private or unconverted path: ${file}`);
+ // Synthetic file: URIs may appear in teaching code; actual links must stay valid below.
  for(const [,href] of html.matchAll(/(?:href|src)="([^"]+)"/g)){
   if(/^(https?:|data:|#)/.test(href))continue;
   const target=path.resolve(path.dirname(file),href.split('#')[0]);
   if(!target.startsWith(root+path.sep)||!fs.existsSync(target))throw Error(`Broken link: ${file} -> ${href}`);
  }
 }
-if(pages.length!==24)throw Error(`Expected twenty-four pages, got ${pages.length}`);
-console.log('Checked twenty-four pages, headings, local destinations and private-path exclusions.');
+if(pages.length!==27)throw Error(`Expected twenty-seven pages, got ${pages.length}`);
+console.log('Checked twenty-seven pages, headings, local destinations and private-path exclusions.');

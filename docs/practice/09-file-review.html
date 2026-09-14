@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stored-file consumer review · Book 21</title><meta name="description" content="Stored-file consumer review for essay 9.">
+<meta property="og:title" content="Stored-file consumer review"><meta property="og:description" content="Stored-file consumer review for essay 9.">
+<meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
+<link rel="stylesheet" href="../assets/style.css"></head>
+<body><a class="skip" href="#main">Skip to content</a><header class="site-header"><a href="../index.html">Security Is an Engineering Job</a><nav aria-label="Book"><a href="../index.html#essays">Essays</a><a href="../about.html">About</a></nav></header>
+<main id="main"><p class="kicker">Essay 9 · Practice</p><article><h1>Stored-file consumer review</h1>
+<p>Compare after your attempt at the <a href="09-file-worksheet.html">worksheet</a>. These are progressive hints, not a substitute for independent evidence.</p>
+<h2>Hint 1: storage preserves the input</h2>
+<p>201 means the byte limit and storage operation succeeded. XML validity and safety were not established. The upload identifier changes the reference to the file, not its trust level. A preview failure leaves these bytes available to the summary path.</p>
+<h2>Hint 2: follow the second call</h2>
+<p>Read <code>SummaryWorker.summarize</code> through <code>UploadStore.read</code> to <code>InvoiceParser.title</code>. Identify the policy argument supplied by the worker. The preview flag configures a different call path; it does not change this argument. A resolver returning null permits default resolution, whereas throwing rejects it.</p>
+<h2>Hint 3: enforce policy whenever bytes are interpreted</h2>
+<p>Reuse the configured restrictive parser for the summary consumer. Retain shape checks and legitimate output. A stored “validated” boolean or a previous preview result cannot replace restrictions on a newly created parser. If replacing stored XML with a validated domain record is proposed instead, explain exactly what is persisted and prove no raw XML is reopened; that is a larger design change than this exercise requires.</p>
+<h2>Evidence to expect</h2>
+<p>The starter has three failures and two passes: file and HTTP references and harmless internal DTDs are accepted by the summary when they should be denied; ordinary and malformed cases already behave as required. The private reference passes all 41 combined cases. Run the worker tests and its HTTP adapter; do not satisfy the tests by disabling ordinary summaries. Restoring the permissive argument must make the relevant exercise cases fail again.</p>
+<p>No resolver call and no HTTP hit support the no-resolution claim for these fixtures. The synthetic note appearing in the permissive file response supports an actual read. None of these observations establishes arbitrary filesystem exposure, tenant isolation, a safe transformation pipeline or a complete denial-of-service defense.</p>
+<p>For an unfamiliar system, list every consumer that can parse, validate, transform or render the bytes. Distinguish those inspected from those merely identified. A browser rendering bug or an archive extraction path needs its own mechanism and repair; the DOM settings in this exercise do not transfer automatically.</p>
+</article><div class="practice-actions"><button onclick="window.print()">Print this page</button><a href="../essays/09-file-consumer.html">Return to essay 9</a><a href="09-file-worksheet.html">Back to worksheet</a></div></main><footer><span>Book 21 · Learn, practise, verify.</span><a href="https://github.com/AnthonyKot/book21">Source on GitHub</a></footer></body></html>

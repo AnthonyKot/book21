@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stored-file consumer worksheet · Book 21</title><meta name="description" content="Stored-file consumer worksheet for essay 9.">
+<meta property="og:title" content="Stored-file consumer worksheet"><meta property="og:description" content="Stored-file consumer worksheet for essay 9.">
+<meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
+<link rel="stylesheet" href="../assets/style.css"></head>
+<body><a class="skip" href="#main">Skip to content</a><header class="site-header"><a href="../index.html">Security Is an Engineering Job</a><nav aria-label="Book"><a href="../index.html#essays">Essays</a><a href="../about.html">About</a></nav></header>
+<main id="main"><p class="kicker">Essay 9 · Practice</p><article><h1>Stored-file consumer worksheet</h1>
+<p>Use after <a href="../essays/09-file-consumer.html">essay 9</a>. Record your prediction before opening the <a href="09-file-review.html">review guide</a>.</p>
+<h2>Preserve your starting point</h2>
+<ul>
+<li>Date, Java/Maven version and repository revision:</li>
+<li>Time available this week (10–15 hours total):</li>
+<li>Assistance used, including hints, AI patches or supplied solutions:</li>
+</ul>
+<p>The local lab is in <a href="https://github.com/AnthonyKot/book21/tree/main/labs/09-file-consumer">labs/09-file-consumer</a>. Its README contains setup and curl instructions. Use only generated synthetic targets. The summary consumer is intentionally unfinished, even with hardened preview.</p>
+<h2>Predict before running</h2>
+<p>An upload stores bytes and returns 201. Preview returns 422 because those bytes contain a DOCTYPE. Summary opens the same identifier afterwards.</p>
+<ol>
+<li>What does 201 establish about the file?</li>
+<li>Which component decides whether an entity is resolved?</li>
+<li>Does a preview error remove the stored file or constrain another parser?</li>
+<li>What should happen to a plain invoice using <code>&amp;amp;</code>?</li>
+</ol>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Table; scroll horizontally on small screens"><table>
+<thead>
+<tr>
+<th>Input</th>
+<th>Stored?</th>
+<th>Preview result</th>
+<th>Summary result before repair</th>
+<th>Summary result required</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Ordinary invoice</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>File entity</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>HTTP entity</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Harmless internal DTD</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Malformed XML</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+</div><h2>Establish the guided evidence</h2>
+<p>Run default tests and <code>python3 demo.py</code> in each preview mode. For each trace retain status, output, resolver delta and HTTP-hit delta. The demo verifies that upload alone caused no resolution. Explain why an empty response would not establish no external contact.</p>
+<p>Run the repair negative control from the README. Record the actual failing cases and exit status. Distinguish failures of assertions from errors that prevented tests from running.</p>
+<h2>Change the later consumer</h2>
+<p>Run <code>python3 demo.py --summary</code> with hardened preview. Then run:</p>
+<pre><code class="language-sh">mvn -Dtest=SummaryExercise test
+</code></pre>
+<p>Repair <code>SummaryWorker.summarize</code>. Every reopening must use the required parser policy. Preserve plain text/CDATA and the invoice-shape checks. File and HTTP references, harmless internal DTDs and malformed XML must produce 422; reference inputs must cause no external resolution or HTTP contact. Do not require a successful preview as a substitute for enforcing the policy here.</p>
+<p>After your attempt:</p>
+<pre><code class="language-sh">mvn &#39;-Dtest=*Test,SummaryExercise&#39; test
+</code></pre>
+<p>Default <code>mvn test</code> only runs the 36 guided cases; it excludes the deliberately unfinished exercise by its name. The combined command runs 41 cases. Reintroduce permissive parsing in a temporary copy and show that the exercise catches it. Retain your patch and explanation, not just the green output.</p>
+<h2>Independent transfer</h2>
+<p>Attempt these named PortSwigger Academy exercises only in their authorized training environments:</p>
+<ul>
+<li><a href="https://portswigger.net/web-security/xxe/lab-exploiting-xxe-to-retrieve-files">Exploiting XXE using external entities to retrieve files</a>. Identify which result demonstrates external resolution. Describe how its input and authority differ from the local fixture.</li>
+<li><a href="https://portswigger.net/web-security/xxe/lab-xinclude-attack">Exploiting XInclude to retrieve files</a>. Identify what the attacker controls when they cannot supply a whole XML document. Explain why our local inactive-XInclude test does not establish that every XML consumer disables it.</li>
+</ul>
+<p>Do not copy the Academy solution before your attempt. Record hints and assisted completion honestly. If a lab is unavailable, keep the transfer result pending and use a changed local case while documenting its narrower scope; local repetition is not completion of the hosted task.</p>
+<h2>Handover and limits</h2>
+<p>Write a short engineering review identifying the second parser path, the repair and the preserved behavior. For a consulting version, include scope, reproducer, impact, retest and exclusions. State that this is a synthetic demonstration.</p>
+<p>Record elapsed time, remaining gap and one delayed check: after a week, trace a fresh consumer from stored bytes to its processor without looking at your patch. Do not mark mastery solely from executing the supplied tests.</p>
+</article><div class="practice-actions"><button onclick="window.print()">Print this page</button><a href="../essays/09-file-consumer.html">Return to essay 9</a><a href="09-file-review.html">Review after your attempt →</a></div></main><footer><span>Book 21 · Learn, practise, verify.</span><a href="https://github.com/AnthonyKot/book21">Source on GitHub</a></footer></body></html>
