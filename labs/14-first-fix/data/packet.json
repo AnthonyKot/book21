@@ -1,0 +1,43 @@
+{
+  "fictional": true,
+  "clock": "2026-09-15T09:00:00Z",
+  "description": "Authored triage exercise. Service inventories, deployment checks, owners and effort estimates below are supplied scenario facts, not executed observations or scanner output. Old dependency versions are chosen for historical advisory analysis, not deployment recommendations. No relation to vulnerabilities in essay13 images.",
+  "items": [
+    {
+      "id": "R1",
+      "service": "ledger-admin",
+      "cve": "CVE-2022-22965",
+      "component": "org.springframework:spring-webmvc",
+      "version": "5.3.17",
+      "artifact": "fixture-sha256:aaae61d54af487128773756a503fd0dcb4d2abdbee6182f6bdace824e15539fe",
+      "evidenceRevision": "R1-e1",
+      "knownPath": "specific-exploit-blocked",
+      "evidence": "Executable Spring Boot JAR on JDK17; restricted administrative ingress; no WAR deployment in the reviewed artifact. Vendor caveat about other possible exploit paths remains.",
+      "observedAt": "2026-09-15T08:30:00Z"
+    },
+    {
+      "id": "R2",
+      "service": "document-files",
+      "cve": "CVE-2024-38816",
+      "component": "org.springframework:spring-webflux",
+      "version": "6.1.12",
+      "artifact": "fixture-sha256:bcb7d7f00ed8cff47f6bb3c32ea3d32fb22b0fadf7e6e132ddb58e47a9a56d57",
+      "evidenceRevision": "R2-e1",
+      "knownPath": "prerequisites-present",
+      "evidence": "Internet-facing WebFlux.fn RouterFunctions static resources with FileSystemResource; Reactor Netty; no Spring Security HTTP Firewall. Process can read confidential exports.",
+      "observedAt": "2026-09-15T08:30:00Z"
+    },
+    {
+      "id": "R3",
+      "service": "legacy-preview",
+      "cve": "CVE-2022-22965",
+      "component": "org.springframework:spring-webmvc",
+      "version": "5.3.17",
+      "artifact": "fixture-sha256:0a8c0b6e98fec52fcd8764edb75c1eb135d143a45c27d05ca0b64ba990ddf8b6",
+      "evidenceRevision": "R3-e1",
+      "knownPath": "unknown",
+      "evidence": "Public endpoint and affected version recorded; deployment packaging record missing. Do not interpret missing WAR evidence as proof of executable-JAR deployment.",
+      "observedAt": "2026-09-15T08:30:00Z"
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+[
+  {
+    "id": "R1",
+    "artifact": "fixture-sha256:aaae61d54af487128773756a503fd0dcb4d2abdbee6182f6bdace824e15539fe",
+    "evidenceRevision": "R1-e1",
+    "action": "deferred",
+    "owner": "Mira, ledger maintainer",
+    "reviewBy": "2026-09-16T09:00:00Z",
+    "rationale": "The described WAR exploit does not match this artifact; this is not a claim the vulnerability is absent. KEV and high EPSS keep remediation urgent.",
+    "plan": "Prepare a tested supported-version upgrade for tomorrow; 4 engineer-hours estimated. Verify administrative ingress now; preserve normal ledger operations and plan rollback that maintains containment.",
+    "reopenOn": "Any packaging, artifact, ingress or advisory change invalidates this deferral."
+  },
+  {
+    "id": "R2",
+    "artifact": "fixture-sha256:bcb7d7f00ed8cff47f6bb3c32ea3d32fb22b0fadf7e6e132ddb58e47a9a56d57",
+    "evidenceRevision": "R2-e1",
+    "action": "patch-now",
+    "owner": "Jon, document service owner",
+    "reviewBy": "2026-09-15T11:00:00Z",
+    "rationale": "The lower base score still describes readable confidential files on this exposed scenario path. Vendor prerequisites match.",
+    "plan": "Disable the static file route while testing an upgrade to a supported fixed release; 2 engineer-hours initial slot. Verify forbidden file access and intended document downloads before restoring service.",
+    "reopenOn": "New exposure evidence or failed containment verification triggers escalation immediately."
+  },
+  {
+    "id": "R3",
+    "artifact": "fixture-sha256:0a8c0b6e98fec52fcd8764edb75c1eb135d143a45c27d05ca0b64ba990ddf8b6",
+    "evidenceRevision": "R3-e1",
+    "action": "investigate",
+    "owner": "Lea, platform engineer",
+    "reviewBy": "2026-09-15T10:00:00Z",
+    "rationale": "Unknown packaging leaves a serious public exposure question open. Same CVE score and EPSS as R1 do not supply missing evidence.",
+    "plan": "Retrieve deployed artifact and servlet/container configuration within one hour; restrict public access while unresolved, coordinating availability impact with service owner.",
+    "reopenOn": "If WAR prerequisites are confirmed or the deadline is missed, escalate containment and remediation."
+  }
+]

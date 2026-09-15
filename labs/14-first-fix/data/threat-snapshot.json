@@ -1,0 +1,38 @@
+{
+  "retrievedOn": "2026-09-15",
+  "epssDate": "2026-09-14",
+  "kevCatalogVersion": "2026.09.14",
+  "kevReleased": "2026-09-14T19:00:02.426Z",
+  "sources": {
+    "epss": "https://api.first.org/data/v1/epss?cve=CVE-2022-22965,CVE-2024-38816&date=2026-09-14",
+    "kev": "https://raw.githubusercontent.com/cisagov/kev-data/main/known_exploited_vulnerabilities.json"
+  },
+  "rawSha256": {
+    "epss-raw.json": "d85ab6b5728c8d2e0f417e5f30b7a1612176cccf288ec776665449c274626a64",
+    "kev-raw.json": "9630fea2f5dbcda3444115d95688e4491134ccc674243f0d9e8a0253e2e6fbfe"
+  },
+  "advisories": {
+    "CVE-2022-22965": {
+      "vendorUrl": "https://spring.io/security/cve-2022-22965/",
+      "cvssVersion": "3.0",
+      "baseVector": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+      "baseScore": 9.8,
+      "scoreAttribution": "Calculated from vendor-linked base vector using FIRST unchanged-scope formula",
+      "epssProbability": "0.996380000",
+      "epssPercentile": "0.999480000",
+      "kevListed": true,
+      "kevDateAdded": "2022-04-04"
+    },
+    "CVE-2024-38816": {
+      "vendorUrl": "https://spring.io/security/cve-2024-38816/",
+      "cvssVersion": "3.1",
+      "baseVector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+      "baseScore": 7.5,
+      "scoreAttribution": "Calculated from vendor-linked base vector using FIRST unchanged-scope formula",
+      "epssProbability": "0.147180000",
+      "epssPercentile": "0.964730000",
+      "kevListed": false,
+      "kevDateAdded": null
+    }
+  }
+}
