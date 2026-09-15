@@ -5,23 +5,97 @@
 <meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
 <link rel="stylesheet" href="../assets/style.css"></head>
 <body><a class="skip" href="#main">Skip to content</a><header class="site-header"><a href="../index.html">Security Is an Engineering Job</a><nav aria-label="Book"><a href="../index.html#essays">Essays</a><a href="../about.html">About</a></nav></header>
-<main id="main"><p class="kicker">Essay 13 · Practice</p><article><h1>Review the association before trusting the inventory</h1>
-<p>Compare with your saved <a href="13-inventory-worksheet.html">worksheet</a>. Hints and supplied reasoning count as assistance.</p>
-<h2>Explain the measured mismatch</h2>
-<p>Maven describes the application&#39;s resolved dependency graph under the configured scopes. The helper is another project, copied into the image later. Its absence from the app BOM is expected; presenting that document as the whole image inventory is the error. The image also adds Alpine and Java runtime components outside that application graph.</p>
-<p>Both copied application JARs are identical. The helper&#39;s embedded Maven version and JAR hash change, and the resulting image IDs differ. Both images pass a real HTTP status check and a separate helper invocation. Those four smoke observations say nothing about whether the web endpoint uses the helper or whether the inventory is complete.</p>
-<p>The guided contract checks 21 observations. Substituting the Maven BOM for the final component list fails four checks: helper and musl for each image. The positive Spring component checks remain true. Syft&#39;s 112 native packages and 1,336 CycloneDX components use different denominators; the latter includes 1,223 file components and one operating-system component. Do not report a coverage percentage from these counts.</p>
-<h2>Progressive hints</h2>
+<main id="main"><p class="kicker">Essay 13 · Practice</p><article><h1>Release inventory review</h1>
+<p>Open this after saving your <a href="13-inventory-worksheet.html">worksheet</a> assessment. Everything below counts as assistance once you have read it. If you are stuck partway, read only the next hint in section 2 and record that you did.</p>
+<h2>1. Judge the attempt before comparing verdicts</h2>
+<p>A sound assessment shows the following.</p>
+<p><strong>Facts checked, not read.</strong> For each record, the hash comparison was computed from the report bytes, and the subject was read from inside the report rather than from <code>claimedSubject</code>. A table that repeats the records&#39; own descriptions is not an assessment.</p>
+<p><strong>The artifact kind named.</strong> The assessment distinguishes an image inventory from an application dependency inventory, and a scan of the selected image from a scan of a related object: the same tag at another time, the same release name for another platform.</p>
+<p><strong>An answer that cites only what can carry it.</strong> Agreeing records that describe something else are listed as not supporting the answer, even when they agree.</p>
+<p><strong>A useful next request.</strong> The sign-off request targets the remaining gap: for example, the untrimmed native scan with its configuration, or direct inspection of the helper JAR inside the selected image by digest.</p>
+<p><strong>Honest limits.</strong> Even the right record describes files present in one platform&#39;s merged filesystem at scan time. It does not show reachability, other platforms, later mounts or downloads, or who produced the record.</p>
+<h2>2. Progressive hints, if you are stuck</h2>
 <ol>
-<li>A tag is a mutable label. Compare the independently supplied selected image ID with the record, while preserving the exercise&#39;s requested-tag check.</li>
-<li>Parse the native scan and inspect <code>source.metadata.imageID</code>. Relabeling an old record must not relabel the scan&#39;s subject. Reject missing or malformed required evidence.</li>
-<li>Compute SHA-256 from each supplied report&#39;s actual bytes and compare it with the corresponding recorded hash. Checking one report does not bind the other.</li>
+<li>For each record, compute the SHA-256 of its report file and compare it with <code>reportSha256</code>. Then open the report and find the subject it names: <code>source.metadata.imageID</code> in Syft JSON, <code>metadata.component</code> in CycloneDX.</li>
+<li>Compare each subject with <code>selection.json</code>. For records that do not name an image, ask what their generator can see. For records naming a platform, compare it with the selection.</li>
+<li>Answer the advisory question using only the records whose subject, platform and bytes you could establish. Check what the others say about the helper, and why that cannot count.</li>
 </ol>
-<p>The executed private reference passes all nine contract tests. The public starter passes only matching A, matching B and rejection of an unrelated tag; six rejection cases fail. With the source-ID comparison removed from the private solution, the relabeled-record case fails, even though tag, record ID and report hashes agree. That is the separate check the negative control tests.</p>
-<p>No complete solution file is published here. Your extra variation is outside these nine reference tests. Explain its result rather than assuming the supplied checks exhaust possible malformed input or all SBOM formats.</p>
-<h2>What remains unproved</h2>
-<p>The pairing record is unsigned. If someone can replace all evidence consistently, matching hashes do not establish an honest producer or trustworthy collection process. The caller must select the image independently and use that immutable identity for subsequent work; resolving a mutable tag again can select another image.</p>
-<p>The exercise binds both report files to the recorded association; it does not fully validate the exchange-format schema, reconstruct every dependency, validate every context field in the sidecar, or prove that two arbitrary reports have identical semantics. <code>record.py</code> assumes reports were produced together by the lab runner; a trusted production pipeline requires its own controls.</p>
-<p>A package URL is also an identification claim. This fixture&#39;s comparator accepts a known Maven JAR with and without <code>?type=jar</code>; it does not treat all qualifiers or different inferred namespaces as equivalent. Follow the location evidence and inspect the archive when tools disagree.</p>
-<p>A useful handover names the image ID, platform, generator/version, merged-filesystem scope, reports and hashes, and exclusions such as later mounts or downloads. Keep findings about identity, component presence and vulnerability exposure separate. No vulnerability scan or professional assessment was performed here.</p>
+<h2>3. What each record is</h2>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Table; scroll horizontally on small screens"><table>
+<thead>
+<tr>
+<th>Record</th>
+<th>Facts</th>
+<th>Verdict</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>R1: release pipeline job 412</td>
+<td>Hash matches. The native scan names the selected image ID; linux/amd64, squashed. Excerpt of this lab&#39;s measured scan of image B. Helper 1.1.0 at <code>/opt/book21/tools/export-helper.jar</code>.</td>
+<td><strong>describes</strong></td>
+</tr>
+<tr>
+<td>R2: release pipeline job 409</td>
+<td>Hash matches, and it claims the same tag as R1. The report names a different image ID: image A, scanned before the tag moved. Helper 1.0.0.</td>
+<td><strong>does-not-describe</strong>: the right label at the wrong time</td>
+</tr>
+<tr>
+<td>R3: application build</td>
+<td>Hash matches. CycloneDX from the Maven plugin; the subject is the application module. Lists Spring dependencies; no helper, no Alpine packages, no image identity.</td>
+<td><strong>partial</strong>: true for the application&#39;s dependency graph, not an inventory of the image</td>
+</tr>
+<tr>
+<td>R4: compliance export</td>
+<td>Claims the selected image ID, and its CycloneDX metadata names it. But the recorded hash does not match the report bytes, and the report lists helper 1.0.0 where the pipeline scan of the same image shows 1.1.0. The file was changed after its hash was recorded, and the edited helper entry still carries identifiers from the 1.1.0 artifact; this condition is authored.</td>
+<td><strong>cannot-rely</strong> (or does-not-describe): content that disagrees with its own recorded hash is not evidence of anything</td>
+</tr>
+<tr>
+<td>R5: registry scanner</td>
+<td>Hash matches. The report names a different image ID and an OCI index digest for the release name; linux/arm64. Authored: the lab built only amd64. It shows helper 1.1.0.</td>
+<td><strong>does-not-describe</strong>: another object and platform, even though it agrees</td>
+</tr>
+</tbody></table>
+</div><p><strong>Release answer:</strong> no. The selected image contains helper 1.1.0, not 1.0.0, supported by R1 alone. R2 and R4 say 1.0.0 but cannot carry the answer; R5 agrees but describes another platform; R3 cannot see the helper at all.</p>
+<p><strong>Before signing off</strong>, a reasonable request is the complete native scan for R1 with its configuration file, or an independent look at the helper JAR&#39;s embedded Maven properties inside the image selected by digest. R1 is one excerpted scan from one producer, and nothing here authenticates that producer.</p>
+<h2>4. Assessments that look finished</h2>
+<p>Each was run through <code>review_check.py</code>.</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Table; scroll horizontally on small screens"><table>
+<thead>
+<tr>
+<th>Assessment</th>
+<th>Result</th>
+<th>What went wrong</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>The verdicts in section 3</td>
+<td>0 failures</td>
+<td>None.</td>
+</tr>
+<tr>
+<td>R1, R2 and R4 accepted as describing the release, answering &quot;yes, 1.0.0 present&quot; from R2 and R4</td>
+<td>3 failures</td>
+<td>Trusted the claimed subject and label; never compared report bytes or the subject inside the report.</td>
+</tr>
+<tr>
+<td>The application BOM and the arm64 scan counted as image evidence, supporting &quot;no&quot; with R1, R3 and R5</td>
+<td>3 failures</td>
+<td>The right conclusion, reached with evidence that cannot carry it.</td>
+</tr>
+</tbody></table>
+</div><p>The second row is the essay&#39;s mechanism in miniature. The tag was right and the component list was well formed, and the evidence still belonged to a different image.</p>
+<h2>5. Reference evidence</h2>
+<p>Recorded while authoring. None of it is evidence of your attempt.</p>
+<ul>
+<li>Guided: <code>verify.py</code> 21/21; the negative inventory control fails the 4 helper and <code>musl</code> checks; <code>pairing_tests.py</code> 9 pass over the two real records.</li>
+<li>Measured on Docker Engine 29.1.3 with the overlay2 image store: image B&#39;s local ID equals the SHA-256 of its configuration blob, checked from an exported image.</li>
+<li>The packet was generated from the lab&#39;s measured scans; R4&#39;s alteration, R5&#39;s scan, producers, times and the advisory are authored.</li>
+<li><code>review_check.py</code>: the section 3 verdicts pass; the two assessments in section 4 fail 3 checks each.</li>
+</ul>
+<p>To compare after your attempt:</p>
+<pre><code class="language-bash">python3 review_check.py --assessment your-assessment.json
+</code></pre>
+<p>It recomputes hashes and subjects, then checks your verdicts and release answer. It cannot judge your reasons or your request for further evidence.</p>
+<h2>6. Limits</h2>
+<p>Excerpts keep subjects and relevant components but omit most packages and the scanner configuration. The packet does not test registry manifests end to end, multi-platform builds, signed attestations or vulnerability databases. A hash binds bytes to a record; it does not establish an honest producer.</p>
 </article><div class="practice-actions"><button onclick="window.print()">Print this page</button><a href="../essays/13-build-inventory.html">Return to essay 13</a><a href="13-inventory-worksheet.html">Back to worksheet</a></div></main><footer><span>Book 21 · Learn, practise, verify.</span><a href="https://github.com/AnthonyKot/book21">Source on GitHub</a></footer></body></html>

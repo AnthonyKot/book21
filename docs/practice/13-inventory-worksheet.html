@@ -5,55 +5,183 @@
 <meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
 <link rel="stylesheet" href="../assets/style.css"></head>
 <body><a class="skip" href="#main">Skip to content</a><header class="site-header"><a href="../index.html">Security Is an Engineering Job</a><nav aria-label="Book"><a href="../index.html#essays">Essays</a><a href="../about.html">About</a></nav></header>
-<main id="main"><p class="kicker">Essay 13 · Practice</p><article><h1>Identify the artifact behind the inventory</h1>
-<p>Use <a href="../essays/13-build-inventory.html">essay 13</a>, the <a href="https://github.com/AnthonyKot/book21/tree/main/labs/13-build-inventory">local lab</a>, and the <a href="13-inventory-review.html">review guide</a> after your own attempt. No real customer data, cloud environment or registry publication is needed.</p>
-<h2>Predict the discrepancy</h2>
-<p>Before running the build, inspect the application POM and Dockerfile. Explain what the Maven plugin can learn about a JAR copied from the independent helper project. Predict whether a change to that helper must change the application JAR, the final image and the appropriate inventory.</p>
+<main id="main"><p class="kicker">Essay 13 · Practice</p><article><h1>Release inventory worksheet</h1>
+<p>Use with <a href="../essays/13-build-inventory.html">essay 13</a> and the <a href="https://github.com/AnthonyKot/book21/tree/main/labs/13-build-inventory">local lab</a>. Save your part B assessment before opening the <a href="13-inventory-review.html">review guide</a> or running <code>review_check.py</code>, whose source reveals the answers. No real customer data, cloud environment or registry publication is needed.</p>
+<h2>Plan the week</h2>
+<p>These are authoring estimates derived from the steps below, not measured learner times. Record your actual time.</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Table; scroll horizontally on small screens"><table>
+<thead>
+<tr>
+<th>Part</th>
+<th>What it involves</th>
+<th>Provisional estimate</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Setup</td>
+<td>Docker, a checksum-verified Syft download, Java, Maven and Python; first image and dependency downloads</td>
+<td>1–2 hours</td>
+</tr>
+<tr>
+<td>Guided</td>
+<td>Read the essay, build and scan both images, run the verification, negative control and pairing tests, part A</td>
+<td>2–3 hours</td>
+</tr>
+<tr>
+<td>Independent</td>
+<td>Part B: assess five records, answer the release question, write the evidence request</td>
+<td>2.5–4 hours</td>
+</tr>
+<tr>
+<td>Delayed check</td>
+<td>The final evidence-record question, about a week later</td>
+<td>0.5 hour</td>
+</tr>
+<tr>
+<td>Optional</td>
+<td>Part C, repeating the assessment on inventory records from a build you may inspect</td>
+<td>1–2 hours, later week</td>
+</tr>
+</tbody></table>
+</div><p>The required parts total about 6–9.5 hours, and setup is the least predictable. Keep the week bounded:</p>
+<ul>
+<li>If Docker or Syft setup blocks you for more than two hours, record the command and error and do part B, which needs only Python and a SHA-256 tool. Return to the guided build next week.</li>
+<li>If part B has not produced a verdict for every record after about two hours, save what you have, open only the next hint in the review guide, marked as assistance, or carry the work into next week.</li>
+</ul>
+<p>Start of attempt:</p>
+<ul>
+<li>Date, repository revision, Docker, Syft, Java, Maven and Python versions:</li>
+<li>Material already seen (hints, AI assistance, the review script):</li>
+</ul>
+<h2>A. Guided: what each view describes</h2>
+<p>Before running the build, read the application POM and the Dockerfile, and predict the answers below.</p>
 <div class="table-scroll" tabindex="0" role="region" aria-label="Table; scroll horizontally on small screens"><table>
 <thead>
 <tr>
 <th>Question</th>
 <th>Prediction</th>
-<th>Observation and evidence location</th>
+<th>Observation and where you found it</th>
 </tr>
 </thead>
 <tbody><tr>
-<td>Is Spring Web MVC present in both inventories?</td>
+<td>Is Spring Web MVC in both the Maven BOM and the image inventory?</td>
 <td></td>
 <td></td>
 </tr>
 <tr>
-<td>Is the helper in the application dependency BOM?</td>
+<td>Is the helper in the Maven BOM?</td>
 <td></td>
 <td></td>
 </tr>
 <tr>
-<td>Which helper version is in A and B?</td>
+<td>Which helper version is in A and in B?</td>
 <td></td>
 <td></td>
 </tr>
 <tr>
-<td>Where do the Alpine packages enter?</td>
+<td>Where do the Alpine packages come from?</td>
 <td></td>
 <td></td>
 </tr>
 <tr>
-<td>Do identical app bytes imply identical images?</td>
+<td>Do identical application bytes imply identical images?</td>
 <td></td>
 <td></td>
 </tr>
 </tbody></table>
-</div><h2>Collect evidence</h2>
-<p>Run the README&#39;s build and verification commands. Save your source revision, tool versions, exact commands and output before rerunning anything. Read the scanner diagnostics. Explain the difference among the 39 Maven components, 112 native package records and 1,336 image CycloneDX components. Pick one component and inspect its identity, version and file location rather than just finding its name in a list.</p>
-<p>Run the negative inventory control. Confirm that the four failures concern the helper and base-package expectations, while the Spring checks pass. An installation, startup or JSON-reading failure does not establish that result.</p>
-<p>Save the local A and B image IDs, application hashes, helper hashes, two inventories per image, pairing records and actual tag-move observations. Keep local image IDs separate from the pinned base registry digest. Do not label a locally built image ID as a pushed registry manifest digest.</p>
-<h2>Independent repair: the verifier trusts a name</h2>
-<p>Run <code>python3 record.py</code> to generate the pairing records, then <code>python3 exercise_tests.py</code>. Save the failing results before opening <code>identity_exercise.py</code>.</p>
-<p>Its input includes a selected image ID from outside the record. Repair the verifier so it checks that selection, the source inside the native scan and the exact bytes of both supplied reports. Missing required evidence must cause rejection. Preserve correct A and B pairs. Keep the test suite and generated artifacts unchanged.</p>
-<p>Explain why changing <code>record[&#39;imageID&#39;]</code> alone cannot legitimately associate A&#39;s scan with B. Explain why checking only the native report&#39;s hash leaves the supplied CycloneDX report unbound. Then add one independently chosen variation: another missing required field, a changed report byte, or a malformed subject structure. Record what you predicted and what actually happened.</p>
-<h2>Write a bounded handover</h2>
-<p>State what was inventoried, by which tool/configuration, for which platform and image identity. Describe the separately copied helper, one unresolved identity discrepancy and what the smoke checks establish. Distinguish present files from code used by a particular request.</p>
-<p>For an internal team, identify the release step and owner responsible for regenerating this evidence after packaging. For consulting, describe the collection scope and what a retest would need. Keep both career routes open; the lab is not a production assessment.</p>
-<p>Allow 10–12 hours within the established 10–15-hour week: about 2 for reading/setup, 3 for builds and comparison, 3 for the verifier, and 2–4 for investigation, handover and delayed explanation. These are planning allowances. Carry a blocked download or unfinished investigation forward rather than extending the week without limit.</p>
-<p>Record actual time, assistance and remaining gaps. On a later day, explain why a valid BOM and a matching tag can still be the wrong evidence for a selected image. Do not mark independent completion when you followed the supplied solution reasoning.</p>
+</div><ol>
+<li>Explain the difference between the 39 Maven components, the 112 native package records and the 1,336 CycloneDX components.</li>
+<li>Run the negative inventory control. Why do exactly the helper and <code>musl</code> checks fail, and why do the Spring checks still pass?</li>
+<li>After the tag moves, why can a record carrying the right tag still describe the wrong image?</li>
+</ol>
+<h2>B. Independent: which record describes the release?</h2>
+<h3>The brief</h3>
+<p><code>data/release-review/selection.json</code> names the image selected for the release. <code>records.json</code> lists five inventory records attached to the change, with their report files. An advisory affects <code>book21:export-helper</code> version 1.0.0 (the advisory is fictional). The release manager asks two questions: which of these records can be attached to the release as its inventory, and does the selected image contain the affected version?</p>
+<p><strong>Requirements.</strong></p>
+<ol>
+<li><strong>Check, do not accept.</strong> For each record, verify what you can yourself: whether the recorded hash matches the report file&#39;s bytes, what the report itself names as its subject, what platform and scope it covers, and what kind of artifact its generator inventories. A record&#39;s <code>claimedSubject</code> is a claim, not evidence.</li>
+<li><strong>One verdict per record:</strong> <code>describes</code> (it is an inventory of the selected image), <code>partial</code> (it truthfully describes part of what the image contains, but not the image), <code>does-not-describe</code> (it describes something else), or <code>cannot-rely</code> (you cannot establish what it describes from the evidence given). If two verdicts fit, choose one and say why.</li>
+<li><strong>Answer only from records that can carry the answer.</strong> A record that agrees with your conclusion but describes something else does not support it.</li>
+<li><strong>Say what you would still ask for.</strong> Name at least one piece of evidence you would request before signing off, and why.</li>
+</ol>
+<h3>Deliverable 1: record assessment</h3>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Table; scroll horizontally on small screens"><table>
+<thead>
+<tr>
+<th>Record</th>
+<th>Recorded hash matches bytes?</th>
+<th>Subject named inside the report</th>
+<th>Platform and scope</th>
+<th>What the generator inventories</th>
+<th>Verdict</th>
+<th>Reason</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>R1</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>R2</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>R3</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>R4</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>R5</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+</div><h3>Deliverable 2: the release answer</h3>
+<ul>
+<li>Does the selected image contain <code>export-helper</code> 1.0.0?</li>
+<li>Records that support the answer, and why each can carry it:</li>
+<li>Records that seem relevant but cannot carry it, and why:</li>
+<li>Evidence you would request before signing off:</li>
+</ul>
+<p>Save your verdicts and answer as the JSON assessment described in the lab README. <code>review_check.py</code> checks only those verdicts and the records you cite; your written reasons, evidence request and limits are judged against the review guide&#39;s rubric.</p>
+<h3>Limits</h3>
+<p>Name one thing even the best record here cannot establish about the release, and one change to the build or deployment that would make you re-inventory.</p>
+<h2>C. Optional: a build you may inspect</h2>
+<p>In a codebase and registry you are permitted to use, find the inventory evidence attached to one release. Apply the same checks to it and write the same verdicts. Do not publish findings about a real system.</p>
+<h2>Handover</h2>
+<p>Write a short note for the release record: which inventory is attached and why, which records were rejected and why, the advisory answer, and what remains unverified. For an internal team, address the release manager. For a consulting client, add the artifact, platform, collection method and exclusions. Label the scenario as fictional.</p>
+<h2>Evidence record</h2>
+<ul>
+<li>Actual time per part:</li>
+<li>Assistance used, including hints, AI suggestions and any look at the review script:</li>
+<li>What you could now explain without notes:</li>
+<li>Delayed check, a week later: without reopening the packet, explain why a correct component list attached to the right tag can still be the wrong evidence for a release.</li>
+</ul>
 </article><div class="practice-actions"><button onclick="window.print()">Print this page</button><a href="../essays/13-build-inventory.html">Return to essay 13</a><a href="13-inventory-review.html">Review after your attempt →</a></div></main><footer><span>Book 21 · Learn, practise, verify.</span><a href="https://github.com/AnthonyKot/book21">Source on GitHub</a></footer></body></html>

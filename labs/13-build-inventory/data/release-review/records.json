@@ -1,0 +1,62 @@
+[
+  {
+    "id": "R1",
+    "producedBy": "release pipeline job 412",
+    "producedAt": "2026-09-15T13:44:20+02:00",
+    "claimedSubject": "book21-inventory:candidate",
+    "generator": "syft 1.51.1",
+    "format": "syft-json",
+    "scope": "squashed",
+    "platform": "linux/amd64",
+    "reportFile": "reports/r1.syft.json",
+    "reportSha256": "8a7ba02cd3434b64092d650ba24f3dc03be91b64f6b3faffe247fdd5a7503930"
+  },
+  {
+    "id": "R2",
+    "producedBy": "release pipeline job 409",
+    "producedAt": "2026-09-15T13:40:05+02:00",
+    "claimedSubject": "book21-inventory:candidate",
+    "generator": "syft 1.51.1",
+    "format": "syft-json",
+    "scope": "squashed",
+    "platform": "linux/amd64",
+    "reportFile": "reports/r2.syft.json",
+    "reportSha256": "e361851f00149d5f26f16388dc531077b68a637bef3426ada9b09d11a28749ef"
+  },
+  {
+    "id": "R3",
+    "producedBy": "application build, module inventory-app",
+    "producedAt": "2026-09-15T13:31:40+02:00",
+    "claimedSubject": "document-service release candidate",
+    "generator": "cyclonedx-maven-plugin 2.9.3",
+    "format": "cyclonedx-json 1.6",
+    "scope": "compile and runtime dependencies",
+    "platform": "not applicable",
+    "reportFile": "reports/r3.cdx.json",
+    "reportSha256": "b6cab71b172a7ad60353a76f2d011125367f22855ef40654fb5560396cde878f"
+  },
+  {
+    "id": "R4",
+    "producedBy": "compliance export, attached to change ticket",
+    "producedAt": "2026-09-15T14:02:11+02:00",
+    "claimedSubject": "sha256:46d17b670019c2f18a2486cffb706e465663926440fca2a8e923c2779653147a",
+    "generator": "syft 1.51.1",
+    "format": "cyclonedx-json 1.6",
+    "scope": "squashed",
+    "platform": "linux/amd64",
+    "reportFile": "reports/r4.cdx.json",
+    "reportSha256": "1eaa87f12271f1e1e158bc778d745068dcee203696e04d54bb998d2199b42c92"
+  },
+  {
+    "id": "R5",
+    "producedBy": "registry scanner",
+    "producedAt": "2026-09-15T14:10:00+02:00",
+    "claimedSubject": "registry.example.test/book21/document-service:2026.09.15",
+    "generator": "syft 1.51.1",
+    "format": "syft-json",
+    "scope": "squashed",
+    "platform": "linux/arm64",
+    "reportFile": "reports/r5.syft.json",
+    "reportSha256": "f555913fdd73a04b9399d19d4341e3d474f0c47281f9ca80a83f805c57bc7872"
+  }
+]

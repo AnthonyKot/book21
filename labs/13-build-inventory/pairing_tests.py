@@ -1,16 +1,16 @@
-"""Independent contract checks over the two real scans; run after record.py."""
+"""Guided checks of pairing.py over the two real scans; run after record.py."""
 import copy
 import hashlib
 import json
 import os
 from pathlib import Path
 import unittest
-from identity_exercise import accepts
+from pairing import accepts
 
 ROOT = Path(os.environ.get('BOOK21_INVENTORY_OUT', Path(__file__).resolve().parent/'out'))
 TAG = 'book21-inventory:candidate'
 
-class IdentityExercise(unittest.TestCase):
+class PairingVerifier(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.records = {x: json.loads((ROOT/x/'record.json').read_text()) for x in ['a','b']}

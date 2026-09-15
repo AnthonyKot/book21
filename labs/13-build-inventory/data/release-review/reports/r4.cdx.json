@@ -1,0 +1,281 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "serialNumber": "urn:uuid:7908bcd3-f67b-4654-a542-0b7d96d81b54",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2026-09-15T13:44:13+02:00",
+    "tools": {
+      "components": [
+        {
+          "type": "application",
+          "author": "anchore",
+          "name": "syft",
+          "version": "1.51.1"
+        }
+      ]
+    },
+    "component": {
+      "bom-ref": "668cff65e5d5c5fb",
+      "type": "container",
+      "name": "sha256",
+      "version": "46d17b670019c2f18a2486cffb706e465663926440fca2a8e923c2779653147a"
+    }
+  },
+  "components": [
+    {
+      "bom-ref": "pkg:maven/book21/export-helper@1.0.0?package-id=3bc9807b4a05ed60",
+      "type": "library",
+      "group": "book21",
+      "name": "export-helper",
+      "version": "1.0.0",
+      "cpe": "cpe:2.3:a:export-helper:export-helper:1.1.0:*:*:*:*:*:*:*",
+      "purl": "pkg:maven/book21/export-helper@1.0.0",
+      "externalReferences": [
+        {
+          "url": "",
+          "hashes": [
+            {
+              "alg": "SHA-1",
+              "content": "363bf47ba3b05d745eb44e24d70a0345d35ab934"
+            }
+          ],
+          "type": "build-meta"
+        }
+      ],
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "java-archive-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "java"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "java-archive"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "java-archive"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:export-helper:export_helper:1.1.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:export_helper:export-helper:1.1.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:export_helper:export_helper:1.1.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:export:export-helper:1.1.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:export:export_helper:1.1.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:layerID",
+          "value": "sha256:49b974072130ebda29d416b6bdaeb376a25f9e939a239955603baa6135e02b98"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/opt/book21/tools/export-helper.jar"
+        },
+        {
+          "name": "syft:metadata:-:artifactID",
+          "value": "export-helper"
+        },
+        {
+          "name": "syft:metadata:-:groupID",
+          "value": "book21"
+        },
+        {
+          "name": "syft:metadata:virtualPath",
+          "value": "/opt/book21/tools/export-helper.jar"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:apk/alpine/musl@1.2.6-r2?arch=x86_64&distro=alpine-3.24.1&package-id=f7ad0ee8f1c27cb0",
+      "type": "library",
+      "publisher": "Natanael Copa <ncopa@alpinelinux.org>",
+      "name": "musl",
+      "version": "1.2.6-r2",
+      "description": "the musl c library (libc) implementation",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "cpe": "cpe:2.3:a:musl-libc:musl:1.2.6-r2:*:*:*:*:*:*:*",
+      "purl": "pkg:apk/alpine/musl@1.2.6-r2?arch=x86_64&distro=alpine-3.24.1",
+      "externalReferences": [
+        {
+          "url": "https://musl.libc.org/",
+          "type": "distribution"
+        }
+      ],
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "apk-db-cataloger"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "apk"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "apk-db-entry"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:musl_libc:musl:1.2.6-r2:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:musl:musl:1.2.6-r2:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:layerID",
+          "value": "sha256:feb44b720e4357b0ce4112fe335bd1ff29b5f07af9cb06a3dff65f8d8c4297a4"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/lib/apk/db/installed"
+        },
+        {
+          "name": "syft:metadata:gitCommitOfApkPort",
+          "value": "f5640d3a10f664c9119720c60515265d3d6f6d01"
+        },
+        {
+          "name": "syft:metadata:installedSize",
+          "value": "670312"
+        },
+        {
+          "name": "syft:metadata:originPackage",
+          "value": "musl"
+        },
+        {
+          "name": "syft:metadata:provides:0",
+          "value": "so:libc.musl-x86_64.so.1=1"
+        },
+        {
+          "name": "syft:metadata:pullChecksum",
+          "value": "Q1D35YJ+ThpzYxvtont4QxqLokDgU="
+        },
+        {
+          "name": "syft:metadata:size",
+          "value": "415475"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:maven/org.springframework/spring-webmvc@7.0.9?package-id=1fa51b94422f19cf",
+      "type": "library",
+      "name": "spring-webmvc",
+      "version": "7.0.9",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        },
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
+      "cpe": "cpe:2.3:a:org.springframework:spring-webmvc:7.0.9:*:*:*:*:*:*:*",
+      "purl": "pkg:maven/org.springframework/spring-webmvc@7.0.9",
+      "externalReferences": [
+        {
+          "url": "",
+          "hashes": [
+            {
+              "alg": "SHA-1",
+              "content": "53b41e6290df1a75fe0e0d16608c80a93bb63bdd"
+            }
+          ],
+          "type": "build-meta"
+        }
+      ],
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "java-archive-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "java"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "java-archive"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "java-archive"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:org.springframework:spring_webmvc:7.0.9:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:springframework:spring-webmvc:7.0.9:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:springframework:spring_webmvc:7.0.9:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:spring-webmvc:spring-webmvc:7.0.9:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:spring-webmvc:spring_webmvc:7.0.9:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:spring_webmvc:spring-webmvc:7.0.9:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:spring_webmvc:spring_webmvc:7.0.9:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:spring:spring-webmvc:7.0.9:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:spring:spring_webmvc:7.0.9:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:layerID",
+          "value": "sha256:eedb87cd0149429d304ffb56342b6f81329514f0a9adae575778d633816bffaf"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/opt/book21/app.jar"
+        },
+        {
+          "name": "syft:metadata:virtualPath",
+          "value": "/opt/book21/app.jar:BOOT-INF/lib/spring-webmvc-7.0.9.jar"
+        }
+      ]
+    }
+  ]
+}

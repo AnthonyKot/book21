@@ -1,0 +1,393 @@
+{
+  "schema": {
+    "version": "16.1.10",
+    "url": "https://raw.githubusercontent.com/anchore/syft/main/schema/json/schema-16.1.10.json"
+  },
+  "descriptor": {
+    "name": "syft",
+    "version": "1.51.1",
+    "configuration": "omitted from this excerpt; the lab run used syft.yaml"
+  },
+  "source": {
+    "id": "005646082d87715eaca6d7ebcf42125b9921b8b3adce3a8c9092fd3a57a0333a",
+    "name": "sha256",
+    "version": "f532c0c8457fdee2ccc755880185b03bc471aaee8d65af8aa4b904750f5295f2",
+    "type": "image",
+    "metadata": {
+      "userInput": "sha256:f532c0c8457fdee2ccc755880185b03bc471aaee8d65af8aa4b904750f5295f2",
+      "imageID": "sha256:f532c0c8457fdee2ccc755880185b03bc471aaee8d65af8aa4b904750f5295f2",
+      "manifestDigest": "sha256:005646082d87715eaca6d7ebcf42125b9921b8b3adce3a8c9092fd3a57a0333a",
+      "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
+      "tags": [
+        "book21-inventory:a"
+      ],
+      "imageSize": 227552960,
+      "layers": [
+        {
+          "mediaType": "application/vnd.docker.image.rootfs.diff.tar.gzip",
+          "digest": "sha256:34884abbe92863fce933ed7c39c0e045631af0ed86d5cc0dfbdf9fdca426ce3c",
+          "size": 8410683
+        },
+        {
+          "mediaType": "application/vnd.docker.image.rootfs.diff.tar.gzip",
+          "digest": "sha256:feb44b720e4357b0ce4112fe335bd1ff29b5f07af9cb06a3dff65f8d8c4297a4",
+          "size": 34877664
+        },
+        {
+          "mediaType": "application/vnd.docker.image.rootfs.diff.tar.gzip",
+          "digest": "sha256:05b35dacf3d7aa9d802993f0eba308a307d2314e2b94082ac9eade193c4178b3",
+          "size": 164352277
+        },
+        {
+          "mediaType": "application/vnd.docker.image.rootfs.diff.tar.gzip",
+          "digest": "sha256:0a759a7d4e3a0721c5810892f48cc6bb319dbcf2655844b42032da6d8fbef4cf",
+          "size": 0
+        },
+        {
+          "mediaType": "application/vnd.docker.image.rootfs.diff.tar.gzip",
+          "digest": "sha256:26a692763921fb18ffc82a32334f15ae35b4e65d0cc8a6e8a3264519b0ace9da",
+          "size": 5975
+        },
+        {
+          "mediaType": "application/vnd.docker.image.rootfs.diff.tar.gzip",
+          "digest": "sha256:c5c9cc6a2dd2232513e86ea7d42ae35d7620dc4315cb7d71a9464a72524a6149",
+          "size": 0
+        },
+        {
+          "mediaType": "application/vnd.docker.image.rootfs.diff.tar.gzip",
+          "digest": "sha256:eedb87cd0149429d304ffb56342b6f81329514f0a9adae575778d633816bffaf",
+          "size": 19904230
+        },
+        {
+          "mediaType": "application/vnd.docker.image.rootfs.diff.tar.gzip",
+          "digest": "sha256:dad99bf39efd026daeb61b67d3beaf1a1e87a90266d8398832341c836f5196bb",
+          "size": 2131
+        }
+      ],
+      "manifest": "eyJzY2hlbWFWZXJzaW9uIjoyLCJtZWRpYVR5cGUiOiJhcHBsaWNhdGlvbi92bmQuZG9ja2VyLmRpc3RyaWJ1dGlvbi5tYW5pZmVzdC52Mitqc29uIiwiY29uZmlnIjp7Im1lZGlhVHlwZSI6ImFwcGxpY2F0aW9uL3ZuZC5kb2NrZXIuY29udGFpbmVyLmltYWdlLnYxK2pzb24iLCJzaXplIjo2MTExLCJkaWdlc3QiOiJzaGEyNTY6ZjUzMmMwYzg0NTdmZGVlMmNjYzc1NTg4MDE4NWIwM2JjNDcxYWFlZThkNjVhZjhhYTRiOTA0NzUwZjUyOTVmMiJ9LCJsYXllcnMiOlt7Im1lZGlhVHlwZSI6ImFwcGxpY2F0aW9uL3ZuZC5kb2NrZXIuaW1hZ2Uucm9vdGZzLmRpZmYudGFyLmd6aXAiLCJzaXplIjo4Njk3ODU2LCJkaWdlc3QiOiJzaGEyNTY6MzQ4ODRhYmJlOTI4NjNmY2U5MzNlZDdjMzljMGUwNDU2MzFhZjBlZDg2ZDVjYzBkZmJkZjlmZGNhNDI2Y2UzYyJ9LHsibWVkaWFUeXBlIjoiYXBwbGljYXRpb24vdm5kLmRvY2tlci5pbWFnZS5yb290ZnMuZGlmZi50YXIuZ3ppcCIsInNpemUiOjM1ODkyMjI0LCJkaWdlc3QiOiJzaGEyNTY6ZmViNDRiNzIwZTQzNTdiMGNlNDExMmZlMzM1YmQxZmYyOWI1ZjA3YWY5Y2IwNmEzZGZmNjVmOGQ4YzQyOTdhNCJ9LHsibWVkaWFUeXBlIjoiYXBwbGljYXRpb24vdm5kLmRvY2tlci5pbWFnZS5yb290ZnMuZGlmZi50YXIuZ3ppcCIsInNpemUiOjE2NDU0NzU4NCwiZGlnZXN0Ijoic2hhMjU2OjA1YjM1ZGFjZjNkN2FhOWQ4MDI5OTNmMGViYTMwOGEzMDdkMjMxNGUyYjk0MDgyYWM5ZWFkZTE5M2M0MTc4YjMifSx7Im1lZGlhVHlwZSI6ImFwcGxpY2F0aW9uL3ZuZC5kb2NrZXIuaW1hZ2Uucm9vdGZzLmRpZmYudGFyLmd6aXAiLCJzaXplIjoyMDQ4LCJkaWdlc3QiOiJzaGEyNTY6MGE3NTlhN2Q0ZTNhMDcyMWM1ODEwODkyZjQ4Y2M2YmIzMTlkYmNmMjY1NTg0NGI0MjAzMmRhNmQ4ZmJlZjRjZiJ9LHsibWVkaWFUeXBlIjoiYXBwbGljYXRpb24vdm5kLmRvY2tlci5pbWFnZS5yb290ZnMuZGlmZi50YXIuZ3ppcCIsInNpemUiOjc2ODAsImRpZ2VzdCI6InNoYTI1NjoyNmE2OTI3NjM5MjFmYjE4ZmZjODJhMzIzMzRmMTVhZTM1YjRlNjVkMGNjOGE2ZThhMzI2NDUxOWIwYWNlOWRhIn0seyJtZWRpYVR5cGUiOiJhcHBsaWNhdGlvbi92bmQuZG9ja2VyLmltYWdlLnJvb3Rmcy5kaWZmLnRhci5nemlwIiwic2l6ZSI6MjA0OCwiZGlnZXN0Ijoic2hhMjU2OmM1YzljYzZhMmRkMjIzMjUxM2U4NmVhN2Q0MmFlMzVkNzYyMGRjNDMxNWNiN2Q3MWE5NDY0YTcyNTI0YTYxNDkifSx7Im1lZGlhVHlwZSI6ImFwcGxpY2F0aW9uL3ZuZC5kb2NrZXIuaW1hZ2Uucm9vdGZzLmRpZmYudGFyLmd6aXAiLCJzaXplIjoxOTkwNzA3MiwiZGlnZXN0Ijoic2hhMjU2OmVlZGI4N2NkMDE0OTQyOWQzMDRmZmI1NjM0MmI2ZjgxMzI5NTE0ZjBhOWFkYWU1NzU3NzhkNjMzODE2YmZmYWYifSx7Im1lZGlhVHlwZSI6ImFwcGxpY2F0aW9uL3ZuZC5kb2NrZXIuaW1hZ2Uucm9vdGZzLmRpZmYudGFyLmd6aXAiLCJzaXplIjo1NjMyLCJkaWdlc3QiOiJzaGEyNTY6ZGFkOTliZjM5ZWZkMDI2ZGFlYjYxYjY3ZDNiZWFmMWExZTg3YTkwMjY2ZDgzOTg4MzIzNDFjODM2ZjUxOTZiYiJ9XX0=",
+      "config": "eyJhcmNoaXRlY3R1cmUiOiJhbWQ2NCIsImNvbmZpZyI6eyJIb3N0bmFtZSI6IiIsIkRvbWFpbm5hbWUiOiIiLCJVc2VyIjoiMTAwMDE6MTAwMDEiLCJBdHRhY2hTdGRpbiI6ZmFsc2UsIkF0dGFjaFN0ZG91dCI6ZmFsc2UsIkF0dGFjaFN0ZGVyciI6ZmFsc2UsIlR0eSI6ZmFsc2UsIk9wZW5TdGRpbiI6ZmFsc2UsIlN0ZGluT25jZSI6ZmFsc2UsIkVudiI6WyJQQVRIPS9vcHQvamF2YS9vcGVuamRrL2JpbjovdXNyL2xvY2FsL3NiaW46L3Vzci9sb2NhbC9iaW46L3Vzci9zYmluOi91c3IvYmluOi9zYmluOi9iaW4iLCJKQVZBX0hPTUU9L29wdC9qYXZhL29wZW5qZGsiLCJMQU5HPWVuX1VTLlVURi04IiwiTEFOR1VBR0U9ZW5fVVM6ZW4iLCJMQ19BTEw9ZW5fVVMuVVRGLTgiLCJKQVZBX1ZFUlNJT049amRrLTIxLjAuMTIrOCJdLCJDbWQiOm51bGwsIkltYWdlIjoic2hhMjU2OmQ3OTY1ZmQ4ZDFmZTA0YTRiZmQ0ZWIxMzhmYzI4ZjJmNzhiN2E0NmZmMDhjOTk4NWJhMDllOTYzZTE0ZjFmYzIiLCJWb2x1bWVzIjpudWxsLCJXb3JraW5nRGlyIjoiL29wdC9ib29rMjEiLCJFbnRyeXBvaW50IjpbImphdmEiLCItamFyIiwiL29wdC9ib29rMjEvYXBwLmphciJdLCJMYWJlbHMiOm51bGx9LCJjb250YWluZXIiOiI2MDUwY2U2ZjBjOTZlMTM2NGM3ZDc4MzQyNjY4OTAxODIwZjc2NTFiNzY5Y2FjYTgzMjVjMjZhYTcyOGU4ZjI1IiwiY29udGFpbmVyX2NvbmZpZyI6eyJIb3N0bmFtZSI6IjYwNTBjZTZmMGM5NiIsIkRvbWFpbm5hbWUiOiIiLCJVc2VyIjoiMTAwMDE6MTAwMDEiLCJBdHRhY2hTdGRpbiI6ZmFsc2UsIkF0dGFjaFN0ZG91dCI6ZmFsc2UsIkF0dGFjaFN0ZGVyciI6ZmFsc2UsIlR0eSI6ZmFsc2UsIk9wZW5TdGRpbiI6ZmFsc2UsIlN0ZGluT25jZSI6ZmFsc2UsIkVudiI6WyJQQVRIPS9vcHQvamF2YS9vcGVuamRrL2JpbjovdXNyL2xvY2FsL3NiaW46L3Vzci9sb2NhbC9iaW46L3Vzci9zYmluOi91c3IvYmluOi9zYmluOi9iaW4iLCJKQVZBX0hPTUU9L29wdC9qYXZhL29wZW5qZGsiLCJMQU5HPWVuX1VTLlVURi04IiwiTEFOR1VBR0U9ZW5fVVM6ZW4iLCJMQ19BTEw9ZW5fVVMuVVRGLTgiLCJKQVZBX1ZFUlNJT049amRrLTIxLjAuMTIrOCJdLCJDbWQiOlsiL2Jpbi9zaCIsIi1jIiwiIyhub3ApICIsIkVOVFJZUE9JTlQgW1wiamF2YVwiIFwiLWphclwiIFwiL29wdC9ib29rMjEvYXBwLmphclwiXSJdLCJJbWFnZSI6InNoYTI1NjpkNzk2NWZkOGQxZmUwNGE0YmZkNGViMTM4ZmMyOGYyZjc4YjdhNDZmZjA4Yzk5ODViYTA5ZTk2M2UxNGYxZmMyIiwiVm9sdW1lcyI6bnVsbCwiV29ya2luZ0RpciI6Ii9vcHQvYm9vazIxIiwiRW50cnlwb2ludCI6WyJqYXZhIiwiLWphciIsIi9vcHQvYm9vazIxL2FwcC5qYXIiXSwiTGFiZWxzIjp7fX0sImNyZWF0ZWQiOiIyMDI2LTA5LTE1VDExOjQzOjUwLjE0Nzk2MDQ1WiIsImhpc3RvcnkiOlt7ImNyZWF0ZWQiOiIyMDI2LTA2LTE2VDAwOjAxOjI5Ljk2NzE2MTkwMloiLCJjcmVhdGVkX2J5IjoiQUREIGFscGluZS1taW5pcm9vdGZzLTMuMjQuMS14ODZfNjQudGFyLmd6IC8gIyBidWlsZGtpdCIsImNvbW1lbnQiOiJidWlsZGtpdC5kb2NrZXJmaWxlLnYwIn0seyJjcmVhdGVkIjoiMjAyNi0wNi0xNlQwMDowMToyOS45NjcxNjE5MDJaIiwiY3JlYXRlZF9ieSI6IkNNRCBbXCIvYmluL3NoXCJdIiwiY29tbWVudCI6ImJ1aWxka2l0LmRvY2tlcmZpbGUudjAiLCJlbXB0eV9sYXllciI6dHJ1ZX0seyJjcmVhdGVkIjoiMjAyNi0wOC0yMVQxODoyNDowOS41MzA3Mzk0NjVaIiwiY3JlYXRlZF9ieSI6IkVOViBKQVZBX0hPTUU9L29wdC9qYXZhL29wZW5qZGsiLCJjb21tZW50IjoiYnVpbGRraXQuZG9ja2VyZmlsZS52MCIsImVtcHR5X2xheWVyIjp0cnVlfSx7ImNyZWF0ZWQiOiIyMDI2LTA4LTIxVDE4OjI0OjA5LjUzMDczOTQ2NVoiLCJjcmVhdGVkX2J5IjoiRU5WIFBBVEg9L29wdC9qYXZhL29wZW5qZGsvYmluOi91c3IvbG9jYWwvc2JpbjovdXNyL2xvY2FsL2JpbjovdXNyL3NiaW46L3Vzci9iaW46L3NiaW46L2JpbiIsImNvbW1lbnQiOiJidWlsZGtpdC5kb2NrZXJmaWxlLnYwIiwiZW1wdHlfbGF5ZXIiOnRydWV9LHsiY3JlYXRlZCI6IjIwMjYtMDgtMjFUMTg6MjQ6MDkuNTMwNzM5NDY1WiIsImNyZWF0ZWRfYnkiOiJFTlYgTEFORz1lbl9VUy5VVEYtOCBMQU5HVUFHRT1lbl9VUzplbiBMQ19BTEw9ZW5fVVMuVVRGLTgiLCJjb21tZW50IjoiYnVpbGRraXQuZG9ja2VyZmlsZS52MCIsImVtcHR5X2xheWVyIjp0cnVlfSx7ImNyZWF0ZWQiOiIyMDI2LTA4LTIxVDE4OjI0OjA5LjUzMDczOTQ2NVoiLCJjcmVhdGVkX2J5IjoiUlVOIC9iaW4vc2ggLWMgc2V0IC1ldXg7ICAgICBhcGsgYWRkIC0tbm8tY2FjaGUgICAgICAgICBmb250Y29uZmlnIHR0Zi1kZWphdnUgICAgICAgICBnbnVwZyAgICAgICAgIGNhLWNlcnRpZmljYXRlcyBwMTEta2l0LXRydXN0ICAgICAgICAgbXVzbC1sb2NhbGVzIG11c2wtbG9jYWxlcy1sYW5nICAgICAgICAgdHpkYXRhICAgICAgICAgY29yZXV0aWxzICAgICAgICAgb3BlbnNzbCAgICAgOyAgICAgcm0gLXJmIC92YXIvY2FjaGUvYXBrLyogIyBidWlsZGtpdCIsImNvbW1lbnQiOiJidWlsZGtpdC5kb2NrZXJmaWxlLnYwIn0seyJjcmVhdGVkIjoiMjAyNi0wOC0yMVQxODoyNDowOS41MzA3Mzk0NjVaIiwiY3JlYXRlZF9ieSI6IkVOViBKQVZBX1ZFUlNJT049amRrLTIxLjAuMTIrOCIsImNvbW1lbnQiOiJidWlsZGtpdC5kb2NrZXJmaWxlLnYwIiwiZW1wdHlfbGF5ZXIiOnRydWV9LHsiY3JlYXRlZCI6IjIwMjYtMDgtMjFUMTg6MjU6MDUuMzg4MzcyOTI5WiIsImNyZWF0ZWRfYnkiOiJSVU4gL2Jpbi9zaCAtYyBzZXQgLWV1eDsgICAgIEFSQ0g9XCIkKGFwayAtLXByaW50LWFyY2gpXCI7ICAgICBjYXNlIFwiJHtBUkNIfVwiIGluICAgICAgICBhYXJjaDY0KSAgICAgICAgICBFU1VNPSdhNGY3MGQyYmU1YzU1OTQwZGQ2MGI2NjM2NjQzYTA1MTI1ZTYwZTZjM2RiYzJhODQwMjAzMmIwMzQ2NzQ0ZGZhJzsgICAgICAgICAgQklOQVJZX1VSTD0naHR0cHM6Ly9naXRodWIuY29tL2Fkb3B0aXVtL3RlbXVyaW4yMS1iaW5hcmllcy9yZWxlYXNlcy9kb3dubG9hZC9qZGstMjEuMC4xMiUyQjgvT3BlbkpESzIxVS1qcmVfYWFyY2g2NF9hbHBpbmUtbGludXhfaG90c3BvdF8yMS4wLjEyXzgudGFyLmd6JzsgICAgICAgICAgOzsgICAgICAgIHg4Nl82NCkgICAgICAgICAgRVNVTT0nOWE3Zjg3MTJhMjc0MWJiMTRlMjQ1MmVlZDJkZTk5ZjYyZDAyZTA1NjE3ZTI3ZDU5ZjE4NjFhMGNkYWQ1ODQ4Nic7ICAgICAgICAgIEJJTkFSWV9VUkw9J2h0dHBzOi8vZ2l0aHViLmNvbS9hZG9wdGl1bS90ZW11cmluMjEtYmluYXJpZXMvcmVsZWFzZXMvZG93bmxvYWQvamRrLTIxLjAuMTIlMkI4L09wZW5KREsyMVUtanJlX3g2NF9hbHBpbmUtbGludXhfaG90c3BvdF8yMS4wLjEyXzgudGFyLmd6JzsgICAgICAgICAgOzsgICAgICAgICopICAgICAgICAgIGVjaG8gXCJVbnN1cHBvcnRlZCBhcmNoOiAke0FSQ0h9XCI7ICAgICAgICAgIGV4aXQgMTsgICAgICAgICAgOzsgICAgIGVzYWM7ICAgICB3Z2V0IC1PIC90bXAvb3Blbmpkay50YXIuZ3ogJHtCSU5BUllfVVJMfTsgICAgIHdnZXQgLU8gL3RtcC9vcGVuamRrLnRhci5nei5zaWcgJHtCSU5BUllfVVJMfS5zaWc7ICAgICBleHBvcnQgR05VUEdIT01FPVwiJChta3RlbXAgLWQpXCI7ICAgICBncGcgLS1iYXRjaCAtLWtleXNlcnZlciBrZXlzZXJ2ZXIudWJ1bnR1LmNvbSAtLXJlY3Yta2V5cyAzQjA0RDc1M0M5MDUwRDlBNUQzNDNGMzk4NDNDNDhBNTY1RjhGMDRCOyAgICAgZ3BnIC0tYmF0Y2ggLS12ZXJpZnkgL3RtcC9vcGVuamRrLnRhci5nei5zaWcgL3RtcC9vcGVuamRrLnRhci5nejsgICAgIHJtIC1yZiBcIiR7R05VUEdIT01FfVwiIC90bXAvb3Blbmpkay50YXIuZ3ouc2lnOyAgICAgZWNobyBcIiR7RVNVTX0gKi90bXAvb3Blbmpkay50YXIuZ3pcIiB8IHNoYTI1NnN1bSAtYyAtOyAgICAgbWtkaXIgLXAgXCIkSkFWQV9IT01FXCI7ICAgICB0YXIgLS1leHRyYWN0ICAgICAgICAgLS1maWxlIC90bXAvb3Blbmpkay50YXIuZ3ogICAgICAgICAtLWRpcmVjdG9yeSBcIiRKQVZBX0hPTUVcIiAgICAgICAgIC0tc3RyaXAtY29tcG9uZW50cyAxICAgICAgICAgLS1uby1zYW1lLW93bmVyICAgICA7ICAgICBybSAtZiAvdG1wL29wZW5qZGsudGFyLmd6OyAjIGJ1aWxka2l0IiwiY29tbWVudCI6ImJ1aWxka2l0LmRvY2tlcmZpbGUudjAifSx7ImNyZWF0ZWQiOiIyMDI2LTA4LTIxVDE4OjI1OjA1LjUzNDEwMjgxNloiLCJjcmVhdGVkX2J5IjoiUlVOIC9iaW4vc2ggLWMgc2V0IC1ldXg7ICAgICBlY2hvIFwiVmVyaWZ5aW5nIGluc3RhbGwgLi4uXCI7ICAgICBlY2hvIFwiamF2YSAtLXZlcnNpb25cIjsgamF2YSAtLXZlcnNpb247ICAgICBlY2hvIFwiQ29tcGxldGUuXCIgIyBidWlsZGtpdCIsImNvbW1lbnQiOiJidWlsZGtpdC5kb2NrZXJmaWxlLnYwIn0seyJjcmVhdGVkIjoiMjAyNi0wOC0yMVQxODoyNTowNS41ODEwMTI5MjZaIiwiY3JlYXRlZF9ieSI6IkNPUFkgLS1jaG1vZD03NTUgZW50cnlwb2ludC5zaCAvX19jYWNlcnRfZW50cnlwb2ludC5zaCAjIGJ1aWxka2l0IiwiY29tbWVudCI6ImJ1aWxka2l0LmRvY2tlcmZpbGUudjAifSx7ImNyZWF0ZWQiOiIyMDI2LTA4LTIxVDE4OjI1OjA1LjU4MTAxMjkyNloiLCJjcmVhdGVkX2J5IjoiRU5UUllQT0lOVCBbXCIvX19jYWNlcnRfZW50cnlwb2ludC5zaFwiXSIsImNvbW1lbnQiOiJidWlsZGtpdC5kb2NrZXJmaWxlLnYwIiwiZW1wdHlfbGF5ZXIiOnRydWV9LHsiY3JlYXRlZCI6IjIwMjYtMDktMTVUMTE6NDM6NDkuNDAzOTUwNjE1WiIsImNyZWF0ZWRfYnkiOiIvYmluL3NoIC1jICMobm9wKSBXT1JLRElSIC9vcHQvYm9vazIxIn0seyJjcmVhdGVkIjoiMjAyNi0wOS0xNVQxMTo0Mzo0OS44MTgxNjE2MVoiLCJjcmVhdGVkX2J5IjoiL2Jpbi9zaCAtYyAjKG5vcCkgQ09QWSBmaWxlOjFmZTVjOTkyNzczM2QwNGY1ZmVkYmM4ODc4NGU2MmMyNzYyOTdkZDhlYTg4NGZkNjk1Njc1NDIzZjYxNTE4NWEgaW4gYXBwLmphciAifSx7ImNyZWF0ZWQiOiIyMDI2LTA5LTE1VDExOjQzOjQ5LjkyNzAzMDUzMloiLCJjcmVhdGVkX2J5IjoiL2Jpbi9zaCAtYyAjKG5vcCkgQ09QWSBmaWxlOjQ5OTZjNGU0MWFlMWJmMGU5ZTM2ZDcxNjA0YTg3YjJiODc2OTNhYTQ3NTdiMjg0ZjRmMmE3NjA5NmIxZTA1OGMgaW4gdG9vbHMvZXhwb3J0LWhlbHBlci5qYXIgIn0seyJjcmVhdGVkIjoiMjAyNi0wOS0xNVQxMTo0Mzo1MC4wMzQ1NjQ4OVoiLCJjcmVhdGVkX2J5IjoiL2Jpbi9zaCAtYyAjKG5vcCkgIFVTRVIgMTAwMDE6MTAwMDEiLCJlbXB0eV9sYXllciI6dHJ1ZX0seyJjcmVhdGVkIjoiMjAyNi0wOS0xNVQxMTo0Mzo1MC4xNDc5NjA0NVoiLCJjcmVhdGVkX2J5IjoiL2Jpbi9zaCAtYyAjKG5vcCkgIEVOVFJZUE9JTlQgW1wiamF2YVwiIFwiLWphclwiIFwiL29wdC9ib29rMjEvYXBwLmphclwiXSIsImVtcHR5X2xheWVyIjp0cnVlfV0sIm9zIjoibGludXgiLCJyb290ZnMiOnsidHlwZSI6ImxheWVycyIsImRpZmZfaWRzIjpbInNoYTI1NjozNDg4NGFiYmU5Mjg2M2ZjZTkzM2VkN2MzOWMwZTA0NTYzMWFmMGVkODZkNWNjMGRmYmRmOWZkY2E0MjZjZTNjIiwic2hhMjU2OmZlYjQ0YjcyMGU0MzU3YjBjZTQxMTJmZTMzNWJkMWZmMjliNWYwN2FmOWNiMDZhM2RmZjY1ZjhkOGM0Mjk3YTQiLCJzaGEyNTY6MDViMzVkYWNmM2Q3YWE5ZDgwMjk5M2YwZWJhMzA4YTMwN2QyMzE0ZTJiOTQwODJhYzllYWRlMTkzYzQxNzhiMyIsInNoYTI1NjowYTc1OWE3ZDRlM2EwNzIxYzU4MTA4OTJmNDhjYzZiYjMxOWRiY2YyNjU1ODQ0YjQyMDMyZGE2ZDhmYmVmNGNmIiwic2hhMjU2OjI2YTY5Mjc2MzkyMWZiMThmZmM4MmEzMjMzNGYxNWFlMzViNGU2NWQwY2M4YTZlOGEzMjY0NTE5YjBhY2U5ZGEiLCJzaGEyNTY6YzVjOWNjNmEyZGQyMjMyNTEzZTg2ZWE3ZDQyYWUzNWQ3NjIwZGM0MzE1Y2I3ZDcxYTk0NjRhNzI1MjRhNjE0OSIsInNoYTI1NjplZWRiODdjZDAxNDk0MjlkMzA0ZmZiNTYzNDJiNmY4MTMyOTUxNGYwYTlhZGFlNTc1Nzc4ZDYzMzgxNmJmZmFmIiwic2hhMjU2OmRhZDk5YmYzOWVmZDAyNmRhZWI2MWI2N2QzYmVhZjFhMWU4N2E5MDI2NmQ4Mzk4ODMyMzQxYzgzNmY1MTk2YmIiXX19",
+      "repoDigests": [],
+      "architecture": "amd64",
+      "os": "linux"
+    }
+  },
+  "distro": {
+    "prettyName": "Alpine Linux v3.24",
+    "name": "Alpine Linux",
+    "id": "alpine",
+    "versionID": "3.24.1",
+    "homeURL": "https://alpinelinux.org/",
+    "bugReportURL": "https://gitlab.alpinelinux.org/alpine/aports/-/issues"
+  },
+  "artifacts": [
+    {
+      "id": "0b324be951cda3d3",
+      "name": "export-helper",
+      "version": "1.0.0",
+      "type": "java-archive",
+      "foundBy": "java-archive-cataloger",
+      "locations": [
+        {
+          "path": "/opt/book21/tools/export-helper.jar",
+          "layerID": "sha256:dad99bf39efd026daeb61b67d3beaf1a1e87a90266d8398832341c836f5196bb",
+          "accessPath": "/opt/book21/tools/export-helper.jar",
+          "annotations": {
+            "evidence": "primary"
+          }
+        }
+      ],
+      "licenses": [],
+      "language": "java",
+      "cpes": [
+        {
+          "cpe": "cpe:2.3:a:export-helper:export-helper:1.0.0:*:*:*:*:*:*:*",
+          "source": "syft-generated"
+        },
+        {
+          "cpe": "cpe:2.3:a:export-helper:export_helper:1.0.0:*:*:*:*:*:*:*",
+          "source": "syft-generated"
+        },
+        {
+          "cpe": "cpe:2.3:a:export_helper:export-helper:1.0.0:*:*:*:*:*:*:*",
+          "source": "syft-generated"
+        },
+        {
+          "cpe": "cpe:2.3:a:export_helper:export_helper:1.0.0:*:*:*:*:*:*:*",
+          "source": "syft-generated"
+        },
+        {
+          "cpe": "cpe:2.3:a:export:export-helper:1.0.0:*:*:*:*:*:*:*",
+          "source": "syft-generated"
+        },
+        {
+          "cpe": "cpe:2.3:a:export:export_helper:1.0.0:*:*:*:*:*:*:*",
+          "source": "syft-generated"
+        }
+      ],
+      "purl": "pkg:maven/book21/export-helper@1.0.0",
+      "metadataType": "java-archive",
+      "metadata": {
+        "virtualPath": "/opt/book21/tools/export-helper.jar",
+        "manifest": {
+          "main": [
+            {
+              "key": "Manifest-Version",
+              "value": "1.0"
+            },
+            {
+              "key": "Created-By",
+              "value": "Maven JAR Plugin 3.4.2"
+            },
+            {
+              "key": "Build-Jdk-Spec",
+              "value": "21"
+            }
+          ]
+        },
+        "pomProperties": {
+          "path": "META-INF/maven/book21/export-helper/pom.properties",
+          "name": "",
+          "groupId": "book21",
+          "artifactId": "export-helper",
+          "version": "1.0.0"
+        },
+        "pomProject": {
+          "path": "META-INF/maven/book21/export-helper/pom.xml",
+          "groupId": "book21",
+          "artifactId": "export-helper",
+          "version": "1.0.0",
+          "name": ""
+        },
+        "digest": [
+          {
+            "algorithm": "sha1",
+            "value": "33e71a93bb54f04170c1ada624280cd8cd60734e"
+          }
+        ]
+      }
+    },
+    {
+      "id": "f7ad0ee8f1c27cb0",
+      "name": "musl",
+      "version": "1.2.6-r2",
+      "type": "apk",
+      "foundBy": "apk-db-cataloger",
+      "locations": [
+        {
+          "path": "/lib/apk/db/installed",
+          "layerID": "sha256:feb44b720e4357b0ce4112fe335bd1ff29b5f07af9cb06a3dff65f8d8c4297a4",
+          "accessPath": "/lib/apk/db/installed",
+          "annotations": {
+            "evidence": "primary"
+          }
+        }
+      ],
+      "licenses": [
+        {
+          "value": "MIT",
+          "spdxExpression": "MIT",
+          "type": "declared",
+          "urls": [],
+          "locations": [
+            {
+              "path": "/lib/apk/db/installed",
+              "layerID": "sha256:feb44b720e4357b0ce4112fe335bd1ff29b5f07af9cb06a3dff65f8d8c4297a4",
+              "accessPath": "/lib/apk/db/installed",
+              "annotations": {
+                "evidence": "primary"
+              }
+            }
+          ]
+        }
+      ],
+      "language": "",
+      "cpes": [
+        {
+          "cpe": "cpe:2.3:a:musl-libc:musl:1.2.6-r2:*:*:*:*:*:*:*",
+          "source": "syft-generated"
+        },
+        {
+          "cpe": "cpe:2.3:a:musl_libc:musl:1.2.6-r2:*:*:*:*:*:*:*",
+          "source": "syft-generated"
+        },
+        {
+          "cpe": "cpe:2.3:a:musl:musl:1.2.6-r2:*:*:*:*:*:*:*",
+          "source": "syft-generated"
+        }
+      ],
+      "purl": "pkg:apk/alpine/musl@1.2.6-r2?arch=x86_64&distro=alpine-3.24.1",
+      "metadataType": "apk-db-entry",
+      "metadata": {
+        "package": "musl",
+        "originPackage": "musl",
+        "maintainer": "Natanael Copa <ncopa@alpinelinux.org>",
+        "version": "1.2.6-r2",
+        "architecture": "x86_64",
+        "url": "https://musl.libc.org/",
+        "description": "the musl c library (libc) implementation",
+        "size": 415475,
+        "installedSize": 670312,
+        "pullDependencies": [],
+        "provides": [
+          "so:libc.musl-x86_64.so.1=1"
+        ],
+        "pullChecksum": "Q1D35YJ+ThpzYxvtont4QxqLokDgU=",
+        "gitCommitOfApkPort": "f5640d3a10f664c9119720c60515265d3d6f6d01",
+        "files": [
+          {
+            "path": "/lib"
+          },
+          {
+            "path": "/lib/ld-musl-x86_64.so.1",
+            "ownerUid": "0",
+            "ownerGid": "0",
+            "permissions": "755",
+            "digest": {
+              "algorithm": "'Q1'+base64(sha1)",
+              "value": "Q1HDbpApgJLhKPJN6IjaA7wJ3Oa4o="
+            }
+          },
+          {
+            "path": "/lib/libc.musl-x86_64.so.1",
+            "ownerUid": "0",
+            "ownerGid": "0",
+            "permissions": "777",
+            "digest": {
+              "algorithm": "'Q1'+base64(sha1)",
+              "value": "Q17yJ3JFNypA4mxhJJr0ou6CzsJVI="
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "1fa51b94422f19cf",
+      "name": "spring-webmvc",
+      "version": "7.0.9",
+      "type": "java-archive",
+      "foundBy": "java-archive-cataloger",
+      "locations": [
+        {
+          "path": "/opt/book21/app.jar",
+          "layerID": "sha256:eedb87cd0149429d304ffb56342b6f81329514f0a9adae575778d633816bffaf",
+          "accessPath": "/opt/book21/app.jar:BOOT-INF/lib/spring-webmvc-7.0.9.jar",
+          "annotations": {
+            "evidence": "primary"
+          }
+        }
+      ],
+      "licenses": [
+        {
+          "value": "Apache-2.0",
+          "spdxExpression": "Apache-2.0",
+          "type": "concluded",
+          "urls": [],
+          "locations": [
+            {
+              "path": "/opt/book21/app.jar",
+              "layerID": "sha256:eedb87cd0149429d304ffb56342b6f81329514f0a9adae575778d633816bffaf",
+              "accessPath": "/opt/book21/app.jar:BOOT-INF/lib/spring-webmvc-7.0.9.jar",
+              "annotations": {
+                "evidence": "primary"
+              }
+            }
+          ]
+        },
+        {
+          "value": "BSD-3-Clause",
+          "spdxExpression": "BSD-3-Clause",
+          "type": "concluded",
+          "urls": [],
+          "locations": [
+            {
+              "path": "/opt/book21/app.jar",
+              "layerID": "sha256:eedb87cd0149429d304ffb56342b6f81329514f0a9adae575778d633816bffaf",
+              "accessPath": "/opt/book21/app.jar:BOOT-INF/lib/spring-webmvc-7.0.9.jar",
+              "annotations": {
+                "evidence": "primary"
+              }
+            }
+          ]
+        }
+      ],
+      "language": "java",
+      "cpes": [
+        {
+          "cpe": "cpe:2.3:a:org.springframework:spring-webmvc:7.0.9:*:*:*:*:*:*:*",
+          "source": "syft-generated"
+        },
+        {
+          "cpe": "cpe:2.3:a:org.springframework:spring_webmvc:7.0.9:*:*:*:*:*:*:*",
+          "source": "syft-generated"
+        },
+        {
+          "cpe": "cpe:2.3:a:springframework:spring-webmvc:7.0.9:*:*:*:*:*:*:*",
+          "source": "syft-generated"
+        },
+        {
+          "cpe": "cpe:2.3:a:springframework:spring_webmvc:7.0.9:*:*:*:*:*:*:*",
+          "source": "syft-generated"
+        },
+        {
+          "cpe": "cpe:2.3:a:spring-webmvc:spring-webmvc:7.0.9:*:*:*:*:*:*:*",
+          "source": "syft-generated"
+        },
+        {
+          "cpe": "cpe:2.3:a:spring-webmvc:spring_webmvc:7.0.9:*:*:*:*:*:*:*",
+          "source": "syft-generated"
+        },
+        {
+          "cpe": "cpe:2.3:a:spring_webmvc:spring-webmvc:7.0.9:*:*:*:*:*:*:*",
+          "source": "syft-generated"
+        },
+        {
+          "cpe": "cpe:2.3:a:spring_webmvc:spring_webmvc:7.0.9:*:*:*:*:*:*:*",
+          "source": "syft-generated"
+        },
+        {
+          "cpe": "cpe:2.3:a:spring:spring-webmvc:7.0.9:*:*:*:*:*:*:*",
+          "source": "syft-generated"
+        },
+        {
+          "cpe": "cpe:2.3:a:spring:spring_webmvc:7.0.9:*:*:*:*:*:*:*",
+          "source": "syft-generated"
+        }
+      ],
+      "purl": "pkg:maven/org.springframework/spring-webmvc@7.0.9",
+      "metadataType": "java-archive",
+      "metadata": {
+        "virtualPath": "/opt/book21/app.jar:BOOT-INF/lib/spring-webmvc-7.0.9.jar",
+        "manifest": {
+          "main": [
+            {
+              "key": "Manifest-Version",
+              "value": "1.0"
+            },
+            {
+              "key": "Implementation-Title",
+              "value": "spring-webmvc"
+            },
+            {
+              "key": "Implementation-Version",
+              "value": "7.0.9"
+            },
+            {
+              "key": "Automatic-Module-Name",
+              "value": "spring.webmvc"
+            },
+            {
+              "key": "Created-By",
+              "value": "25.0.4 (Oracle Corporation)"
+            }
+          ]
+        },
+        "digest": [
+          {
+            "algorithm": "sha1",
+            "value": "53b41e6290df1a75fe0e0d16608c80a93bb63bdd"
+          }
+        ]
+      }
+    }
+  ]
+}

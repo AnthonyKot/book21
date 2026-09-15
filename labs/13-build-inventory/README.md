@@ -62,17 +62,39 @@ image_id=$(docker image inspect book21-inventory:a --format '{{.Id}}')
 
 The configuration disables app-update checks, online Java enrichment, host Maven repository consultation and transitive resolution from archive POMs. Preserve the config with results. A native scan retains subject identity and locations that help investigate differences. The CycloneDX format also includes file components; filter according to the comparison question.
 
-## Independent task: stale pairing after a tag moves
+## Guided: verify a pairing record
 
-Use the [worksheet](https://anthonykot.github.io/book21/practice/13-inventory-worksheet.html) before the review. Generate records first, then:
+`record.py` writes a pairing record for each image; `pairing.py` checks one against an image ID selected independently of the record. It accepts only when the selection, the native scan's `source.metadata.imageID` and the SHA-256 of both report files agree:
 
 ```bash
-python3 exercise_tests.py
+python3 pairing_tests.py
 ```
 
-The public `identity_exercise.py` deliberately compares only the tag: **3 pass, 6 fail**. Modify that verifier, preserving the generated fixtures and tests. Accept both correctly paired images and reject a stale record after a tag move, swapped native or CycloneDX reports, a relabeled record with the wrong scanner subject, a missing required field, and malformed native JSON even if its hash was recorded. The selected image ID is an independent input supplied by the caller. The private reference passed **9/9**; removing its source-ID comparison caused **1 failure / 8 passes**.
+Expected: 9 pass over the two real records, including rejection of a stale record after the tag move, swapped reports, a relabeled record and malformed evidence. These checks bind report bytes to a recorded image. They are not schema validation, a signed attestation or verification of an untrusted producer.
 
-The exercise verifies correspondence of two report byte strings to a recorded image. It is not comprehensive CycloneDX schema validation, a signed attestation, or verification of an untrusted producer. The sidecar does not make coordinated edits to an image, reports and record trustworthy. Configuration and app hashes are context fields; the exercise's acceptance contract checks image selection and both report hashes, not every context field.
+## Independent: which record describes the release?
+
+Use the [worksheet](https://anthonykot.github.io/book21/practice/13-inventory-worksheet.html). This part needs only Python 3 and `sha256sum` (or any SHA-256 tool); Docker and Syft are not required.
+
+`data/release-review/` holds `selection.json` (the image chosen for release) and `records.json` (five inventory records with their report files under `reports/`). Report files are excerpts in real Syft and CycloneDX formats: each keeps its document's subject and metadata plus the components relevant to the review, and the scanner configuration block is omitted. Some records come from this lab's measured run, some were authored for the review, and the producers, times and the advisory are fictional. Treat each record's description of itself as a claim.
+
+Write your assessment as JSON:
+
+```json
+{
+  "records": {"R1": "describes | partial | does-not-describe | cannot-rely", "...": "..."},
+  "containsHelper100": false,
+  "supportingRecords": ["..."]
+}
+```
+
+### After saving your attempt
+
+`review_check.py` recomputes the checkable facts for every record and compares your verdicts and release answer with the authored ones. Opening the file reveals the answers:
+
+```bash
+python3 review_check.py --assessment my-assessment.json
+```
 
 ## Limits and cleanup
 

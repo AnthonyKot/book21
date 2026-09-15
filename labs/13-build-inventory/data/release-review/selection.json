@@ -1,0 +1,9 @@
+{
+  "release": "document-service 2026.09.15",
+  "selectedImageID": "sha256:46d17b670019c2f18a2486cffb706e465663926440fca2a8e923c2779653147a",
+  "platform": "linux/amd64",
+  "selectedAt": "2026-09-15T13:52:00+02:00",
+  "selectedBy": "release manager (fictional)",
+  "label": "book21-inventory:candidate",
+  "note": "The label is mutable. The image ID was copied from the deployment manifest at selection time."
+}

@@ -1,0 +1,347 @@
+{
+  "schema": {
+    "version": "16.1.10",
+    "url": "https://raw.githubusercontent.com/anchore/syft/main/schema/json/schema-16.1.10.json"
+  },
+  "descriptor": {
+    "name": "syft",
+    "version": "1.51.1",
+    "configuration": "omitted from this excerpt; the lab run used syft.yaml"
+  },
+  "source": {
+    "id": "99d29ee0ea688d3b8caa093d1f682f8eca2d552c95c965a6e00c18a3d7a0a6d0",
+    "name": "registry.example.test/book21/document-service",
+    "version": "2026.09.15",
+    "type": "image",
+    "metadata": {
+      "userInput": "registry.example.test/book21/document-service:2026.09.15",
+      "imageID": "sha256:6b6503a2f5afbfad8bd5e87ec2bada7c8b9bcc3ff48ff77761aaea8120fc8563",
+      "manifestDigest": "sha256:0f06dc44481fbb7c6f3327f6b761777fb75474412cd7336ad0727405da69e436",
+      "mediaType": "application/vnd.oci.image.index.v1+json",
+      "tags": [
+        "registry.example.test/book21/document-service:2026.09.15"
+      ],
+      "architecture": "arm64",
+      "os": "linux"
+    }
+  },
+  "distro": {
+    "prettyName": "Alpine Linux v3.24",
+    "name": "Alpine Linux",
+    "id": "alpine",
+    "versionID": "3.24.1",
+    "homeURL": "https://alpinelinux.org/",
+    "bugReportURL": "https://gitlab.alpinelinux.org/alpine/aports/-/issues"
+  },
+  "artifacts": [
+    {
+      "id": "3bc9807b4a05ed60",
+      "name": "export-helper",
+      "version": "1.1.0",
+      "type": "java-archive",
+      "foundBy": "java-archive-cataloger",
+      "locations": [
+        {
+          "path": "/opt/book21/tools/export-helper.jar",
+          "layerID": "sha256:49b974072130ebda29d416b6bdaeb376a25f9e939a239955603baa6135e02b98",
+          "accessPath": "/opt/book21/tools/export-helper.jar",
+          "annotations": {
+            "evidence": "primary"
+          }
+        }
+      ],
+      "licenses": [],
+      "language": "java",
+      "cpes": [
+        {
+          "cpe": "cpe:2.3:a:export-helper:export-helper:1.1.0:*:*:*:*:*:*:*",
+          "source": "syft-generated"
+        },
+        {
+          "cpe": "cpe:2.3:a:export-helper:export_helper:1.1.0:*:*:*:*:*:*:*",
+          "source": "syft-generated"
+        },
+        {
+          "cpe": "cpe:2.3:a:export_helper:export-helper:1.1.0:*:*:*:*:*:*:*",
+          "source": "syft-generated"
+        },
+        {
+          "cpe": "cpe:2.3:a:export_helper:export_helper:1.1.0:*:*:*:*:*:*:*",
+          "source": "syft-generated"
+        },
+        {
+          "cpe": "cpe:2.3:a:export:export-helper:1.1.0:*:*:*:*:*:*:*",
+          "source": "syft-generated"
+        },
+        {
+          "cpe": "cpe:2.3:a:export:export_helper:1.1.0:*:*:*:*:*:*:*",
+          "source": "syft-generated"
+        }
+      ],
+      "purl": "pkg:maven/book21/export-helper@1.1.0",
+      "metadataType": "java-archive",
+      "metadata": {
+        "virtualPath": "/opt/book21/tools/export-helper.jar",
+        "manifest": {
+          "main": [
+            {
+              "key": "Manifest-Version",
+              "value": "1.0"
+            },
+            {
+              "key": "Created-By",
+              "value": "Maven JAR Plugin 3.4.2"
+            },
+            {
+              "key": "Build-Jdk-Spec",
+              "value": "21"
+            }
+          ]
+        },
+        "pomProperties": {
+          "path": "META-INF/maven/book21/export-helper/pom.properties",
+          "name": "",
+          "groupId": "book21",
+          "artifactId": "export-helper",
+          "version": "1.1.0"
+        },
+        "pomProject": {
+          "path": "META-INF/maven/book21/export-helper/pom.xml",
+          "groupId": "book21",
+          "artifactId": "export-helper",
+          "version": "1.0.0",
+          "name": ""
+        },
+        "digest": [
+          {
+            "algorithm": "sha1",
+            "value": "363bf47ba3b05d745eb44e24d70a0345d35ab934"
+          }
+        ]
+      }
+    },
+    {
+      "id": "f7ad0ee8f1c27cb0",
+      "name": "musl",
+      "version": "1.2.6-r2",
+      "type": "apk",
+      "foundBy": "apk-db-cataloger",
+      "locations": [
+        {
+          "path": "/lib/apk/db/installed",
+          "layerID": "sha256:feb44b720e4357b0ce4112fe335bd1ff29b5f07af9cb06a3dff65f8d8c4297a4",
+          "accessPath": "/lib/apk/db/installed",
+          "annotations": {
+            "evidence": "primary"
+          }
+        }
+      ],
+      "licenses": [
+        {
+          "value": "MIT",
+          "spdxExpression": "MIT",
+          "type": "declared",
+          "urls": [],
+          "locations": [
+            {
+              "path": "/lib/apk/db/installed",
+              "layerID": "sha256:feb44b720e4357b0ce4112fe335bd1ff29b5f07af9cb06a3dff65f8d8c4297a4",
+              "accessPath": "/lib/apk/db/installed",
+              "annotations": {
+                "evidence": "primary"
+              }
+            }
+          ]
+        }
+      ],
+      "language": "",
+      "cpes": [
+        {
+          "cpe": "cpe:2.3:a:musl-libc:musl:1.2.6-r2:*:*:*:*:*:*:*",
+          "source": "syft-generated"
+        },
+        {
+          "cpe": "cpe:2.3:a:musl_libc:musl:1.2.6-r2:*:*:*:*:*:*:*",
+          "source": "syft-generated"
+        },
+        {
+          "cpe": "cpe:2.3:a:musl:musl:1.2.6-r2:*:*:*:*:*:*:*",
+          "source": "syft-generated"
+        }
+      ],
+      "purl": "pkg:apk/alpine/musl@1.2.6-r2?arch=x86_64&distro=alpine-3.24.1",
+      "metadataType": "apk-db-entry",
+      "metadata": {
+        "package": "musl",
+        "originPackage": "musl",
+        "maintainer": "Natanael Copa <ncopa@alpinelinux.org>",
+        "version": "1.2.6-r2",
+        "architecture": "x86_64",
+        "url": "https://musl.libc.org/",
+        "description": "the musl c library (libc) implementation",
+        "size": 415475,
+        "installedSize": 670312,
+        "pullDependencies": [],
+        "provides": [
+          "so:libc.musl-x86_64.so.1=1"
+        ],
+        "pullChecksum": "Q1D35YJ+ThpzYxvtont4QxqLokDgU=",
+        "gitCommitOfApkPort": "f5640d3a10f664c9119720c60515265d3d6f6d01",
+        "files": [
+          {
+            "path": "/lib"
+          },
+          {
+            "path": "/lib/ld-musl-x86_64.so.1",
+            "ownerUid": "0",
+            "ownerGid": "0",
+            "permissions": "755",
+            "digest": {
+              "algorithm": "'Q1'+base64(sha1)",
+              "value": "Q1HDbpApgJLhKPJN6IjaA7wJ3Oa4o="
+            }
+          },
+          {
+            "path": "/lib/libc.musl-x86_64.so.1",
+            "ownerUid": "0",
+            "ownerGid": "0",
+            "permissions": "777",
+            "digest": {
+              "algorithm": "'Q1'+base64(sha1)",
+              "value": "Q17yJ3JFNypA4mxhJJr0ou6CzsJVI="
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "1fa51b94422f19cf",
+      "name": "spring-webmvc",
+      "version": "7.0.9",
+      "type": "java-archive",
+      "foundBy": "java-archive-cataloger",
+      "locations": [
+        {
+          "path": "/opt/book21/app.jar",
+          "layerID": "sha256:eedb87cd0149429d304ffb56342b6f81329514f0a9adae575778d633816bffaf",
+          "accessPath": "/opt/book21/app.jar:BOOT-INF/lib/spring-webmvc-7.0.9.jar",
+          "annotations": {
+            "evidence": "primary"
+          }
+        }
+      ],
+      "licenses": [
+        {
+          "value": "Apache-2.0",
+          "spdxExpression": "Apache-2.0",
+          "type": "concluded",
+          "urls": [],
+          "locations": [
+            {
+              "path": "/opt/book21/app.jar",
+              "layerID": "sha256:eedb87cd0149429d304ffb56342b6f81329514f0a9adae575778d633816bffaf",
+              "accessPath": "/opt/book21/app.jar:BOOT-INF/lib/spring-webmvc-7.0.9.jar",
+              "annotations": {
+                "evidence": "primary"
+              }
+            }
+          ]
+        },
+        {
+          "value": "BSD-3-Clause",
+          "spdxExpression": "BSD-3-Clause",
+          "type": "concluded",
+          "urls": [],
+          "locations": [
+            {
+              "path": "/opt/book21/app.jar",
+              "layerID": "sha256:eedb87cd0149429d304ffb56342b6f81329514f0a9adae575778d633816bffaf",
+              "accessPath": "/opt/book21/app.jar:BOOT-INF/lib/spring-webmvc-7.0.9.jar",
+              "annotations": {
+                "evidence": "primary"
+              }
+            }
+          ]
+        }
+      ],
+      "language": "java",
+      "cpes": [
+        {
+          "cpe": "cpe:2.3:a:org.springframework:spring-webmvc:7.0.9:*:*:*:*:*:*:*",
+          "source": "syft-generated"
+        },
+        {
+          "cpe": "cpe:2.3:a:org.springframework:spring_webmvc:7.0.9:*:*:*:*:*:*:*",
+          "source": "syft-generated"
+        },
+        {
+          "cpe": "cpe:2.3:a:springframework:spring-webmvc:7.0.9:*:*:*:*:*:*:*",
+          "source": "syft-generated"
+        },
+        {
+          "cpe": "cpe:2.3:a:springframework:spring_webmvc:7.0.9:*:*:*:*:*:*:*",
+          "source": "syft-generated"
+        },
+        {
+          "cpe": "cpe:2.3:a:spring-webmvc:spring-webmvc:7.0.9:*:*:*:*:*:*:*",
+          "source": "syft-generated"
+        },
+        {
+          "cpe": "cpe:2.3:a:spring-webmvc:spring_webmvc:7.0.9:*:*:*:*:*:*:*",
+          "source": "syft-generated"
+        },
+        {
+          "cpe": "cpe:2.3:a:spring_webmvc:spring-webmvc:7.0.9:*:*:*:*:*:*:*",
+          "source": "syft-generated"
+        },
+        {
+          "cpe": "cpe:2.3:a:spring_webmvc:spring_webmvc:7.0.9:*:*:*:*:*:*:*",
+          "source": "syft-generated"
+        },
+        {
+          "cpe": "cpe:2.3:a:spring:spring-webmvc:7.0.9:*:*:*:*:*:*:*",
+          "source": "syft-generated"
+        },
+        {
+          "cpe": "cpe:2.3:a:spring:spring_webmvc:7.0.9:*:*:*:*:*:*:*",
+          "source": "syft-generated"
+        }
+      ],
+      "purl": "pkg:maven/org.springframework/spring-webmvc@7.0.9",
+      "metadataType": "java-archive",
+      "metadata": {
+        "virtualPath": "/opt/book21/app.jar:BOOT-INF/lib/spring-webmvc-7.0.9.jar",
+        "manifest": {
+          "main": [
+            {
+              "key": "Manifest-Version",
+              "value": "1.0"
+            },
+            {
+              "key": "Implementation-Title",
+              "value": "spring-webmvc"
+            },
+            {
+              "key": "Implementation-Version",
+              "value": "7.0.9"
+            },
+            {
+              "key": "Automatic-Module-Name",
+              "value": "spring.webmvc"
+            },
+            {
+              "key": "Created-By",
+              "value": "25.0.4 (Oracle Corporation)"
+            }
+          ]
+        },
+        "digest": [
+          {
+            "algorithm": "sha1",
+            "value": "53b41e6290df1a75fe0e0d16608c80a93bb63bdd"
+          }
+        ]
+      }
+    }
+  ]
+}

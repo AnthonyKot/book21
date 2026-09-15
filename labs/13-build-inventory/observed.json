@@ -1,45 +1,44 @@
 {
-  "observedOn": "2026-09-15",
-  "scope": "Authored local fixture, linux/amd64; not a completeness benchmark",
-  "syftVersion": "1.51.1",
-  "cycloneDxMavenPlugin": "2.9.3",
-  "mavenComponents": 39,
-  "images": {
-    "a": {
-      "imageID": "sha256:f532c0c8457fdee2ccc755880185b03bc471aaee8d65af8aa4b904750f5295f2",
-      "appJarSha256": "ffd3ca4bedf57a04945aea845465974dbb9173ce1ac260e084c33453b079edf3",
-      "helperPurl": "pkg:maven/book21/export-helper@1.0.0",
-      "helperLocation": "/opt/book21/tools/export-helper.jar",
-      "rawPackageCount": 112,
-      "rawPackageTypes": {
-        "apk": 73,
-        "java-archive": 38,
-        "binary": 1
-      },
-      "cycloneDxComponentTypes": {
-        "library": 111,
-        "application": 1,
-        "operating-system": 1,
-        "file": 1223
-      }
-    },
-    "b": {
-      "imageID": "sha256:46d17b670019c2f18a2486cffb706e465663926440fca2a8e923c2779653147a",
-      "appJarSha256": "ffd3ca4bedf57a04945aea845465974dbb9173ce1ac260e084c33453b079edf3",
-      "helperPurl": "pkg:maven/book21/export-helper@1.1.0",
-      "helperLocation": "/opt/book21/tools/export-helper.jar",
-      "rawPackageCount": 112,
-      "rawPackageTypes": {
-        "apk": 73,
-        "java-archive": 38,
-        "binary": 1
-      },
-      "cycloneDxComponentTypes": {
-        "library": 111,
-        "application": 1,
-        "operating-system": 1,
-        "file": 1223
-      }
-    }
+ "observedOn": "2026-09-15",
+ "scope": "Authored local fixture, linux/amd64; not a completeness benchmark",
+ "syftVersion": "1.51.1",
+ "cycloneDxMavenPlugin": "2.9.3",
+ "mavenComponents": 39,
+ "images": {
+  "a": {
+   "appJarSha256": "ffd3ca4bedf57a04945aea845465974dbb9173ce1ac260e084c33453b079edf3",
+   "helperPurl": "pkg:maven/book21/export-helper@1.0.0",
+   "helperLocation": "/opt/book21/tools/export-helper.jar",
+   "rawPackageCount": 112,
+   "rawPackageTypes": {
+    "apk": 73,
+    "java-archive": 38,
+    "binary": 1
+   },
+   "cycloneDxComponentTypes": {
+    "library": 111,
+    "application": 1,
+    "operating-system": 1,
+    "file": 1223
+   }
+  },
+  "b": {
+   "appJarSha256": "ffd3ca4bedf57a04945aea845465974dbb9173ce1ac260e084c33453b079edf3",
+   "helperPurl": "pkg:maven/book21/export-helper@1.1.0",
+   "helperLocation": "/opt/book21/tools/export-helper.jar",
+   "rawPackageCount": 112,
+   "rawPackageTypes": {
+    "apk": 73,
+    "java-archive": 38,
+    "binary": 1
+   },
+   "cycloneDxComponentTypes": {
+    "library": 111,
+    "application": 1,
+    "operating-system": 1,
+    "file": 1223
+   }
   }
+ },
+ "note": "Image IDs from the authoring run are omitted; your rebuild produces its own. The two IDs differed while the application JAR hashes matched."
 }

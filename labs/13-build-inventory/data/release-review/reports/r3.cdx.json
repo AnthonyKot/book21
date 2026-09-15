@@ -1,0 +1,299 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "serialNumber": "urn:uuid:812401b3-89e7-3215-9d4a-41caa8c79319",
+  "version": 1,
+  "metadata": {
+    "lifecycles": [
+      {
+        "phase": "build"
+      }
+    ],
+    "tools": {
+      "components": [
+        {
+          "type": "library",
+          "author": "OWASP Foundation",
+          "group": "org.cyclonedx",
+          "name": "cyclonedx-maven-plugin",
+          "version": "2.9.3",
+          "description": "CycloneDX Maven plugin",
+          "hashes": [
+            {
+              "alg": "MD5",
+              "content": "e7c87ab327b65b23c681fc9dc8bb620b"
+            },
+            {
+              "alg": "SHA-1",
+              "content": "fa3f0f04f4d5077b5e085d4d09aa2e68aeba5260"
+            },
+            {
+              "alg": "SHA-256",
+              "content": "c452d5eebe28bc86bef2e7c72d129f04f60877bef843eac8120f01fb655be293"
+            },
+            {
+              "alg": "SHA-512",
+              "content": "ec0344ed2ffe62d565aaf936a37140d04c7fffa8669a666be0366cd44eec3195232d79841cdec47030b79068216ac7e1a8c805255758e3d418dae32a4b9b9beb"
+            },
+            {
+              "alg": "SHA-384",
+              "content": "3df26b2a00d87fe090851975ebcc30217f98634e7c47d07128e148f325ebfe3bc0790b2f52ad4591734b7b0de738f003"
+            },
+            {
+              "alg": "SHA3-384",
+              "content": "470c1b4962379b5b6494c75bd1475da3519bbe2543999c95f26b4021164d3d05419b0c3f704443162fe5433a204250e9"
+            },
+            {
+              "alg": "SHA3-256",
+              "content": "900e9c4edb18940ed3c4a4ba6946957fa613ef0d4b0c380551638f229206373c"
+            },
+            {
+              "alg": "SHA3-512",
+              "content": "5e36433e18ae24f7460902da27818874df5d1d73df1a97e49e7369335f7cc61ca595466a2d37789fba7eaa7f7f251b29216c3d7a78910b2ec38e2ed68ea84876"
+            }
+          ]
+        }
+      ]
+    },
+    "component": {
+      "type": "application",
+      "bom-ref": "pkg:maven/book21/inventory-app@1.0.0?type=jar",
+      "group": "book21",
+      "name": "inventory-app",
+      "version": "1.0.0",
+      "description": "Parent pom providing dependency and plugin management for applications built with Maven",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "purl": "pkg:maven/book21/inventory-app@1.0.0?type=jar",
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://spring.io/projects/spring-boot/inventory-app"
+        },
+        {
+          "type": "vcs",
+          "url": "https://github.com/spring-projects/spring-boot/inventory-app"
+        }
+      ]
+    },
+    "properties": [
+      {
+        "name": "maven.goal",
+        "value": "makeAggregateBom"
+      },
+      {
+        "name": "maven.scopes",
+        "value": "compile,runtime"
+      },
+      {
+        "name": "cdx:reproducible",
+        "value": "enabled"
+      }
+    ]
+  },
+  "components": [
+    {
+      "type": "library",
+      "bom-ref": "pkg:maven/org.springframework/spring-web@7.0.9?type=jar",
+      "publisher": "Spring IO",
+      "group": "org.springframework",
+      "name": "spring-web",
+      "version": "7.0.9",
+      "description": "Spring Web",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "MD5",
+          "content": "3ad4a5d872c4094ab34b16980aedafa9"
+        },
+        {
+          "alg": "SHA-1",
+          "content": "c42f4ce0cded1526527296726c4ed30335dfaa10"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "941ced476427bde2533872f293da535fd0258de3f3a650a7f1bfe01ed2927302"
+        },
+        {
+          "alg": "SHA-512",
+          "content": "4bd89b2a61bdf63f17132465e720f0065692c270be19d4fe82471c2cb13630f06491cb9061e8faeab679065e7c6148272802081fdb6aa835296bb8e484f23d0a"
+        },
+        {
+          "alg": "SHA-384",
+          "content": "db0c270d29d3212e39148149422ef015fc00c6e7a31c0b4bfc439770fa5b20c8681f94f944c049e87c05e4e67aa5af72"
+        },
+        {
+          "alg": "SHA3-384",
+          "content": "be6bf61095e3df02717f6d43558233ff62c1cc3a6b91cb05f124fe838f1fd200c874f32845ada605ec1e0a73bb2d2b59"
+        },
+        {
+          "alg": "SHA3-256",
+          "content": "a0d0207f9291e85600cf3594764a18254dc58870b6393f89fc36156ff4c6da33"
+        },
+        {
+          "alg": "SHA3-512",
+          "content": "eb25812e1e703c1026b13dd0ff8205be48de0aa79e56a48a96a37d0ffe71cb0b40f4d3ae2a69ca4a8dd8a2f16084a17fd4aa2f5e2bdffc520a0175e7aba1ab55"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "purl": "pkg:maven/org.springframework/spring-web@7.0.9?type=jar",
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://github.com/spring-projects/spring-framework"
+        },
+        {
+          "type": "issue-tracker",
+          "url": "https://github.com/spring-projects/spring-framework/issues"
+        },
+        {
+          "type": "vcs",
+          "url": "https://github.com/spring-projects/spring-framework"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:maven/org.springframework/spring-webmvc@7.0.9?type=jar",
+      "publisher": "Spring IO",
+      "group": "org.springframework",
+      "name": "spring-webmvc",
+      "version": "7.0.9",
+      "description": "Spring Web MVC",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "MD5",
+          "content": "7d4e0f02f611df75eabff8d2822b1f81"
+        },
+        {
+          "alg": "SHA-1",
+          "content": "53b41e6290df1a75fe0e0d16608c80a93bb63bdd"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "8f114c1461692c5e534e82b27de23b7fb23370db8dee7ce0c92d5106906c9555"
+        },
+        {
+          "alg": "SHA-512",
+          "content": "2118a2fe35cc55e674725bf4df247d5669d8f6ac2eaf5112490694064fd2951c684c9d569e4f9ed12f7c5d054336f63e94fe8f7c6775b1867be863e2c469a873"
+        },
+        {
+          "alg": "SHA-384",
+          "content": "b2e0af6693f5a56d42e047408e668327fdd437654544484d38f752e2f21d8f9c42dc3c71feee4c1ec616a70a1809a53c"
+        },
+        {
+          "alg": "SHA3-384",
+          "content": "9d15c0f0b7d3baa499d5293e3e3385b2b2b043400b3aafd16dcb8fa809baf2fb22478b8208e7487ca922f94018307692"
+        },
+        {
+          "alg": "SHA3-256",
+          "content": "7c7f4e95cf0eb9c1f3330bea5ae2a34501c17cb6b31d1231b187990bcfccf5e9"
+        },
+        {
+          "alg": "SHA3-512",
+          "content": "027d2025285b5e8267d48b14d0bd87e45bf2d97e1b9656dd26514f408af097e693b8aa6418eaa036c11f80f8a3e63176ba50dd02b73a455f670a912a38f1eaf6"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "purl": "pkg:maven/org.springframework/spring-webmvc@7.0.9?type=jar",
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://github.com/spring-projects/spring-framework"
+        },
+        {
+          "type": "issue-tracker",
+          "url": "https://github.com/spring-projects/spring-framework/issues"
+        },
+        {
+          "type": "vcs",
+          "url": "https://github.com/spring-projects/spring-framework"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:maven/org.springframework/spring-core@7.0.9?type=jar",
+      "publisher": "Spring IO",
+      "group": "org.springframework",
+      "name": "spring-core",
+      "version": "7.0.9",
+      "description": "Spring Core",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "MD5",
+          "content": "f87ba857b1fb00b125568d966aa66058"
+        },
+        {
+          "alg": "SHA-1",
+          "content": "e03c619fc5b26931973277f5ba65ae47967a20e3"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "5195f4722699b39878d99a832549fe65df2890b159d063b88fff31b1ca65ae36"
+        },
+        {
+          "alg": "SHA-512",
+          "content": "d7056bd34cd838e559143b8bebd596be7573cef260d725d48d860a2522b54018ff2947c48552ff8dfd0666e627da153a552ca19f3890e6c71614c316fd2c6dd5"
+        },
+        {
+          "alg": "SHA-384",
+          "content": "68ec7ff70b8156ac3c395084f2a6f1b562daabe5c35f4dd51b4ff6c60dc8a50c0629daf933be33d44340d9dfb09193db"
+        },
+        {
+          "alg": "SHA3-384",
+          "content": "3367b728870f18430f4ebf56d5e06b460e822d2782682cc0db59ce26e7b8fd84eaecb216f96ac59dd91f49f8aa1dd40b"
+        },
+        {
+          "alg": "SHA3-256",
+          "content": "5eeeef7fb4def9345e9e6eef8c17aaa6abaa819ea25a79856db52a95ad30039d"
+        },
+        {
+          "alg": "SHA3-512",
+          "content": "40e6e3c6bc339a51a5bd5dc83839f2f0198ef01e1f72b940b90eaf5ee0b7c15f7171a50ea315c14afac0fd2978a03c033769d7a109a0ed753c10859ca304b3d0"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "purl": "pkg:maven/org.springframework/spring-core@7.0.9?type=jar",
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://github.com/spring-projects/spring-framework"
+        },
+        {
+          "type": "issue-tracker",
+          "url": "https://github.com/spring-projects/spring-framework/issues"
+        },
+        {
+          "type": "vcs",
+          "url": "https://github.com/spring-projects/spring-framework"
+        }
+      ]
+    }
+  ]
+}
