@@ -6,15 +6,73 @@
 <link rel="stylesheet" href="../assets/style.css"></head>
 <body><a class="skip" href="#main">Skip to content</a><header class="site-header"><a href="../index.html">Security Is an Engineering Job</a><nav aria-label="Book"><a href="../index.html#essays">Essays</a><a href="../about.html">About</a></nav></header>
 <main id="main"><p class="kicker">Essay 11 · Practice</p><article><h1>Security review guide</h1>
-<p>Compare after your <a href="11-review-worksheet.html">worksheet</a> attempt.</p>
-<h2>Hint 1: the query is not every return path</h2>
-<p>On a cache hit, <code>computeIfAbsent</code> does not call the repository loader. Adding tenant filtering only there leaves the candidate’s shared-key return path unaffected. A denied cold request therefore cannot establish denial after another principal warms the cache.</p>
-<h2>Hint 2: preserve the trusted dimensions</h2>
-<p>The guided key contains trusted tenant and document ID. Caller input must not choose the tenant. Retain the tenant-scoped repository lookup and owner cache hits. A concurrent collection coordinates map operations; it does not infer which caller may receive a value.</p>
-<h2>Hint 3: download is a separate action</h2>
-<p><code>DownloadService</code> has access to the store’s <code>requireDownload</code> policy check. Use the current tenant, identifier and archive state before returning full content from either a cache hit or a miss. The preview deliberately permits archived summaries, so changing its loader to reject all archived data would break the legitimate preview requirement. This lab also caches full content during preview loading. Assess whether that extra cached data is needed; splitting cache data by action does not remove the need for a current download decision.</p>
-<h2>Expected evidence</h2>
-<p>The two cold candidate tests pass. The 20 guided tests also pass because the reproduction class expects the flaw. Restoring the shared key under repair expectations produces 2 failures and 8 passes. The exercise starter fails warm-after-archive and cold-archived downloads, while four other cases pass. The private reference passes all 26 cases. The body-load counter excludes the fresh policy query; do not claim the repair makes zero database calls.</p>
-<p>The model ledger is a record of your investigation, not a leaderboard. Findings that are technically possible but outside supplied evidence remain unresolved until checked. Context matters: a model shown the walkthrough has not independently discovered its answer. A suggested patch earns acceptance through its denied and permitted behavior.</p>
-<p>No cache TTL, distributed invalidation, membership/ownership change, concurrent revocation guarantee, production benchmark or human security audit is demonstrated. The exercise tests an authorization decision after a completed archive. A response authorized before a concurrent archive is outside that contract.</p>
+<p>Open this after saving your <a href="11-review-worksheet.html">worksheet</a> attempt. Everything below counts as assistance once you have read it. If you are stuck partway, read only the next hint in section 2 and record that you did.</p>
+<h2>1. Judge the attempt before comparing answers</h2>
+<p>A sound release review shows the following, whatever fix it chose.</p>
+<p><strong>Inventory.</strong> Each operation that returns a summary or full content is listed with the source its data can come from on a cache hit and on a cache miss, and with what enforces each property on each source. A verdict rests on an observed response or on code that was then exercised, not on the change summary.</p>
+<p><strong>Reproduction.</strong> A violation is shown by a short request sequence with the observed response body, and the cache state is stated. A correct operation is supported by tests in both cache states where the cache is involved.</p>
+<p><strong>Review comment.</strong> It acknowledges what the candidate does correctly, identifies the claim in the summary that the code does not support, gives a reproducible sequence and names the behaviour a fix must keep. It does not overstate: no claim of cross-tenant exposure unless one was observed.</p>
+<p><strong>Verdict.</strong> Approving the candidate is a legitimate conclusion when every operation&#39;s evidence supports it and the negative control uses a deliberately broken copy. For release 2 that verdict does not survive the archive-after-export sequence in section 3.</p>
+<p><strong>Decision.</strong> If a change was made, the write-up says where the check now sits and why that placement suits future operations that return content. It records an alternative that was considered or tried and rejected with evidence.</p>
+<p><strong>Tests.</strong> Violations are tested warm and cold where the cache is involved. Preserved behaviour includes the owner&#39;s cache reuse. The negative control fails against the candidate, or a described broken copy, on assertions, not on startup or compilation.</p>
+<p><strong>Limits.</strong> At least one honest gap, such as a response already authorized before a concurrent archive, other caches or replicas, or the fixed tenant mapping.</p>
+<h2>2. Progressive hints, if you are stuck</h2>
+<ol>
+<li>List every controller method that returns a summary or content. For each, follow the call to the point where the returned value is produced. Which of those values can come out of <code>PreviewService</code>&#39;s cache, and which queries run before that happens?</li>
+<li>The change summary says each new operation &quot;authorizes the document against its current state&quot;. Find each point where that happens and ask which request it runs in. Then test the property&#39;s second rule with the request order it describes: an action first, the archive afterwards.</li>
+<li>There is more than one way to place the missing decision: repeat the current-state check in the operation, or route the operation through a path you have already verified. Test either against a warm and a cold cache, and check that the owner&#39;s archived summary still comes from the cache.</li>
+</ol>
+<h2>3. What release 2 contains</h2>
+<p><strong>Download is correct.</strong> <code>DownloadService.download</code> now calls <code>requireDownload</code> before reading from the cache. An archived document returns 404 whether its record is cached or not, and an active document still downloads. The candidate&#39;s first claim holds.</p>
+<p><strong>Preview is unchanged and holds.</strong> The tenant-partitioned key from the guided repair keeps other tenants out. Archived summaries remain visible to the owner by design.</p>
+<p><strong>Export creation checks current state; export delivery does not.</strong> <code>create</code> calls <code>requireDownload</code>, so an archived document cannot be exported. <code>fetch</code> checks that the caller&#39;s tenant created the export, then returns <code>previews.preview(...).content()</code>, which runs no archive check on a cache hit or on a miss. Create an export, archive the document and fetch the link: the full content is still delivered, in both cache states. Another tenant still gets 404, so the summary&#39;s tenant claim holds.</p>
+<p>Two sentences in the summary go further than the code. &quot;Authorizes the document against its current state&quot; is true only of the request that creates the link. &quot;Both new operations reuse ... the existing current-state authorization query&quot; is false for the fetch. The seven candidate tests pass because none archives a document after an export exists.</p>
+<h2>4. Designs that look finished</h2>
+<p>Each row was run as a variant of the private reference against the review check and the reference&#39;s own tests.</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Table; scroll horizontally on small screens"><table>
+<thead>
+<tr>
+<th>Change to <code>ExportService.fetch</code></th>
+<th>What still happens</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Nothing (the candidate)</td>
+<td>Archive after export: content delivered warm and cold.</td>
+</tr>
+<tr>
+<td>Evict the document&#39;s cache entry when it is archived</td>
+<td>The next fetch reloads through the same loader, which has no archive condition, so content is still delivered warm and cold. The owner&#39;s archived preview now costs a second body load, breaking preserved behaviour. The cache was never the missing decision.</td>
+</tr>
+<tr>
+<td>Check an <code>archived</code> flag carried in the cached record</td>
+<td>Correct on a cold cache. With a warm entry cached before the archive, the flag is stale and content is delivered. A cached copy of authorization data is not a current decision.</td>
+</tr>
+<tr>
+<td>Call <code>requireDownload</code> before reading from the cache</td>
+<td>Meets every tested case.</td>
+</tr>
+<tr>
+<td>Return <code>DownloadService.download(...)</code> after the export ownership check</td>
+<td>Meets every tested case, and reuses the check the candidate already fixed.</td>
+</tr>
+</tbody></table>
+</div><p>The last two are both sound. Repeating the check is explicit at the call site; delegating keeps one place responsible for full-content authorization, so a future change to that rule reaches both operations. Either way, the next operation that returns content still has to be reviewed.</p>
+<p>A third incomplete design, reading directly from the repository instead of the cache, was also run. It fails the two archive-after-export cases for the same reason as eviction, because the fresh read has no archive condition, but it keeps the owner&#39;s cache reuse. It is not listed separately because it exposes the same misunderstanding.</p>
+<h2>5. Reference evidence</h2>
+<p>Recorded while authoring. None of it is evidence of your attempt.</p>
+<ul>
+<li>Guided suites: 20 pass. Negative control with the shared key: 2 failures (both warm cross-tenant directions), 8 passes.</li>
+<li>Default <code>mvn test</code> with the candidate: 27 pass (20 guided, 7 candidate tests).</li>
+<li><code>ReleaseReviewCheck</code> against the candidate: 2 failures (archive after export, warm and cold), 8 passes.</li>
+<li>The private reference&#39;s learner-style tests against the candidate: 2 failures, 4 passes.</li>
+<li>Private reference with the check at fetch: 43 pass (20 guided, 7 candidate, 6 of its own, 10 review checks). Delegating to download: 43 pass.</li>
+<li>Variants against the review check: eviction 3 failures (archive after export warm and cold, owner&#39;s archived preview reloads); cached flag 1 failure (warm only); direct repository read 2 failures.</li>
+</ul>
+<p>To compare after your attempt:</p>
+<pre><code class="language-sh">mvn -DreviewCheck=true &#39;-Dtest=*Test,ReleaseReviewCheck&#39; test
+</code></pre>
+<p>The check covers the stated property and preserved behaviour through HTTP. It cannot judge your inventory, your comment or tests you did not write. Passing it after reading this guide is assisted evidence.</p>
+<h2>6. Limits of the task</h2>
+<p>The property is checked at the moment a request is authorized. The lab does not test cancelling a response already authorized before a concurrent archive, revocation across processes or copies already delivered. Tenant membership and ownership are fixed. The cache is one in-process map, so HTTP intermediaries, CDNs, replicas and distributed caches, each with its own key and freshness rules, are outside it. The candidate was produced for teaching; one generated patch says nothing general about how often AI-assisted code contains such gaps.</p>
 </article><div class="practice-actions"><button onclick="window.print()">Print this page</button><a href="../essays/11-security-property.html">Return to essay 11</a><a href="11-review-worksheet.html">Back to worksheet</a></div></main><footer><span>Book 21 · Learn, practise, verify.</span><a href="https://github.com/AnthonyKot/book21">Source on GitHub</a></footer></body></html>

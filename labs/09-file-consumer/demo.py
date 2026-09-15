@@ -9,7 +9,6 @@ from xml.sax.saxutils import quoteattr
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--port', type=int, default=8089)
-parser.add_argument('--summary', action='store_true', help='also run the unfinished later consumer')
 args = parser.parse_args()
 base = f'http://127.0.0.1:{args.port}'
 with tempfile.TemporaryDirectory(prefix='book21-curl-') as tmp:
@@ -48,7 +47,3 @@ with tempfile.TemporaryDirectory(prefix='book21-curl-') as tmp:
         print(json.dumps({'case': name, 'upload': 201, 'preview': status, 'body': body,
                           'httpDelta': a['httpHits'] - b['httpHits'],
                           'resolutionDelta': a['resolutions'] - b['resolutions']}))
-        if args.summary:
-            status, body = call('/api/uploads/' + upload_id + '/summary', '')
-            _, counts = call('/lab/targets')
-            print(json.dumps({'case': name, 'summary': status, 'body': body, 'counts': json.loads(counts)}))

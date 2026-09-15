@@ -1,6 +1,12 @@
-# Stored XML, active consumer — essay 9 lab
+# Stored XML, active consumers — essay 9 lab
 
-Java 21, Maven 3.9+, Python 3 and curl. Tested on Java 21.0.12, Maven 3.9.16, Spring Boot 4.1.1 / Security 7.1.1. One synthetic account (`alice` / `local-only`), no production data. Run on loopback only. Ports 8089 (API) and 8090 (fixture) must be free.
+Companion to [essay 9](https://anthonykot.github.io/book21/essays/09-file-consumer.html). A synthetic, intentionally vulnerable local service. Run it on loopback only.
+
+Requires Java 21, Maven 3.9+, Python 3 and curl. Tested with Java 21.0.12, Maven 3.9.16, Spring Boot 4.1.1 and Spring Security 7.1.1. The first Maven run downloads dependencies. Ports 8089 (API) and 8090 (fixture) must be free for manual runs; tests use random ports.
+
+One account, `alice` / `local-only`. HTTP Basic is a loopback convenience. CSRF protection stays enabled, so POSTs need the session cookie and token from `/csrf`.
+
+## 1. Guided demonstration: the preview parser
 
 ```sh
 mvn test
@@ -14,13 +20,13 @@ In another terminal, from this directory:
 python3 demo.py
 ```
 
-Standalone execution defaults to fixture port 8090; `/lab/targets` returns the actual bound port. Automated authoring runs use random ports (`--lab.fixture-port=0`) to avoid conflicts.
+The script uploads four documents and previews each: an ordinary invoice, a file entity, an HTTP entity and an external DTD. It reads the synthetic target URIs from `/lab/targets` and prints the resolver and HTTP-hit deltas. It also checks that storing a document resolves nothing.
 
-The script executes curl requests, obtains a CSRF token with its session cookie, uploads four XML documents and previews each. It reads only fixture URLs returned by `/lab/targets`: a newly created synthetic text file and two local HTTP resources. Upload returns 201 without resolving anything. Vulnerable previews return 200: `Cedar & Sons` for ordinary XML; `SERVER-ONLY-SYNTHETIC-NOTE` for file, HTTP and external-DTD cases. HTTP and DTD previews each add one fixture hit; the file case adds no HTTP hit. All three entity cases add one resolver callback.
+Permissive preview returns 200 for all four. The ordinary invoice gives `Cedar & Sons`; the other three give `SERVER-ONLY-SYNTHETIC-NOTE`. The HTTP entity and external DTD each add one fixture hit.
 
-Stop the Java process with Ctrl-C. Restart with `--lab.hardened=true` (the default) and rerun the demo. Ordinary preview still returns 200; all three external-reference previews return 422 with zero new resolver callbacks or HTTP hits. Startup creates fresh upload storage and fixture state. Normal shutdown removes the process's temporary files; a forced kill may leave them in the system temporary directory.
+Stop the server with Ctrl-C and restart with `--lab.hardened=true` (the default). Rerun the script: the ordinary invoice still returns 200, the three reference cases return 422, and no resolution or HTTP hit occurs.
 
-A single upload and preview can also be sent manually. Save the token and cookie together:
+One upload and preview by hand:
 
 ```sh
 curl -sS -u alice:local-only -c cookies.txt http://127.0.0.1:8089/csrf > csrf.json
@@ -32,41 +38,49 @@ curl -sS -u alice:local-only -b cookies.txt -H "X-CSRF-TOKEN: $TOKEN" \
   -X POST -w '\n[HTTP %{http_code}]\n' "http://127.0.0.1:8089/api/uploads/$ID/preview"
 ```
 
-`POST /api/uploads` accepts a raw `application/xml` body, not multipart input, and stores at most 8192 bytes under a server-generated UUID outside the web root. It does not validate the XML or mark it trusted. `POST /api/uploads/{id}/preview` reopens those bytes. The invoice subset is one unnamespaced `invoice` element containing exactly one unnamespaced, attribute-free `title`, whose text/CDATA is nonblank and at most 120 Java UTF-16 code units. Whitespace between elements is allowed. Comments and processing instructions inside `invoice` or `title` are rejected by this narrow shape policy. Those outside the root are ignored by title extraction; no stylesheet processor is invoked. Parser depth is capped at 32. A malformed or disallowed invoice returns 422; wrong media type 415; oversized upload 413; unknown UUID 404. Predefined `&amp;` is supported without a DTD.
+### Guided tests and negative control
 
-CSRF is retained. Use the cookie and token on POSTs; in this Basic-auth fixture a missing CSRF token returns 401 because the CSRF check precedes Basic authentication. This is an observed rejection, not a universal CSRF status contract. A valid token without Basic authentication also returns 401.
-
-## Verification and negative control
-
-Default `mvn test` runs 36 guided cases (18 in each mode), including actual HTTP upload/preview operations and a direct parser depth boundary test. The reproduction class expects the vulnerability. Tests run sequentially because fixture counters are shared.
+Default `mvn test` runs 36 cases: `ParserReproductionTest` (18, expects the permissive flaw) and `ParserRepairTest` (18, expects the repair). Both share `PreviewCases`. The negative control runs the repair assertions against a permissive application and must exit nonzero:
 
 ```sh
 mvn -Dtest=ParserRepairTest -Dtest.hardened=false test
 ```
 
-Expected: five failures (file entity, HTTP entity, external DTD, internal DTD and UTF-16 entity), thirteen passes, no errors. This restores the deliberately permissive parsing policy. It does not isolate the necessity of each individual hardening setting.
+Expected: five failures (file entity, HTTP entity, external DTD, internal DTD, UTF-16 entity), thirteen passes, no errors. It switches the whole parser policy, so it does not show that each individual setting is necessary.
 
-## Independent exercise: the later summary consumer
+## 2. Independent task: release review for partner statements
 
-With hardened preview, run:
+Use the [worksheet](https://anthonykot.github.io/book21/practice/09-file-worksheet.html). This release adds two operations on stored uploads:
 
-```sh
-python3 demo.py --summary
-mvn -Dtest=SummaryExercise test
-```
+- `POST /api/uploads/{id}/statement` totals a partner statement and returns, for example, `2 lines, 1500 cents: Toner & paper; Delivery`. See `samples/statement.xml` for the format.
+- `GET /api/uploads/{id}/receipt` returns the SHA-256 and size of the stored bytes. Support uses it to identify any submission, including one that XML processing rejects.
 
-`SummaryWorker.summarize` reopens the stored file with the permissive parser. Its HTTP adapter is synchronous; direct worker tests avoid inventing a queue or timing guarantee. A rejected preview does not delete the upload, and no prior-preview requirement exists. The starter fails three of five exercise tests. Repair this consumer so every parse enforces the same no-DTD policy, preserves ordinary summaries, and rejects file, HTTP and harmless internal-DTD inputs with 422 and no resolution/contact. Do not “fix” it by returning empty output or disabling all summaries.
-
-`SummaryExercise` deliberately falls outside Maven's default test naming filter. After repairing it, run all 41 cases:
+The release policy, the legitimate behaviour to preserve and the deliverables are in the worksheet. Run the review with `lab.hardened=true`. An ordinary statement by hand, reusing `TOKEN` and `cookies.txt` from above:
 
 ```sh
-mvn '-Dtest=*Test,SummaryExercise' test
+ID=$(curl -sS -u alice:local-only -b cookies.txt -H "X-CSRF-TOKEN: $TOKEN" \
+  -H 'Content-Type: application/xml' --data-binary @samples/statement.xml \
+  http://127.0.0.1:8089/api/uploads)
+curl -sS -u alice:local-only -b cookies.txt -H "X-CSRF-TOKEN: $TOKEN" \
+  -X POST -w '\n[HTTP %{http_code}]\n' "http://127.0.0.1:8089/api/uploads/$ID/statement"
+curl -sS -u alice:local-only "http://127.0.0.1:8089/api/uploads/$ID/receipt"
 ```
 
-The private reference was executed during authoring; it is not shipped here. The public summary route stays unfinished even when `lab.hardened=true`.
+Write your own tests under `src/test/java/lab/`. Extending `UploadHttp` gives you an authenticated client with CSRF, `upload`, `preview`, `statement` and `receipt` helpers, and fixture counters reset before each test. Name a class `…Test` to include it in `mvn test`. `/lab/targets` returns the synthetic file and HTTP URIs to reference.
 
-## Scope
+### After saving your attempt
 
-The custom resolver bounds the vulnerable demonstration to three exact synthetic URIs; it throws for other references. Returning null for an allowed fixture URI lets the real JDK parser open it. This demonstrates file and network access, not unrestricted host filesystem access or a network-isolation boundary. The hardened parser refuses DOCTYPE, disables external entities/DTD loading and XInclude, sets empty external access lists, keeps secure processing enabled and rejects resolver fallback. Configuration failure aborts processing instead of retrying insecurely.
+`ReleaseReviewCheck` checks the stated release contract over HTTP. Default `mvn test` does not run it, and it skips itself unless `-DreviewCheck=true` is set, so an IDE's "run all tests" will not show its results early. It is a comparison for your own evidence, not a substitute for it; opening the file first turns the task into a guided one, so leave it closed in your IDE's project tree until you have saved your attempt.
 
-One account is not a tenant-authorization implementation. There is no raw-file download, browser rendering, archive extraction, schema validation, XSLT or Java deserialization. The per-upload and parser limits do not implement aggregate disk quotas, request-rate limits, a processing deadline, hostile concurrent workloads or crash recovery. Avoid using the temporary store as a production upload service.
+```sh
+mvn -DreviewCheck=true '-Dtest=*Test,ReleaseReviewCheck' test
+```
+
+## Fixture details and scope
+
+- **Intake.** `POST /api/uploads` accepts a raw `application/xml` body (not multipart) and stores at most 8192 bytes under a server-generated UUID outside the web root. 201 means stored, not validated. Wrong media type returns 415, an oversized body 413, an unknown ID 404.
+- **Invoice format.** One unnamespaced, attribute-free `invoice` containing exactly one attribute-free `title`. The title is text or CDATA, nonblank and at most 120 Java UTF-16 code units. Comments and processing instructions inside `invoice` or `title` are rejected; those outside the root are ignored. Invalid invoices return 422. Parser depth is capped at 32.
+- **Statement format.** One unnamespaced, attribute-free `statement` containing one or more `line` elements. Each `line` has exactly one attribute, `cents`, with 1–9 decimal digits, and a nonblank text description of at most 120 characters. Invalid statements return 422.
+- **Lab safety guard.** Every XML consumer installs `Fixture.confine`, which counts each external resolution request and refuses URIs other than the three synthetic targets. It does not decide whether a consumer should resolve references. Where a consumer lets resolution proceed, the JDK processor really opens the file or makes the HTTP request. The lab therefore demonstrates file and network access without exposing arbitrary host files. The targets are reachable from your terminal too: "server-only" names their role in the application's policy, not an operating-system boundary.
+- **Status codes.** A missing CSRF token returns 401 in this Basic-auth fixture, because the CSRF check runs before Basic authentication. Treat that as observed behaviour of this fixture, not a universal CSRF status.
+- **Not covered.** No tenant authorization (one account), raw-file download, browser rendering, archive extraction, schema validation, XSLT, XInclude processing or Java deserialization. No aggregate disk quota, rate limit, processing deadline, hostile concurrency or crash recovery. No expansion-bomb test. The temporary store is not a production upload service. Normal shutdown removes temporary files; a forced kill may leave them in the system temporary directory.

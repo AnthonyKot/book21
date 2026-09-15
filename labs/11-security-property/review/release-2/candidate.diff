@@ -1,0 +1,250 @@
+diff -ruN a/src/main/java/lab/DocumentController.java b/src/main/java/lab/DocumentController.java
+--- a/src/main/java/lab/DocumentController.java	2026-09-15 20:52:28.265841193 +0200
++++ b/src/main/java/lab/DocumentController.java	2026-09-15 20:54:39.615708936 +0200
+@@ -16,14 +16,17 @@
+ public class DocumentController {
+     private final PreviewService previews;
+     private final DownloadService downloads;
++    private final ExportService exportsService;
+     private final DocumentStore store;
+ 
+     @Value("${lab.fixtures}")
+     boolean fixtures;
+ 
+-    public DocumentController(PreviewService previews, DownloadService downloads, DocumentStore store) {
++    public DocumentController(PreviewService previews, DownloadService downloads, ExportService exportsService,
++            DocumentStore store) {
+         this.previews = previews;
+         this.downloads = downloads;
++        this.exportsService = exportsService;
+         this.store = store;
+     }
+ 
+@@ -37,6 +40,16 @@
+         return downloads.download(id, Tenants.of(principal));
+     }
+ 
++    @PostMapping(value = "/api/documents/{id}/export", produces = "text/plain")
++    String export(@PathVariable String id, Principal principal) {
++        return exportsService.create(id, Tenants.of(principal));
++    }
++
++    @GetMapping(value = "/api/exports/{exportId}", produces = "text/plain")
++    String fetchExport(@PathVariable String exportId, Principal principal) {
++        return exportsService.fetch(exportId, Tenants.of(principal));
++    }
++
+     @GetMapping("/csrf")
+     Map<String, String> csrf(CsrfToken token) {
+         return Map.of("header", token.getHeaderName(), "token", token.getToken());
+@@ -55,6 +68,7 @@
+         requireFixtures();
+         store.reset();
+         previews.clear();
++        exportsService.clear();
+     }
+ 
+     @PostMapping("/lab/archive/{id}")
+diff -ruN a/src/main/java/lab/DownloadService.java b/src/main/java/lab/DownloadService.java
+--- a/src/main/java/lab/DownloadService.java	2026-09-15 20:52:20.365058130 +0200
++++ b/src/main/java/lab/DownloadService.java	2026-09-15 20:54:39.615801697 +0200
+@@ -14,6 +14,7 @@
+     }
+ 
+     public String download(String id, String tenant) {
++        store.requireDownload(id, tenant);
+         return previews.preview(id, tenant).content();
+     }
+ }
+diff -ruN a/src/main/java/lab/ExportService.java b/src/main/java/lab/ExportService.java
+--- a/src/main/java/lab/ExportService.java	1970-01-01 01:00:00.000000000 +0100
++++ b/src/main/java/lab/ExportService.java	2026-09-15 20:54:39.615769484 +0200
+@@ -0,0 +1,48 @@
++package lab;
++
++import static org.springframework.http.HttpStatus.NOT_FOUND;
++
++import java.util.Map;
++import java.util.UUID;
++import java.util.concurrent.ConcurrentHashMap;
++import org.springframework.stereotype.Service;
++import org.springframework.web.server.ResponseStatusException;
++
++/**
++ * Export links: a tenant creates an export for one of its documents and later fetches the
++ * full content through the export identifier, for example from a support ticket.
++ */
++@Service
++public class ExportService {
++    private final DocumentStore store;
++    private final PreviewService previews;
++    private final Map<String, Export> exports = new ConcurrentHashMap<>();
++
++    public ExportService(DocumentStore store, PreviewService previews) {
++        this.store = store;
++        this.previews = previews;
++    }
++
++    private record Export(String tenant, String documentId) {}
++
++    /** Authorizes the export against the document's current state, then records it. */
++    public String create(String documentId, String tenant) {
++        store.requireDownload(documentId, tenant);
++        String exportId = UUID.randomUUID().toString();
++        exports.put(exportId, new Export(tenant, documentId));
++        return exportId;
++    }
++
++    /** Returns the exported content to the tenant that created the export. */
++    public String fetch(String exportId, String tenant) {
++        Export export = exports.get(exportId);
++        if (export == null || !export.tenant().equals(tenant)) {
++            throw new ResponseStatusException(NOT_FOUND);
++        }
++        return previews.preview(export.documentId(), tenant).content();
++    }
++
++    public void clear() {
++        exports.clear();
++    }
++}
+diff -ruN a/src/test/java/lab/ExportCandidateTest.java b/src/test/java/lab/ExportCandidateTest.java
+--- a/src/test/java/lab/ExportCandidateTest.java	1970-01-01 01:00:00.000000000 +0100
++++ b/src/test/java/lab/ExportCandidateTest.java	2026-09-15 20:54:39.618075150 +0200
+@@ -0,0 +1,57 @@
++package lab;
++
++import static org.junit.jupiter.api.Assertions.assertEquals;
++
++import org.junit.jupiter.api.Test;
++import org.springframework.boot.test.context.SpringBootTest;
++
++/** Tests supplied with the release 2 candidate. See review/release-2/EXPLANATION.md. */
++@SpringBootTest(
++        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
++        properties = {"lab.partition=true"})
++class ExportCandidateTest extends ReviewHttp {
++    @Test
++    void activeDownload() throws Exception {
++        var response = download("alice", "C-1001");
++        assertEquals(200, response.statusCode());
++        assertEquals("CEDAR-FULL-INVOICE-CONTENT", response.body());
++    }
++
++    @Test
++    void archivedDownloadDenied() throws Exception {
++        preview("alice", "C-1001");
++        store.archive("C-1001", "cedar");
++        noContent(download("alice", "C-1001"));
++    }
++
++    @Test
++    void archivedSummaryStillVisible() throws Exception {
++        store.archive("C-1001", "cedar");
++        assertEquals("CEDAR-PRIVATE-SUMMARY", preview("alice", "C-1001").body());
++    }
++
++    @Test
++    void exportRoundTrip() throws Exception {
++        String exportId = export("alice", "C-1001");
++        var response = fetchExport("alice", exportId);
++        assertEquals(200, response.statusCode());
++        assertEquals("CEDAR-FULL-INVOICE-CONTENT", response.body());
++    }
++
++    @Test
++    void exportOfArchivedDocumentRefused() throws Exception {
++        store.archive("C-1001", "cedar");
++        assertEquals(404, post("alice", "/api/documents/C-1001/export").statusCode());
++    }
++
++    @Test
++    void foreignTenantCannotFetchExport() throws Exception {
++        String exportId = export("alice", "C-1001");
++        noContent(fetchExport("bob", exportId));
++    }
++
++    @Test
++    void unknownExport() throws Exception {
++        noContent(fetchExport("alice", "00000000-0000-0000-0000-000000000000"));
++    }
++}
+diff -ruN a/src/test/java/lab/ReviewHttp.java b/src/test/java/lab/ReviewHttp.java
+--- a/src/test/java/lab/ReviewHttp.java	2026-09-15 20:52:39.581156112 +0200
++++ b/src/test/java/lab/ReviewHttp.java	2026-09-15 20:54:39.617994609 +0200
+@@ -3,12 +3,15 @@
+ import static org.junit.jupiter.api.Assertions.assertEquals;
+ import static org.junit.jupiter.api.Assertions.assertFalse;
+ 
++import java.net.CookieManager;
++import java.net.CookiePolicy;
+ import java.net.URI;
+ import java.net.http.HttpClient;
+ import java.net.http.HttpRequest;
+ import java.net.http.HttpResponse;
+ import java.nio.charset.StandardCharsets;
+ import java.util.Base64;
++import java.util.regex.Pattern;
+ import org.junit.jupiter.api.AfterEach;
+ import org.junit.jupiter.api.BeforeEach;
+ import org.springframework.beans.factory.annotation.Autowired;
+@@ -28,13 +31,17 @@
+     @Autowired
+     PreviewService previews;
+ 
++    @Autowired
++    ExportService exports;
++
+     HttpClient client;
+ 
+     @BeforeEach
+     void reset() {
+         store.reset();
+         previews.clear();
+-        client = HttpClient.newHttpClient();
++        exports.clear();
++        client = HttpClient.newBuilder().cookieHandler(new CookieManager(null, CookiePolicy.ACCEPT_ALL)).build();
+     }
+ 
+     @AfterEach
+@@ -54,6 +61,23 @@
+         return response;
+     }
+ 
++    /** Authenticated POST with the session's CSRF token, as the application requires. */
++    HttpResponse<String> post(String user, String path) throws Exception {
++        var csrf = get(user, "/csrf");
++        var matcher = Pattern.compile("\"token\":\"([^\"]+)\"").matcher(csrf.body());
++        String token = matcher.find() ? matcher.group(1) : "";
++        var builder = HttpRequest.newBuilder(URI.create("http://127.0.0.1:" + port + path))
++                .header("X-CSRF-TOKEN", token);
++        if (!user.isEmpty()) {
++            String credentials = Base64.getEncoder().encodeToString((user + ":local-only").getBytes(StandardCharsets.UTF_8));
++            builder.header("Authorization", "Basic " + credentials);
++        }
++        var response = client.send(builder.POST(HttpRequest.BodyPublishers.noBody()).build(),
++                HttpResponse.BodyHandlers.ofString());
++        System.out.println(user + " POST " + path + " -> " + response.statusCode() + " body=" + response.body());
++        return response;
++    }
++
+     HttpResponse<String> get(String user, String id, String route, String suffix) throws Exception {
+         return get(user, "/api/documents/" + id + "/" + route + suffix);
+     }
+@@ -66,6 +90,16 @@
+         return get(user, id, "download", "");
+     }
+ 
++    String export(String user, String id) throws Exception {
++        var response = post(user, "/api/documents/" + id + "/export");
++        assertEquals(200, response.statusCode());
++        return response.body();
++    }
++
++    HttpResponse<String> fetchExport(String user, String exportId) throws Exception {
++        return get(user, "/api/exports/" + exportId);
++    }
++
+     /** 404 with no private content of any tenant in the body. */
+     void noContent(HttpResponse<String> response) {
+         assertEquals(404, response.statusCode());

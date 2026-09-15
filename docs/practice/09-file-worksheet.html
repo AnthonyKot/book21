@@ -6,36 +6,66 @@
 <link rel="stylesheet" href="../assets/style.css"></head>
 <body><a class="skip" href="#main">Skip to content</a><header class="site-header"><a href="../index.html">Security Is an Engineering Job</a><nav aria-label="Book"><a href="../index.html#essays">Essays</a><a href="../about.html">About</a></nav></header>
 <main id="main"><p class="kicker">Essay 9 · Practice</p><article><h1>Stored-file consumer worksheet</h1>
-<p>Use after <a href="../essays/09-file-consumer.html">essay 9</a>. Record your prediction before opening the <a href="09-file-review.html">review guide</a>.</p>
-<h2>Preserve your starting point</h2>
-<ul>
-<li>Date, Java/Maven version and repository revision:</li>
-<li>Time available this week (10–15 hours total):</li>
-<li>Assistance used, including hints, AI patches or supplied solutions:</li>
-</ul>
-<p>The local lab is in <a href="https://github.com/AnthonyKot/book21/tree/main/labs/09-file-consumer">labs/09-file-consumer</a>. Its README contains setup and curl instructions. Use only generated synthetic targets. The summary consumer is intentionally unfinished, even with hardened preview.</p>
-<h2>Predict before running</h2>
-<p>An upload stores bytes and returns 201. Preview returns 422 because those bytes contain a DOCTYPE. Summary opens the same identifier afterwards.</p>
-<ol>
-<li>What does 201 establish about the file?</li>
-<li>Which component decides whether an entity is resolved?</li>
-<li>Does a preview error remove the stored file or constrain another parser?</li>
-<li>What should happen to a plain invoice using <code>&amp;amp;</code>?</li>
-</ol>
+<p>Use with <a href="../essays/09-file-consumer.html">essay 9</a> and the <a href="https://github.com/AnthonyKot/book21/tree/main/labs/09-file-consumer">lab</a>. Save your attempt before opening the <a href="09-file-review.html">review guide</a> or the lab&#39;s <code>ReleaseReviewCheck</code> (leave it closed in your IDE&#39;s project tree too; it skips itself unless <code>-DreviewCheck=true</code> is set). Work only with the lab&#39;s synthetic targets.</p>
+<h2>Plan the week</h2>
+<p>These are authoring estimates derived from the steps below, not measured learner times. Record your actual time.</p>
 <div class="table-scroll" tabindex="0" role="region" aria-label="Table; scroll horizontally on small screens"><table>
 <thead>
 <tr>
-<th>Input</th>
-<th>Stored?</th>
-<th>Preview result</th>
-<th>Summary result before repair</th>
-<th>Summary result required</th>
+<th>Part</th>
+<th>What it involves</th>
+<th>Provisional estimate</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Setup</td>
+<td>Java 21, Maven, Python 3 and curl, already used in essays 4–8; first dependency download</td>
+<td>0.5–1 hour</td>
+</tr>
+<tr>
+<td>Guided run</td>
+<td>Read the essay, run both preview modes, run the negative control, answer part A</td>
+<td>2–3 hours</td>
+</tr>
+<tr>
+<td>Independent release review</td>
+<td>Part B: inventory, reproduction, design, your own tests, handover note</td>
+<td>4–7 hours</td>
+</tr>
+<tr>
+<td>Delayed check</td>
+<td>The final evidence-record question, about a week later</td>
+<td>0.5 hour</td>
+</tr>
+<tr>
+<td>Optional transfer</td>
+<td>Part C: two hosted Academy labs; schedule for a later week by default</td>
+<td>1–3 hours</td>
+</tr>
+</tbody></table>
+</div><p>The required parts total about 7–11.5 hours, before troubleshooting. In a 10-hour week, the upper end leaves no room. Keep the week bounded:</p>
+<ul>
+<li>If setup or an unrelated tool failure takes more than an hour, record the command and error and move on to what you can do.</li>
+<li>If part B has not produced a reproduction after about 3 hours, stop and record what you tried. Open only the next hint in the review guide, marked as assistance, or carry the review into next week.</li>
+<li>Leave part C for a later week unless the required parts finished early.</li>
+</ul>
+<p>Start of attempt:</p>
+<ul>
+<li>Date, repository revision, Java and Maven versions:</li>
+<li>Assistance you expect to use or have already seen (hints, AI, earlier notes):</li>
+</ul>
+<h2>A. Guided run: preview</h2>
+<p>Before running <code>python3 demo.py</code>, predict the response and counter changes for each document in both modes. Then record what you observed.</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Table; scroll horizontally on small screens"><table>
+<thead>
+<tr>
+<th>Document</th>
+<th>Permissive: status, body, resolutions, HTTP hits</th>
+<th>Hardened: status, resolutions, HTTP hits</th>
 </tr>
 </thead>
 <tbody><tr>
 <td>Ordinary invoice</td>
-<td></td>
-<td></td>
 <td></td>
 <td></td>
 </tr>
@@ -43,51 +73,135 @@
 <td>File entity</td>
 <td></td>
 <td></td>
-<td></td>
-<td></td>
 </tr>
 <tr>
 <td>HTTP entity</td>
 <td></td>
 <td></td>
+</tr>
+<tr>
+<td>External DTD</td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+</div><ol>
+<li>What does <code>201</code> establish about an uploaded file, and what does it not?</li>
+<li>Why can the invoice shape check not prevent the file read, even though it rejects unexpected content?</li>
+<li>Why does the test for the HTTP entity check the fixture counter as well as the response body?</li>
+<li>Run the negative control from the README. Which cases failed, and why do the intake and shape cases still pass?</li>
+</ol>
+<h2>B. Independent release review: partner statements</h2>
+<h3>The brief</h3>
+<p>The release adds two operations on stored uploads (see the lab README):</p>
+<ul>
+<li><code>POST /api/uploads/{id}/statement</code> totals a partner statement.</li>
+<li><code>GET /api/uploads/{id}/receipt</code> returns the SHA-256 and size of the stored bytes.</li>
+</ul>
+<p>You are reviewing the release before it ships. You have not been told whether it is safe.</p>
+<p><strong>Policy.</strong> Apply these to every operation on stored uploads:</p>
+<ol>
+<li>Invoices and partner statements do not use a <code>DOCTYPE</code>. Any operation that parses stored bytes as XML must reject a document containing a <code>DOCTYPE</code> with <code>422</code>, including one whose declarations are never used.</li>
+<li>No operation may request resolution of, read or contact any location named in an upload. This holds even when the operation would reject the document afterwards.</li>
+<li>The policy applies to every encoding the XML parser accepts, not only UTF-8.</li>
+</ol>
+<p><strong>Behaviour to preserve.</strong></p>
+<ul>
+<li>An ordinary statement still totals correctly, including predefined entities such as <code>&amp;amp;</code> and CDATA text. <code>samples/statement.xml</code> uses both and returns <code>2 lines, 1500 cents: Toner &amp; paper; Delivery</code>.</li>
+<li>An invalid statement still returns <code>422</code>.</li>
+<li>An ordinary invoice still previews, and the guided preview repair and its tests remain intact.</li>
+<li>The receipt still returns the hash and size for every stored upload, including documents that XML processing rejects.</li>
+</ul>
+<p><strong>Constraints.</strong> Run with <code>lab.hardened=true</code>. Keep <code>Fixture.confine</code> in place: it is lab safety, not the control under review. Do not change the formats, disable an operation, or reject every statement. Any design is acceptable if it meets the policy and preserves the behaviour above.</p>
+<h3>Deliverable 1: consumer inventory</h3>
+<p>List every path from stored bytes to a component that reads them. Base each verdict on observation or inspected configuration, not on what the code looks like it should do.</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Table; scroll horizontally on small screens"><table>
+<thead>
+<tr>
+<th>Operation</th>
+<th>Code location</th>
+<th>Interprets the bytes as XML? With which API?</th>
+<th>Settings relevant to DTDs and external resources</th>
+<th>Evidence for your verdict</th>
+<th>Meets the policy?</th>
+</tr>
+</thead>
+<tbody><tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
 <td></td>
 <td></td>
 </tr>
 <tr>
-<td>Harmless internal DTD</td>
+<td></td>
+<td></td>
 <td></td>
 <td></td>
 <td></td>
 <td></td>
 </tr>
 <tr>
-<td>Malformed XML</td>
+<td></td>
+<td></td>
 <td></td>
 <td></td>
 <td></td>
 <td></td>
 </tr>
 </tbody></table>
-</div><h2>Establish the guided evidence</h2>
-<p>Run default tests and <code>python3 demo.py</code> in each preview mode. For each trace retain status, output, resolver delta and HTTP-hit delta. The demo verifies that upload alone caused no resolution. Explain why an empty response would not establish no external contact.</p>
-<p>Run the repair negative control from the README. Record the actual failing cases and exit status. Distinguish failures of assertions from errors that prevented tests from running.</p>
-<h2>Change the later consumer</h2>
-<p>Run <code>python3 demo.py --summary</code> with hardened preview. Then run:</p>
-<pre><code class="language-sh">mvn -Dtest=SummaryExercise test
-</code></pre>
-<p>Repair <code>SummaryWorker.summarize</code>. Every reopening must use the required parser policy. Preserve plain text/CDATA and the invoice-shape checks. File and HTTP references, harmless internal DTDs and malformed XML must produce 422; reference inputs must cause no external resolution or HTTP contact. Do not require a successful preview as a substitute for enforcing the policy here.</p>
-<p>After your attempt:</p>
-<pre><code class="language-sh">mvn &#39;-Dtest=*Test,SummaryExercise&#39; test
-</code></pre>
-<p>Default <code>mvn test</code> only runs the 36 guided cases; it excludes the deliberately unfinished exercise by its name. The combined command runs 41 cases. Reintroduce permissive parsing in a temporary copy and show that the exercise catches it. Retain your patch and explanation, not just the green output.</p>
-<h2>Independent transfer</h2>
-<p>Attempt these named PortSwigger Academy exercises only in their authorized training environments:</p>
+</div><h3>Deliverable 2: reproduction</h3>
+<p>For each violation you find, give the smallest document that shows it, then the observed status, body, resolution count and HTTP-hit count. For each operation you judge compliant, give the observation that supports that verdict.</p>
+<h3>Deliverable 3: verdict and enforcement decision</h3>
+<p>A release can pass review. If you conclude that no change is needed, give the evidence for that verdict and name a change to the code that would break it; then skip to the tests.</p>
 <ul>
-<li><a href="https://portswigger.net/web-security/xxe/lab-exploiting-xxe-to-retrieve-files">Exploiting XXE using external entities to retrieve files</a>. Identify which result demonstrates external resolution. Describe how its input and authority differ from the local fixture.</li>
-<li><a href="https://portswigger.net/web-security/xxe/lab-xinclude-attack">Exploiting XInclude to retrieve files</a>. Identify what the attacker controls when they cannot supply a whole XML document. Explain why our local inactive-XInclude test does not establish that every XML consumer disables it.</li>
+<li>Verdict (change needed or not), with the evidence:</li>
+<li>What you changed, and where the policy is now enforced:</li>
+<li>Why that location. Would the next consumer of stored bytes also receive it?</li>
+<li>What happens if a required setting is unsupported:</li>
+<li>At least one alternative you considered or tried, and the evidence that made you reject it:</li>
+<li>A document that your design still accepts, and why the policy permits it:</li>
 </ul>
-<p>Do not copy the Academy solution before your attempt. Record hints and assisted completion honestly. If a lab is unavailable, keep the transfer result pending and use a changed local case while documenting its narrower scope; local repetition is not completion of the hosted task.</p>
-<h2>Handover and limits</h2>
-<p>Write a short engineering review identifying the second parser path, the repair and the preserved behavior. For a consulting version, include scope, reproducer, impact, retest and exclusions. State that this is a synthetic demonstration.</p>
-<p>Record elapsed time, remaining gap and one delayed check: after a week, trace a fresh consumer from stored bytes to its processor without looking at your patch. Do not mark mastery solely from executing the supplied tests.</p>
+<h3>Deliverable 4: your tests</h3>
+<p>Write tests under <code>src/test/java/lab/</code> (extending <code>UploadHttp</code> is convenient). Include:</p>
+<ul>
+<li>Every refusal case your inventory and policy require. Each must assert that no resolution or fixture contact happened, as well as the status.</li>
+<li>Legitimate cases showing the behaviour to preserve still works.</li>
+<li>A negative control that shows your tests can fail for the right reason. If you changed code, run them against the original release; if you did not, run them against a deliberately broken copy you describe (for example, one setting removed). Record which fail. A compilation or startup error does not count.</li>
+</ul>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Table; scroll horizontally on small screens"><table>
+<thead>
+<tr>
+<th>Test</th>
+<th>What it proves</th>
+<th>Result on the original or broken code</th>
+<th>Result on the final code</th>
+</tr>
+</thead>
+<tbody><tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+</div><p>Final command and summary line:</p>
+<h3>Limits</h3>
+<p>Name one thing your tests do not establish, and one other consumer or format that would need its own review.</p>
+<h2>C. Optional transfer: hosted labs</h2>
+<p>Use only the authorized training environments. Record hints and walkthroughs as assistance. If a lab is unavailable, mark it pending; repeating a local case is not completion.</p>
+<ul>
+<li><a href="https://portswigger.net/web-security/xxe/lab-exploiting-xxe-to-retrieve-files">Exploiting XXE using external entities to retrieve files</a>. Which response shows external resolution, and how does the attacker&#39;s control differ from the local upload?</li>
+<li><a href="https://portswigger.net/web-security/xxe/lab-xinclude-attack">Exploiting XInclude to retrieve files</a>. What does the attacker control when they cannot supply the whole document? Why does the local lab&#39;s inactive-XInclude test not show that every XML consumer disables it?</li>
+</ul>
+<h2>Handover</h2>
+<p>Write a short release-review note stating the policy, inventory, finding, change, evidence and limits. For an internal team, address the engineer who owns the release. For a consulting client, add the assessed scope, the retest you would run and the exclusions. Label the lab as synthetic.</p>
+<h2>Evidence record</h2>
+<ul>
+<li>Actual time per part:</li>
+<li>Assistance used, including hints, AI suggestions and any look at the review check:</li>
+<li>What you could now explain without notes:</li>
+<li>Delayed check, a week later: without looking at your patch, pick a different XML-reading component (from any codebase you may inspect) and state how you would establish its effective policy.</li>
+</ul>
 </article><div class="practice-actions"><button onclick="window.print()">Print this page</button><a href="../essays/09-file-consumer.html">Return to essay 9</a><a href="09-file-review.html">Review after your attempt →</a></div></main><footer><span>Book 21 · Learn, practise, verify.</span><a href="https://github.com/AnthonyKot/book21">Source on GitHub</a></footer></body></html>

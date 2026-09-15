@@ -2,7 +2,7 @@
 """Local synthetic review trace; requires Python3, curl and --lab.fixtures=true."""
 import argparse,json,subprocess,tempfile
 from pathlib import Path
-p=argparse.ArgumentParser();p.add_argument('--port',type=int,default=8092);p.add_argument('--exercise',action='store_true');args=p.parse_args()
+p=argparse.ArgumentParser();p.add_argument('--port',type=int,default=8092);args=p.parse_args()
 base=f'http://127.0.0.1:{args.port}'
 with tempfile.TemporaryDirectory(prefix='book21-review-') as tmp:
  jar=str(Path(tmp)/'cookies');token=''
@@ -28,8 +28,3 @@ with tempfile.TemporaryDirectory(prefix='book21-review-') as tmp:
  observe('reverse-owner','bob','B-2001')
  observe('reverse-warm','alice','B-2001')
  observe('anonymous-warm','','B-2001')
- if args.exercise:
-  reset();observe('before-archive','alice','C-1001')
-  assert call('/lab/archive/C-1001',post=True)[0]==200
-  observe('archived-preview','alice','C-1001')
-  observe('archived-download','alice','C-1001','download')

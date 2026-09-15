@@ -1,0 +1,14 @@
+--- a/src/main/java/lab/DocumentStore.java
++++ b/src/main/java/lab/DocumentStore.java
+@@ -24,9 +24,9 @@
+     public Document read(String id, String tenant) {
+         bodyLoads.incrementAndGet();
+         var rows = jdbc.query(
+-                "SELECT summary, body FROM document WHERE id = ?",
++                "SELECT summary, body FROM document WHERE id = ? AND tenant = ?",
+                 (rs, n) -> new Document(rs.getString(1), rs.getString(2)),
+-                id);
++                id, tenant);
+         if (rows.isEmpty()) {
+             throw new ResponseStatusException(NOT_FOUND);
+         }

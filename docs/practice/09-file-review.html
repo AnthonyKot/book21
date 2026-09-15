@@ -6,15 +6,105 @@
 <link rel="stylesheet" href="../assets/style.css"></head>
 <body><a class="skip" href="#main">Skip to content</a><header class="site-header"><a href="../index.html">Security Is an Engineering Job</a><nav aria-label="Book"><a href="../index.html#essays">Essays</a><a href="../about.html">About</a></nav></header>
 <main id="main"><p class="kicker">Essay 9 · Practice</p><article><h1>Stored-file consumer review</h1>
-<p>Compare after your attempt at the <a href="09-file-worksheet.html">worksheet</a>. These are progressive hints, not a substitute for independent evidence.</p>
-<h2>Hint 1: storage preserves the input</h2>
-<p>201 means the byte limit and storage operation succeeded. XML validity and safety were not established. The upload identifier changes the reference to the file, not its trust level. A preview failure leaves these bytes available to the summary path.</p>
-<h2>Hint 2: follow the second call</h2>
-<p>Read <code>SummaryWorker.summarize</code> through <code>UploadStore.read</code> to <code>InvoiceParser.title</code>. Identify the policy argument supplied by the worker. The preview flag configures a different call path; it does not change this argument. A resolver returning null permits default resolution, whereas throwing rejects it.</p>
-<h2>Hint 3: enforce policy whenever bytes are interpreted</h2>
-<p>Reuse the configured restrictive parser for the summary consumer. Retain shape checks and legitimate output. A stored “validated” boolean or a previous preview result cannot replace restrictions on a newly created parser. If replacing stored XML with a validated domain record is proposed instead, explain exactly what is persisted and prove no raw XML is reopened; that is a larger design change than this exercise requires.</p>
-<h2>Evidence to expect</h2>
-<p>The starter has three failures and two passes: file and HTTP references and harmless internal DTDs are accepted by the summary when they should be denied; ordinary and malformed cases already behave as required. The private reference passes all 41 combined cases. Run the worker tests and its HTTP adapter; do not satisfy the tests by disabling ordinary summaries. Restoring the permissive argument must make the relevant exercise cases fail again.</p>
-<p>No resolver call and no HTTP hit support the no-resolution claim for these fixtures. The synthetic note appearing in the permissive file response supports an actual read. None of these observations establishes arbitrary filesystem exposure, tenant isolation, a safe transformation pipeline or a complete denial-of-service defense.</p>
-<p>For an unfamiliar system, list every consumer that can parse, validate, transform or render the bytes. Distinguish those inspected from those merely identified. A browser rendering bug or an archive extraction path needs its own mechanism and repair; the DOM settings in this exercise do not transfer automatically.</p>
+<p>Open this after saving your <a href="09-file-worksheet.html">worksheet</a> attempt. Everything below counts as assistance once you have read it. If you are stuck partway, read only the next hint in section 2 and record that you did.</p>
+<h2>1. Judge the attempt before comparing answers</h2>
+<p>A sound release review shows the following, whatever design it chose.</p>
+<p><strong>Inventory.</strong> Each operation that reads stored bytes gets a verdict backed by evidence: an observed status and counter delta, or configuration inspected in the code and then confirmed by running it. &quot;Uses a parser, therefore vulnerable&quot; and &quot;doesn&#39;t look like XML parsing, therefore fine&quot; are both unsupported until checked. A useful inventory also distinguishes reading bytes from interpreting them.</p>
+<p><strong>Reproduction.</strong> A violation is shown with the smallest document that causes it, and the effect is recorded directly: file text in a response, or a nonzero resolution or HTTP-hit count. A <code>422</code> alone does not show that nothing was contacted.</p>
+<p><strong>Verdict.</strong> &quot;No change needed&quot; is a legitimate conclusion when every operation&#39;s evidence supports it and the negative control uses a deliberately broken copy. For this release that verdict does not survive the statement cases in section 3.</p>
+<p><strong>Decision.</strong> The write-up says where the policy is enforced and why that location suits the next consumer as well as this one. It says what happens if a setting is unsupported. It records at least one design that was tried or considered and rejected, with evidence rather than preference.</p>
+<p><strong>Tests.</strong> Refusal tests assert zero resolution and zero contact as well as the status. Legitimate tests pin exact output. The negative control fails against the original release, or a described broken copy, for the intended reason: assertion failures, not a startup error. The tests follow from the written policy, so they include the cases the policy names explicitly: an unused <code>DOCTYPE</code>, and an encoding other than UTF-8.</p>
+<p><strong>Limits.</strong> At least one honest gap, such as another XML API or library, schema or transformation processing, resource exhaustion, or the lab&#39;s single account.</p>
+<h2>2. Progressive hints, if you are stuck</h2>
+<ol>
+<li>List the operations in <code>UploadController</code>. For each, follow the stored bytes to the first class that does something other than copy or hash them. Which JDK API does that class use, and which settings does it apply before parsing?</li>
+<li>The guided repair configured one <code>DocumentBuilderFactory</code>. Any other XML API has its own properties and its own defaults. First observe what the code actually does with a file entity, an HTTP entity, an external DTD and a parameter entity, checking the counters as well as the status. Then choose a route: configure that API from its own documentation, or send the bytes through a parser configuration you have already verified.</li>
+<li>Test your candidate settings one at a time against every case the policy names, including a <code>DOCTYPE</code> that declares nothing it uses. A setting can stop contact while still accepting the <code>DOCTYPE</code>. Rejecting a <code>DOCTYPE</code> after the parser has already processed it can be too late.</li>
+</ol>
+<h2>3. What the release contains</h2>
+<p><strong>Preview</strong> uses the guided <code>DocumentBuilderFactory</code> policy. With <code>lab.hardened=true</code> it refuses every <code>DOCTYPE</code> before resolution, so it meets the release policy.</p>
+<p><strong>Receipt</strong> reads the stored bytes and hashes them. It never interprets them as XML: a hostile document returns its hash, and the counters stay at zero. Rejecting such documents here would break support&#39;s stated need to identify rejected submissions.</p>
+<p><strong>Statement</strong> does not meet the policy. <code>StatementReader</code> uses the JDK streaming API, <code>XMLInputFactory.newDefaultFactory()</code>, with no DTD or external-access settings. On Java 21.0.12 its behaviour was:</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Table; scroll horizontally on small screens"><table>
+<thead>
+<tr>
+<th>Document stored and totalled</th>
+<th>Observed with the release code</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Entity naming the fixture file</td>
+<td><code>200</code>, the note text as the line description; one resolution</td>
+</tr>
+<tr>
+<td>Entity naming the fixture HTTP address</td>
+<td><code>200</code>, the note text; one HTTP hit</td>
+</tr>
+<tr>
+<td>External DTD, entity not even used</td>
+<td><code>200</code>; one HTTP hit</td>
+</tr>
+<tr>
+<td>External parameter entity</td>
+<td><code>200</code>; one HTTP hit</td>
+</tr>
+<tr>
+<td>Internal <code>DOCTYPE</code>, declarations unused</td>
+<td><code>200</code></td>
+</tr>
+<tr>
+<td>UTF-16 file entity</td>
+<td><code>200</code>, the note text</td>
+</tr>
+</tbody></table>
+</div><p>The <code>StatementReader</code> resolver looks like a control but is the lab safety guard. For the fixture URIs it returns <code>null</code>, and the <code>XMLResolver</code> contract says the processor then resolves the entity &quot;using its default mechanism.&quot; The same trap appears in the guided SAX resolver. <a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.xml/javax/xml/stream/XMLResolver.html">XMLResolver</a></p>
+<p>The <code>XMLInputFactory</code> documentation lists <code>SUPPORT_DTD</code> with default <code>true</code>, and <code>IS_SUPPORTING_EXTERNAL_ENTITIES</code> with an unspecified default. The JDK implementation used here resolved external entities. Oracle&#39;s JAXP guide notes that the StAX processor does not support <code>FEATURE_SECURE_PROCESSING</code>, so external-access properties must be set directly. Setting secure processing, as the DOM code does, is not an available shortcut here. <a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.xml/javax/xml/stream/XMLInputFactory.html">XMLInputFactory</a>, <a href="https://docs.oracle.com/en/java/javase/21/security/java-api-xml-processing-jaxp-security-guide.html">JAXP security guide</a></p>
+<h2>4. Designs that look finished</h2>
+<p>Each row below is an actual variant of the private reference, run against the reference tests and the review check.</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Table; scroll horizontally on small screens"><table>
+<thead>
+<tr>
+<th>Change to the statement reader</th>
+<th>What still happens</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>External entities off only</td>
+<td>The external DTD is still fetched (one HTTP hit). An unused <code>DOCTYPE</code> and the parameter-entity document are accepted. An HTTP entity inside an otherwise nonempty description vanishes silently, without contact: <code>Item &amp;x;</code> becomes <code>Item </code>.</td>
+</tr>
+<tr>
+<td>DTD support off only</td>
+<td>No contact in the tested cases. Documents that use a declared entity fail with an undeclared-entity error and <code>422</code>, but a <code>DOCTYPE</code> whose declarations go unused, an external DTD reference and a parameter entity are all accepted with <code>200</code>, and the policy requires <code>422</code>.</td>
+</tr>
+<tr>
+<td>Reject the DTD event only, default factory</td>
+<td>Every <code>DOCTYPE</code> returns <code>422</code>, but the external DTD and parameter entity were already fetched before the event arrived.</td>
+</tr>
+<tr>
+<td>DTD support off, external entities off, external DTD access empty, and reject the DTD event</td>
+<td>Meets every tested case, and ordinary statements still total.</td>
+</tr>
+</tbody></table>
+</div><p>Other designs can be sound. For example, statements could be parsed through the same hardened DOM builder that preview uses, or through a shared factory both consumers obtain, with the lines then read from the tree. An executed version of the first option, which parses statements with the guided <code>builder(true)</code> and configures no StAX settings at all, passes all 36 guided cases and all 9 review checks. Behaviour, not the choice of API, decides the verdict. A shared, fail-closed construction point also answers the &quot;next consumer&quot; question better than settings copied into each class.</p>
+<p>Scanning the raw bytes for an ASCII <code>&lt;!DOCTYPE</code> cannot match the UTF-16 case, where each character is encoded in two bytes, and duplicates work the parser has to do anyway. Disabling the statement operation, or returning <code>422</code> for everything, violates the behaviour you were asked to preserve.</p>
+<h2>5. Reference evidence</h2>
+<p>Recorded while authoring. None of it is evidence of your attempt.</p>
+<ul>
+<li>Guided suite: 36 pass. The preview negative control gives 5 failures and 13 passes.</li>
+<li><code>ReleaseReviewCheck</code> against the public release code: 6 failures (file, HTTP, external DTD, parameter entity, unused <code>DOCTYPE</code>, UTF-16) and 3 passes (ordinary totals, invalid shape, receipt).</li>
+<li>The private reference&#39;s own learner-style tests fail 6 of 8 against the release code.</li>
+<li>The private reference passes all 53 cases: 36 guided, 8 of its own tests and 9 review checks.</li>
+<li>The incomplete variants in section 4 fail these review checks:<ul>
+<li>External entities off only: 3 (external DTD, parameter entity, unused <code>DOCTYPE</code>).</li>
+<li>DTD support off only: the same 3.</li>
+<li>Reject the DTD event only: 2 (external DTD, parameter entity).</li>
+</ul>
+</li>
+</ul>
+<p>To compare after your attempt:</p>
+<pre><code class="language-sh">mvn -DreviewCheck=true &#39;-Dtest=*Test,ReleaseReviewCheck&#39; test
+</code></pre>
+<p>The check covers the stated contract through HTTP. It cannot judge your inventory, your reasoning or tests you did not write. Passing it after reading this guide is assisted evidence.</p>
+<h2>6. Limits of the task</h2>
+<p>The review covers two XML APIs of one JDK version in a synthetic service. It does not show how third-party StAX implementations, JAXB, XML libraries in Spring or Jackson, <code>Validator</code> or <code>TransformerFactory</code> behave. Each has its own configuration and needs its own observation. No entity-expansion or other resource-exhaustion case is run. The lab has one account, so tenant authorization is untested. A policy enforced at every current consumer still depends on future code using the shared construction point, which is a maintenance question for code review and, later in this book, for detection rules.</p>
 </article><div class="practice-actions"><button onclick="window.print()">Print this page</button><a href="../essays/09-file-consumer.html">Return to essay 9</a><a href="09-file-worksheet.html">Back to worksheet</a></div></main><footer><span>Book 21 · Learn, practise, verify.</span><a href="https://github.com/AnthonyKot/book21">Source on GitHub</a></footer></body></html>

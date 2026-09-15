@@ -6,66 +6,205 @@
 <link rel="stylesheet" href="../assets/style.css"></head>
 <body><a class="skip" href="#main">Skip to content</a><header class="site-header"><a href="../index.html">Security Is an Engineering Job</a><nav aria-label="Book"><a href="../index.html#essays">Essays</a><a href="../about.html">About</a></nav></header>
 <main id="main"><p class="kicker">Essay 11 · Practice</p><article><h1>Security review worksheet</h1>
-<p>Use with <a href="../essays/11-security-property.html">essay 11</a>. Start from the <a href="https://github.com/AnthonyKot/book21/tree/main/labs/11-security-property/review">review brief and diff</a> before opening the walkthrough or <a href="11-review-guide.html">review guide</a>, if you want to preserve an unassisted first pass.</p>
+<p>Use with <a href="../essays/11-security-property.html">essay 11</a> and the <a href="https://github.com/AnthonyKot/book21/tree/main/labs/11-security-property">lab</a>. Save your attempt before opening the <a href="11-review-guide.html">review guide</a> or the lab&#39;s <code>ReleaseReviewCheck</code> (leave it closed in your IDE&#39;s project tree too; it skips itself unless <code>-DreviewCheck=true</code> is set). Work only with the lab&#39;s synthetic users and documents.</p>
+<h2>Plan the week</h2>
+<p>These are authoring estimates derived from the steps below, not measured learner times. Record your actual time.</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Table; scroll horizontally on small screens"><table>
+<thead>
+<tr>
+<th>Part</th>
+<th>What it involves</th>
+<th>Provisional estimate</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Setup</td>
+<td>Java 21, Maven, Python 3 and curl, already used in essays 4–10</td>
+<td>0.25–0.5 hour</td>
+</tr>
+<tr>
+<td>Guided review</td>
+<td>Release 1 first pass from the brief, the essay, both demo modes, the negative control, part A</td>
+<td>2–3 hours</td>
+</tr>
+<tr>
+<td>Independent review</td>
+<td>Part B: read the release 2 packet, inventory, reproduction, review comment, any fix, your own tests</td>
+<td>3.5–6 hours</td>
+</tr>
+<tr>
+<td>Delayed check</td>
+<td>The final evidence-record question, about a week later</td>
+<td>0.5 hour</td>
+</tr>
+<tr>
+<td>Optional</td>
+<td>Part C: a model-assisted comparison (1–1.5 hours); a hosted lab (1–2 hours, later week by default)</td>
+<td>—</td>
+</tr>
+</tbody></table>
+</div><p>The required parts total about 6.25–10 hours. In a 10-hour week, the upper end leaves no room for troubleshooting, so keep the week bounded:</p>
 <ul>
-<li>Date, revision, Java/framework/database versions:</li>
-<li>Time available this week (10–15 hours total):</li>
-<li>Material already seen, hints and AI assistance:</li>
+<li>If setup or a tool failure takes more than an hour, record the command and error and move on to what you can do.</li>
+<li>If part B has not produced either a violating sequence or evidence that each operation holds after about 3 hours, stop and record what you tried. Open only the next hint in the review guide, marked as assistance, or carry the review into next week.</li>
+<li>Leave part C for a later week unless the required parts finished early.</li>
 </ul>
-<h2>First review</h2>
-<p>Write the security property without naming the proposed fix. Follow every preview return path from authenticated principal to response data. Record what the changed query establishes and which paths call it.</p>
+<p>Start of attempt:</p>
+<ul>
+<li>Date, repository revision, Java and Maven versions:</li>
+<li>Material already seen (walkthrough, hints, AI assistance):</li>
+</ul>
+<h2>A. Guided review: release 1</h2>
+<p>Before reading the essay walkthrough, read <code>review/release-1-BRIEF.md</code> and its diff. Write the property in one sentence without naming the fix, and list every branch that can return a summary. Then run the lab.</p>
 <div class="table-scroll" tabindex="0" role="region" aria-label="Table; scroll horizontally on small screens"><table>
 <thead>
 <tr>
 <th>Sequence</th>
 <th>Prediction</th>
-<th>Observed status/body</th>
-<th>Branch and evidence</th>
+<th>Observed status and body</th>
+<th>Branch taken, and evidence</th>
 </tr>
 </thead>
 <tbody><tr>
-<td>Bob requests C-1001 cold</td>
+<td>Bob previews C-1001, cold</td>
 <td></td>
 <td></td>
 <td></td>
 </tr>
 <tr>
-<td>Alice then Bob request C-1001</td>
+<td>Alice, then Bob, preview C-1001</td>
 <td></td>
 <td></td>
 <td></td>
 </tr>
 <tr>
-<td>Bob then Alice request B-2001</td>
+<td>Bob, then Alice, preview B-2001</td>
 <td></td>
 <td></td>
 <td></td>
 </tr>
 <tr>
-<td>Alice repeats own preview</td>
+<td>Alice repeats her own preview</td>
 <td></td>
 <td></td>
 <td></td>
 </tr>
 <tr>
-<td>Anonymous request after warm-up</td>
+<td>Anonymous preview after warm-up</td>
 <td></td>
 <td></td>
 <td></td>
 </tr>
 </tbody></table>
-</div><p>Save your first finding before model assistance. Run the two cold tests, the full suite and the negative control from the lab README. Record actual failures versus setup errors. Explain how a passing assertion can be correct while the test collection misses the security property.</p>
-<h2>Compare a model-assisted pass</h2>
-<p>Use only this public synthetic code or other material you are authorized to share. Record tool/model/date, prompt, exact files, whether answer-bearing tests were included, output and elapsed investigation time. An optional reusable prompt:</p>
-<pre><code class="language-text">Review this candidate against this property: every preview response must belong to the authenticated tenant, regardless of prior cache population. Trace all response paths through the supplied callers, cache and repository. For each suspected violation give the input sequence, failing branch and evidence required to confirm it. Identify one legitimate behavior the fix must preserve. Separate suspected and verified claims. Do not edit or execute anything.
+</div><ol>
+<li>The two cold-cache tests pass against the flawed candidate. What exactly do they establish?</li>
+<li>Why does the body-load counter support the explanation without being the decisive evidence?</li>
+<li>Run the negative control from the README. Which cases fail, and why do the cold denials stay green?</li>
+</ol>
+<h2>B. Independent review: release 2</h2>
+<h3>The brief</h3>
+<p>The lab&#39;s source contains release 2, produced with an AI coding assistant. Read <code>review/release-2/EXPLANATION.md</code>, <code>review/release-2/candidate.diff</code> and <code>ExportCandidateTest</code>, then the code. You are reviewing it before it merges. You have not been told whether it is correct.</p>
+<p><strong>Property.</strong> Apply these to every operation:</p>
+<ol>
+<li>A response may contain a document&#39;s summary or full content only when the document belongs to the authenticated caller&#39;s tenant. The tenant comes from the authenticated principal, never from the request.</li>
+<li>Archiving a document withdraws access to its full content from that moment, whichever operation delivers the content. The summary stays visible to the owning tenant.</li>
+<li>Both rules hold whether the application cache is empty or populated.</li>
+</ol>
+<p><strong>Behaviour to preserve.</strong></p>
+<ul>
+<li>An owner&#39;s repeated preview is served from the cache without another body load, including after the document is archived.</li>
+<li>An active document downloads its full content, and an unaffected document is not blocked by another document&#39;s archive.</li>
+<li>A tenant can create an export link for an active document and fetch its content through the link.</li>
+<li>Unknown documents and unknown export links return 404, with no private content in the body.</li>
+</ul>
+<p><strong>Constraints.</strong> Keep the cache and the export feature. Do not change <code>Tenants</code>, the fixture endpoints or the guided tests. Any design is acceptable if it satisfies the property and preserves the behaviour above.</p>
+<h3>Deliverable 1: path inventory</h3>
+<p>List every operation that can return a summary or full content. Base each verdict on observation or inspected code, not on the change summary.</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Table; scroll horizontally on small screens"><table>
+<thead>
+<tr>
+<th>Operation</th>
+<th>Where the returned data comes from (cache, repository, other)</th>
+<th>What enforces property 1 on that source</th>
+<th>What enforces property 2 on that source</th>
+<th>Evidence</th>
+<th>Holds?</th>
+</tr>
+</thead>
+<tbody><tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+</div><h3>Deliverable 2: reproduction</h3>
+<p>For any violation, give the shortest request sequence that shows it, with the observed status and body and the cache state (warm or cold). For each operation you judge correct, give the observation that supports that verdict, including the cache state you tested.</p>
+<h3>Deliverable 3: review comment</h3>
+<p>Write the comment you would leave on the pull request: approve, or request changes. Separate what the candidate gets right from any unsupported claim in its summary. If you request changes, give the author a reproducible sequence and the behaviour a fix must preserve. If you approve, state the evidence that each operation satisfies the property.</p>
+<h3>Deliverable 4: decision</h3>
+<p>If you approved the candidate unchanged, name a change to the code that would break the property and skip to the tests.</p>
+<ul>
+<li>What you changed, and where the check now sits:</li>
+<li>Why that location. Would a future operation that returns content receive the same check?</li>
+<li>At least one alternative you considered or tried, and the evidence that made you reject it:</li>
+<li>A request your design still allows, and why the property permits it:</li>
+</ul>
+<h3>Deliverable 5: your tests</h3>
+<p>Write tests under <code>src/test/java/lab/</code> (extending <code>ReviewHttp</code> is convenient). Include:</p>
+<ul>
+<li>Every violation your inventory identified, in each cache state that matters, asserting status and the absence of private content.</li>
+<li>The behaviour to preserve, including the owner&#39;s cache reuse.</li>
+<li>A negative control that shows your tests can fail for the right reason. If you changed code, run them against the original candidate; if you approved it, run them against a deliberately broken copy you describe. Record which fail. A compilation or startup error does not count.</li>
+</ul>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Table; scroll horizontally on small screens"><table>
+<thead>
+<tr>
+<th>Test</th>
+<th>What it proves</th>
+<th>Result on the candidate or broken copy</th>
+<th>Result on the final code</th>
+</tr>
+</thead>
+<tbody><tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+</div><p>Final command and summary line:</p>
+<h3>Limits</h3>
+<p>Name one thing your tests do not establish, and one other source of response data that would need its own review in a real service.</p>
+<h2>C. Optional transfer</h2>
+<p><strong>Model-assisted comparison.</strong> After saving part B, give a model the property, the change summary and the relevant callers, not only the diff. Record the tool, date, prompt, files supplied and whether your own findings were included. A starting prompt:</p>
+<pre><code class="language-text">Review this candidate against the property below. Trace every operation that can return a summary or full content, including cache hits and misses. For each suspected violation give an executable request sequence, the branch that permits it, and the evidence needed to confirm it. Name one legitimate behaviour a fix must preserve. Separate suspected from verified claims. Do not edit or execute anything.
 </code></pre>
 <div class="table-scroll" tabindex="0" role="region" aria-label="Table; scroll horizontally on small screens"><table>
 <thead>
 <tr>
 <th>Claim</th>
-<th>Already in my first pass?</th>
+<th>Already in my review?</th>
 <th>Verification performed</th>
-<th>Confirmed/rejected/unresolved</th>
+<th>Confirmed / rejected / unresolved</th>
 <th>Time</th>
 </tr>
 </thead>
@@ -77,26 +216,15 @@
 <td></td>
 </tr>
 </tbody></table>
-</div><p>Validate every accepted finding and patch. Do not score a claim as correct merely because it sounds familiar. If no model is available, leave the comparison pending; the code investigation can still be completed. One small assisted task is not a productivity benchmark or proof of independent mastery.</p>
-<h2>Changed task: archive and download</h2>
-<p>Policy: own archived summaries stay visible; full downloads require an own-tenant, non-archived document at the current authorization check. The archive completes before the tested download begins. The starter’s tenant-partitioned cache remains populated after archive.</p>
-<p>Run <code>python3 demo.py --exercise</code>, then <code>mvn -Dtest=ArchiveExercise test</code>. Repair <code>DownloadService.download</code> using the existing fresh policy query. Required results:</p>
-<ul>
-<li>Active own document downloads its full content.</li>
-<li>Warm cache followed by archive denies full download without another body load.</li>
-<li>Archive before cache fill denies download without loading the body.</li>
-<li>Own archived summary remains visible.</li>
-<li>Foreign download is denied even after owner warm-up.</li>
-<li>An unaffected own document still downloads.</li>
-</ul>
-<p>Run <code>mvn &#39;-Dtest=*Test,ArchiveExercise&#39; test</code> for all 26 cases. Default <code>mvn test</code> excludes the unfinished exercise. Reintroduce the missing action check in a separate copy and demonstrate the failed regression. Record the original flaw, your change, permitted behavior and remaining limitations.</p>
-<h2>Independent transfer</h2>
-<p>Use only the authorized PortSwigger lab environments:</p>
-<ul>
-<li><a href="https://portswigger.net/web-security/access-control/lab-user-id-controlled-by-request-parameter">User ID controlled by request parameter</a>. Derive the object-authorization property from the observed endpoint; record the violating request and needed server decision.</li>
-<li><a href="https://portswigger.net/web-security/access-control/lab-user-id-controlled-by-request-parameter-with-password-disclosure">User ID controlled by request parameter with password disclosure</a>. Inspect the actual response fields when assessing impact rather than relying only on what the page visibly displays.</li>
-</ul>
-<p>These are black-box transfer tasks, not replicas of the cache. If you completed one earlier, record that and use it as delayed revalidation rather than claiming a new independent discovery. Record hints; unavailable tasks remain pending.</p>
+</div><p>One comparison is not a productivity benchmark. A model shown your findings or the review guide has not found anything independently.</p>
+<p><strong>Hosted lab.</strong> <a href="https://portswigger.net/web-security/web-cache-deception/lab-wcd-exploiting-path-mapping">Exploiting path mapping for web cache deception</a> (Practitioner; Burp Suite Community Edition is enough). Use only the authorized training environment. Explain how the cache and the origin disagree about which response may be stored and served, and compare that with the application cache key in this lab. Record hints and walkthroughs as assistance.</p>
 <h2>Handover</h2>
-<p>Write a concise engineering review with property, reproducer, branch, fix, retest and limits. For consulting, add assessed endpoints and exclusions. Record elapsed time, assistance, next gap and a delayed task: trace a changed response path a week later without reading your previous finding.</p>
+<p>Write a short review note stating the property, inventory, finding, change, evidence and limits. For an internal team, address the author of the pull request. For a consulting client, add the assessed operations and cache states, the retest you would run and the exclusions. Label the lab as synthetic.</p>
+<h2>Evidence record</h2>
+<ul>
+<li>Actual time per part:</li>
+<li>Assistance used, including hints, AI suggestions and any look at the review check:</li>
+<li>What you could now explain without notes:</li>
+<li>Delayed check, a week later: without looking at your fix, pick an endpoint in a codebase you may inspect and list every source its response can come from and what authorizes each.</li>
+</ul>
 </article><div class="practice-actions"><button onclick="window.print()">Print this page</button><a href="../essays/11-security-property.html">Return to essay 11</a><a href="11-review-guide.html">Review after your attempt →</a></div></main><footer><span>Book 21 · Learn, practise, verify.</span><a href="https://github.com/AnthonyKot/book21">Source on GitHub</a></footer></body></html>
