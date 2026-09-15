@@ -19,6 +19,7 @@ const essays = [
   {slug:'10-valid-requests',part:'Find and repair application failures',title:'Two valid requests can violate one business rule',payoff:'Reproduce a one-use credit race with controlled request ordering, repair the database claim, and preserve rollback in a later worker.'},
   {slug:'11-security-property',part:'Find and repair application failures',title:'Review the security property, including in generated code',payoff:'Find the cache-hit path a tenant-check patch misses, verify model-supplied findings, and distinguish preview permission from current download authority.'},
   {slug:'12-known-misses',part:'Make secure delivery repeatable',title:'A useful detector has known misses',payoff:'Build a tested SQL detection rule, execute the vulnerable wrapper it misses, and distinguish measured fixture results from coverage claims.'},
+  {slug:'13-build-inventory',part:'Make secure delivery repeatable',title:'An SBOM records what a particular build contains',payoff:'Compare a Maven dependency BOM with two finished images, find the separately copied component, and reject stale inventory associations.'},
 ];
 const escape = s => s.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
 const renderer = new Renderer();
@@ -44,7 +45,7 @@ function markdown(file) {return marked.parse(fs.readFileSync(path.join(root,file
 write('index.html',shell(title,'From experienced developer to application and product security in the age of AI.',`
 <p class="kicker">Book 21 · A book in progress</p><h1>${title}</h1><p class="lede">From experienced developer to application and product security in the age of AI.</p>
 <p>Learn to investigate a failure, repair its cause and verify the result. These essays connect security reasoning to the software you already know how to build, with worked examples and practice.</p>
-<p class="status">Twelve essays available. New chapters will extend the path into application security, secure delivery and AI systems.</p>
+<p class="status">Thirteen essays available. New chapters will extend the path into application security, secure delivery and AI systems.</p>
 <section id="essays"><h2>Start reading</h2><ol class="essay-list">${essays.map(e=>`<li><h3><a href="essays/${e.slug}.html">${escape(e.title)}</a></h3><p>${e.payoff}</p></li>`).join('')}</ol></section>
 <section><h2>Learn by making a decision</h2><p>The opening essays use a document-export service to connect roles, requirements and security evidence. Read in order, attempt the exercise, then compare your reasoning with the review notes where provided.</p><a href="essays/${essays[0].slug}.html">Begin with essay 1 →</a></section>`));
 for (const [i,e] of essays.entries()) {
@@ -63,6 +64,7 @@ const practice=[
   {n:10,essay:'10-valid-requests',sheet:'10-credit-worksheet',review:'10-credit-review',name:'Credit invariant'},
   {n:11,essay:'11-security-property',sheet:'11-review-worksheet',review:'11-review-guide',name:'Security review'},
   {n:12,essay:'12-known-misses',sheet:'12-detector-worksheet',review:'12-detector-review',name:'Detection evidence'},
+  {n:13,essay:'13-build-inventory',sheet:'13-inventory-worksheet',review:'13-inventory-review',name:'Build inventory'},
 ];
 for (const p of practice) for (const slug of [p.sheet,p.review]) {
   const isSheet=slug===p.sheet, name=`${p.name} ${isSheet?'worksheet':'review'}`;

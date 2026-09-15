@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>An SBOM records what a particular build contains · Book 21</title><meta name="description" content="Compare a Maven dependency BOM with two finished images, find the separately copied component, and reject stale inventory associations.">
+<meta property="og:title" content="An SBOM records what a particular build contains"><meta property="og:description" content="Compare a Maven dependency BOM with two finished images, find the separately copied component, and reject stale inventory associations.">
+<meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
+<link rel="stylesheet" href="../assets/style.css"></head>
+<body><a class="skip" href="#main">Skip to content</a><header class="site-header"><a href="../index.html">Security Is an Engineering Job</a><nav aria-label="Book"><a href="../index.html#essays">Essays</a><a href="../about.html">About</a></nav></header>
+<main id="main"><p class="kicker">Essay 13 · Make secure delivery repeatable</p><article><h1>An SBOM records what a particular build contains</h1>
+<p>The application JAR has not changed. Its Maven dependency BOM has not changed. The image contains a different version of a utility.</p>
+<p>In this constructed release, all three statements are true. Maven packages a small document service, then a container build copies another JAR beside it. Later, that utility changes from version 1.0.0 to 1.1.0. The application still starts and returns the same response. An inventory taken before the copy cannot describe the whole image, however accurately it describes the application&#39;s dependencies.</p>
+<p>That is the question this essay investigates: <strong>which artifact does this inventory describe?</strong> Before counting components or searching for a vulnerable version, establish the object being counted.</p>
+<h2>Follow the extra copy</h2>
+<p>The <a href="https://github.com/AnthonyKot/book21/tree/main/labs/13-build-inventory">local lab</a> contains two independent Maven projects. <code>app</code> is a Spring Boot service. <code>helper</code> is an author-owned command-line utility named <code>export-helper</code>. The application does not declare the helper as a dependency. The container&#39;s packaging instructions bring them together:</p>
+<pre><code class="language-dockerfile">WORKDIR /opt/book21
+COPY app.jar app.jar
+COPY export-helper.jar tools/export-helper.jar
+USER 10001:10001
+ENTRYPOINT [&quot;java&quot;, &quot;-jar&quot;, &quot;/opt/book21/app.jar&quot;]
+</code></pre>
+<p>This excerpt follows a <code>FROM</code> line pinned to a Java 21 runtime image by registry digest; the full Dockerfile is in the lab. The image includes an Alpine userspace and Java runtime in addition to the two copied JARs.</p>
+<p>The helper is intentionally separate. The lab invokes it explicitly with <code>java -cp</code> to verify that the packaged utility runs. The web application&#39;s normal entrypoint does not load it. That distinction matters: <em>present in the image</em> and <em>used by this request</em> are different claims. An inventory can establish useful evidence for the first without establishing the second.</p>
+<p>Run the README&#39;s setup, then:</p>
+<pre><code class="language-bash">python3 run.py --syft &quot;$PWD/.tools/syft&quot;
+python3 verify.py
+python3 record.py
+</code></pre>
+<p>The runner builds application A and B from the same application JAR, changing only the helper version supplied to the packaging step. It scans each image by its local image ID, checks the service over loopback HTTP, invokes the helper, and stops its containers. It also moves the lab&#39;s <code>candidate</code> tag from A to B so the later exercise can reproduce a stale association. Nothing is pushed to a registry.</p>
+<p>The guided verification passes <strong>21 checks</strong>. The important observations are small enough to inspect directly:</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Table; scroll horizontally on small screens"><table>
+<thead>
+<tr>
+<th>Evidence</th>
+<th>Application Maven BOM</th>
+<th>Image A inventory</th>
+<th>Image B inventory</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Spring Web MVC 7.0.9</td>
+<td>Present</td>
+<td>Present</td>
+<td>Present</td>
+</tr>
+<tr>
+<td><code>book21:export-helper</code></td>
+<td>Absent</td>
+<td>1.0.0</td>
+<td>1.1.0</td>
+</tr>
+<tr>
+<td>Alpine <code>musl</code> package</td>
+<td>Absent</td>
+<td>Present</td>
+<td>Present</td>
+</tr>
+<tr>
+<td>Application JAR SHA-256</td>
+<td>Same input used for both images</td>
+<td>Same bytes</td>
+<td>Same bytes</td>
+</tr>
+<tr>
+<td>Local image ID</td>
+<td>Not the object Maven inventoried</td>
+<td>A</td>
+<td>B, different from A</td>
+</tr>
+</tbody></table>
+</div><p>The helper&#39;s image location is <code>/opt/book21/tools/export-helper.jar</code>. Its embedded Maven properties identify the version. Those properties, the copied file and the scanner result provide an inspectable explanation for the difference. We have not inferred the helper from a filename alone.</p>
+<h2>Three useful views of one release</h2>
+<p>The source POM is a declaration. It names direct dependencies and includes a test starter. Maven resolves that declaration into a dependency graph, including dependencies introduced by other dependencies. Packaging then determines which files enter an artifact. A later image build can add a runtime, operating-system packages or files from elsewhere.</p>
+<p>Our CycloneDX Maven plugin runs against the application project and includes compile and runtime scopes. Test, provided and system scopes are explicitly excluded. The resulting BOM contains 39 components. It includes resolved Spring dependencies that were not each written as a direct dependency in our POM; it excludes the declared test starter and its test dependencies. These are deliberate scope choices, not discoveries that those dependencies never existed. The pinned plugin is <strong>2.9.3</strong>, generating CycloneDX <strong>1.6</strong>. <a href="https://github.com/CycloneDX/cyclonedx-maven-plugin/blob/cyclonedx-maven-plugin-2.9.3/src/main/java/org/cyclonedx/maven/BaseCycloneDxMojo.java">Plugin scope parameters and pinned implementation</a>.</p>
+<p>The application BOM has no reason to include an independent project that a later Dockerfile copies. The missing helper reveals a mistake only when someone presents that BOM as an inventory of the finished image. The repair is to generate and retain evidence at that later boundary, with a clear relationship to the earlier dependency view.</p>
+<p>A software bill of materials is a machine-readable representation of components and their relationships. CycloneDX supplies a format for expressing that information. Selecting the format does not choose the input artifact, discover every component or validate the truth of each identity. Those responsibilities still belong to the generation and verification process. <a href="https://cyclonedx.org/capabilities/sbom/">CycloneDX SBOM overview</a>.</p>
+<h2>Ask the scanner about the final image</h2>
+<p>The runner resolves the local image ID before scanning. For a manual inspection from the lab directory:</p>
+<pre><code class="language-bash">image_id=$(docker image inspect book21-inventory:a --format &#39;{{.Id}}&#39;)
+.tools/syft scan &quot;docker:$image_id&quot; --config syft.yaml --scope squashed \
+  -o syft-json=out/manual.syft.json \
+  -o cyclonedx-json@1.6=out/manual.cdx.json
+</code></pre>
+<p>This lab pins <strong>Syft 1.51.1</strong>. The explicit <code>docker:</code> source selects the local daemon. The <code>squashed</code> scope examines the merged image filesystem. The configuration disables update checks, online Java enrichment and consultation of the host&#39;s Maven repository; the runner saves both native Syft JSON and CycloneDX JSON from the same scan. Syft supports image and filesystem targets and can inspect Java archives, including nested archives such as the libraries inside a Spring Boot JAR. <a href="https://oss.anchore.com/docs/guides/sbom/scan-targets/">Scan targets</a>, <a href="https://github.com/anchore/syft/blob/v1.51.1/syft/pkg/cataloger/java/config.go">Java cataloging configuration</a>.</p>
+<p>The measured image inventory contains <strong>112 package records</strong>: 73 Alpine packages, 38 Java archives and one binary package. Its CycloneDX representation contains <strong>1,336 components</strong>, including 1,223 file components and an operating-system component. Comparing either number directly with Maven&#39;s 39 libraries would answer a poorly specified question.</p>
+<p>Compare identities and evidence for the components you mean. The same Spring Web MVC package appears with a Maven package URL in both reports, although Maven&#39;s URL includes a <code>type=jar</code> qualifier. The lab comparator accepts those two explicit forms for its known JAR fixtures. It does not erase arbitrary classifiers or qualifiers from every package identity.</p>
+<p>Other discrepancies need investigation. In this run, some Spring Boot module namespaces differ between Maven&#39;s resolved coordinates and Syft&#39;s inferred package URLs. A string-set difference is therefore not sufficient evidence that a library file is missing. Native Syft output retains locations that help trace a result back into the image. Preserve it rather than assuming an exchange-format conversion retains every useful detail in the same form.</p>
+<p>The final scan identifies the separate helper and the base <code>musl</code> package. To verify that the acceptance checks depend on the later inventory, run:</p>
+<pre><code class="language-bash">python3 verify.py --negative
+</code></pre>
+<p>This deliberately substitutes the application Maven BOM where the checks expect the final image&#39;s component list. <strong>Four checks fail</strong>: the helper and base-package expectations for A and B. The legitimate Spring dependency checks still pass. This is an incomplete inventory for the stated target, not evidence that the Maven plugin malfunctioned.</p>
+<h2>Record the identity, not just the label</h2>
+<p>After building B, <code>book21-inventory:candidate</code> names B. It previously named A. The application bytes and human-readable tag provide insufficient evidence that an older report belongs to the selected image.</p>
+<p><code>record.py</code> writes a local pairing record for each image. It includes the local image ID and platform, hashes of both inventory files, the application JAR hash, the scanner version, filesystem scope and configuration-file hash. Before writing, it checks that the native scanner source identifies the inspected image.</p>
+<p>The two application hashes match. The two image IDs differ. That is the concrete reason an application hash cannot stand in for an image identity. The <a href="https://github.com/AnthonyKot/book21/blob/main/labs/13-build-inventory/observed.json">observed snapshot</a> contains the full values from this authoring run; your rebuild can produce different image IDs, so use the values generated locally.</p>
+<p>There are several different digests in this workflow. A local image ID hashes the image configuration, which references filesystem layers. A registry manifest digest and a multi-platform index digest identify different objects. The base-image pin in our Dockerfile is a registry digest; the release-pairing exercise uses local image IDs obtained from Docker inspection. It does not claim these values are interchangeable. <a href="https://github.com/opencontainers/image-spec/blob/v1.1.1/config.html#imageid">OCI image identity</a>, <a href="https://docs.docker.com/dhi/explore/security-concepts/digests/">Docker manifest and platform distinctions</a>.</p>
+<p>A matching hash establishes equality with recorded bytes. It does not establish who produced the record or whether the scanner described those bytes accurately. Someone who can replace the image, reports and record together can create another internally consistent set. This unsigned local sidecar is an association check, not a signed attestation or a trustworthy release pipeline. The build-authority chapter will take up that broader boundary.</p>
+<h2>Keep the useful limits attached</h2>
+<p>The repaired workflow retains the application dependency BOM and adds an inventory of the final image. Both have a named scope. Neither proves that all components have been recognized correctly, that every possible dependency is present, or that the application cannot fetch more code later.</p>
+<p>The image scan does not include future mounted volumes, writable-container changes, the host kernel or a plugin downloaded after startup. We measured one Linux/AMD64 image variant and a merged filesystem view. Historical layers and other platforms require deliberately different questions. The simple smoke checks establish that these images start and the separate utility can execute; they are not an assessment of application security or vulnerable-code reachability.</p>
+<p>No vulnerability database was queried in this essay. A component inventory will help investigate a later advisory, but presence alone does not establish exploitability, priority or a suitable fix. Those decisions belong to the next essay. The current deliverable is narrower: another engineer can identify which artifact was examined, reproduce the component discrepancy, and detect when the report no longer matches the selected image.</p>
+<hr>
+
+<h2>Exercise: the tag still matches</h2>
+<p>Open the <a href="../practice/13-inventory-worksheet.html">worksheet</a> before the <a href="../practice/13-inventory-review.html">review guide</a>. <code>identity_exercise.py</code> contains a deliberately weak verifier: it accepts a record when the tag string matches. Run <code>python3 exercise_tests.py</code> after generating the records. The starter passes three checks and fails six.</p>
+<p>Repair the verifier so a matching A pair and a matching B pair remain acceptable, while stale records, swapped reports, missing required evidence and an inconsistent scanner subject are rejected. The selected image ID is supplied independently of the record. Check both report hashes and the subject inside the native scan; do not merely copy the requested ID into an old record. An unpublished reference was executed: all nine checks pass. Removing its scanner-subject comparison makes the relabeled-record check fail.</p>
+<p>Reserve about <strong>10–12 hours within the existing 10–15-hour weekly budget</strong> for setup, inventory comparison, the independent repair and a short handover. This is an allowance to calibrate, not a measured completion time; initial image and Maven downloads may require extra setup time in another week.</p>
+<p>For an employment portfolio, show where this inventory step would sit in a team&#39;s release process and who investigates discrepancies. For consulting, name the artifact, platform, collection method and exclusions in the handover. Keep the source revision and assistance used with your evidence. Both routes benefit from a precise inventory claim that survives the next build.</p>
+</article><nav class="pager" aria-label="Adjacent essays"><a href="12-known-misses.html">← Essay 12</a><a href="../index.html">Back to the book →</a></nav></main><footer><span>Book 21 · Learn, practise, verify.</span><a href="https://github.com/AnthonyKot/book21">Source on GitHub</a></footer></body></html>

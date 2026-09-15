@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Build inventory worksheet · Book 21</title><meta name="description" content="Build inventory worksheet for essay 13.">
+<meta property="og:title" content="Build inventory worksheet"><meta property="og:description" content="Build inventory worksheet for essay 13.">
+<meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
+<link rel="stylesheet" href="../assets/style.css"></head>
+<body><a class="skip" href="#main">Skip to content</a><header class="site-header"><a href="../index.html">Security Is an Engineering Job</a><nav aria-label="Book"><a href="../index.html#essays">Essays</a><a href="../about.html">About</a></nav></header>
+<main id="main"><p class="kicker">Essay 13 · Practice</p><article><h1>Identify the artifact behind the inventory</h1>
+<p>Use <a href="../essays/13-build-inventory.html">essay 13</a>, the <a href="https://github.com/AnthonyKot/book21/tree/main/labs/13-build-inventory">local lab</a>, and the <a href="13-inventory-review.html">review guide</a> after your own attempt. No real customer data, cloud environment or registry publication is needed.</p>
+<h2>Predict the discrepancy</h2>
+<p>Before running the build, inspect the application POM and Dockerfile. Explain what the Maven plugin can learn about a JAR copied from the independent helper project. Predict whether a change to that helper must change the application JAR, the final image and the appropriate inventory.</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Table; scroll horizontally on small screens"><table>
+<thead>
+<tr>
+<th>Question</th>
+<th>Prediction</th>
+<th>Observation and evidence location</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Is Spring Web MVC present in both inventories?</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Is the helper in the application dependency BOM?</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Which helper version is in A and B?</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Where do the Alpine packages enter?</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Do identical app bytes imply identical images?</td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+</div><h2>Collect evidence</h2>
+<p>Run the README&#39;s build and verification commands. Save your source revision, tool versions, exact commands and output before rerunning anything. Read the scanner diagnostics. Explain the difference among the 39 Maven components, 112 native package records and 1,336 image CycloneDX components. Pick one component and inspect its identity, version and file location rather than just finding its name in a list.</p>
+<p>Run the negative inventory control. Confirm that the four failures concern the helper and base-package expectations, while the Spring checks pass. An installation, startup or JSON-reading failure does not establish that result.</p>
+<p>Save the local A and B image IDs, application hashes, helper hashes, two inventories per image, pairing records and actual tag-move observations. Keep local image IDs separate from the pinned base registry digest. Do not label a locally built image ID as a pushed registry manifest digest.</p>
+<h2>Independent repair: the verifier trusts a name</h2>
+<p>Run <code>python3 record.py</code> to generate the pairing records, then <code>python3 exercise_tests.py</code>. Save the failing results before opening <code>identity_exercise.py</code>.</p>
+<p>Its input includes a selected image ID from outside the record. Repair the verifier so it checks that selection, the source inside the native scan and the exact bytes of both supplied reports. Missing required evidence must cause rejection. Preserve correct A and B pairs. Keep the test suite and generated artifacts unchanged.</p>
+<p>Explain why changing <code>record[&#39;imageID&#39;]</code> alone cannot legitimately associate A&#39;s scan with B. Explain why checking only the native report&#39;s hash leaves the supplied CycloneDX report unbound. Then add one independently chosen variation: another missing required field, a changed report byte, or a malformed subject structure. Record what you predicted and what actually happened.</p>
+<h2>Write a bounded handover</h2>
+<p>State what was inventoried, by which tool/configuration, for which platform and image identity. Describe the separately copied helper, one unresolved identity discrepancy and what the smoke checks establish. Distinguish present files from code used by a particular request.</p>
+<p>For an internal team, identify the release step and owner responsible for regenerating this evidence after packaging. For consulting, describe the collection scope and what a retest would need. Keep both career routes open; the lab is not a production assessment.</p>
+<p>Allow 10–12 hours within the established 10–15-hour week: about 2 for reading/setup, 3 for builds and comparison, 3 for the verifier, and 2–4 for investigation, handover and delayed explanation. These are planning allowances. Carry a blocked download or unfinished investigation forward rather than extending the week without limit.</p>
+<p>Record actual time, assistance and remaining gaps. On a later day, explain why a valid BOM and a matching tag can still be the wrong evidence for a selected image. Do not mark independent completion when you followed the supplied solution reasoning.</p>
+</article><div class="practice-actions"><button onclick="window.print()">Print this page</button><a href="../essays/13-build-inventory.html">Return to essay 13</a><a href="13-inventory-review.html">Review after your attempt →</a></div></main><footer><span>Book 21 · Learn, practise, verify.</span><a href="https://github.com/AnthonyKot/book21">Source on GitHub</a></footer></body></html>

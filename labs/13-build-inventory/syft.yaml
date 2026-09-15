@@ -1,0 +1,6 @@
+check-for-app-update: false
+# No online Java enrichment; retain the scanner's evidence from this image.
+java:
+  use-network: false
+  use-maven-local-repository: false
+  resolve-transitive-dependencies: false
