@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Detection evidence worksheet · Book 21</title><meta name="description" content="Detection evidence worksheet for essay 12.">
+<meta property="og:title" content="Detection evidence worksheet"><meta property="og:description" content="Detection evidence worksheet for essay 12.">
+<meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
+<link rel="stylesheet" href="../assets/style.css"></head>
+<body><a class="skip" href="#main">Skip to content</a><header class="site-header"><a href="../index.html">Security Is an Engineering Job</a><nav aria-label="Book"><a href="../index.html#essays">Essays</a><a href="../about.html">About</a></nav></header>
+<main id="main"><p class="kicker">Essay 12 · Practice</p><article><h1>Measure the rule you can explain</h1>
+<p>Use this worksheet with <a href="../essays/12-known-misses.html">essay 12</a> and the <a href="https://github.com/AnthonyKot/book21/tree/main/labs/12-known-misses">local lab</a>. Open the <a href="12-detector-review.html">review guide</a> after saving an attempt. The supplied fixtures are deliberately small and vulnerable; keep the application on loopback.</p>
+<h2>Before scanning</h2>
+<p>Write the security property in one sentence. Name the source expression, SQL argument and method boundary in each of <code>SearchCases.direct</code>, <code>alias</code>, <code>wrapped</code> and <code>bound</code>. Predict the attack response separately from the expected scanner result. Explain what an apostrophe in an ordinary title tests.</p>
+<p>Record the repository revision, Java/Maven/Python/Semgrep versions, engine and commands. Follow the README to execute <code>mvn test</code>, the annotated rule tests, and <code>python3 check.py</code>. Inspect <code>results.json</code> for scanned paths and errors, not just a summary banner.</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Table; scroll horizontally on small screens"><table>
+<thead>
+<tr>
+<th>Case</th>
+<th>Predicted HTTP result</th>
+<th>Predicted finding</th>
+<th>Actual result</th>
+<th>Explanation</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Direct</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Alias</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Wrapped</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Bound</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+</div><p>The table focuses on the four primary search cases. The full matrix also checks the repaired endpoint, the constant query and three header routes; add predictions for these before measuring the exercise.</p>
+<p>Run both negative controls. Record the exact failed cases and whether they failed for the intended reason. Restore the ordinary configuration before using the demo.</p>
+<h2>Independent task: a header becomes SQL</h2>
+<p>Inspect <code>HeaderCases</code> without changing the application. A caller now controls <code>X-Title</code> instead of the title parameter. Extend the rule so <code>python3 check.py --exercise</code> reports the local unsafe header case. Preserve the original direct and alias findings and all four safe non-findings. Keep both wrapper misses documented.</p>
+<p>Add at least one positive and one negative annotated header example in <code>rules/request-sql.java</code>. Choose a further variation yourself: a different local variable name, a different header name, or a value transformed before concatenation. Predict its behavior before running the scanner. Explain the observed result; do not claim all transformations work from a single example.</p>
+<p>After the extension, also run <code>python3 check.py --exercise --negative</code>: all three required findings should disappear and fail their matrix checks. Keep using <code>--exercise</code> to measure your extended rule.</p>
+<p>Save the patch, rule-test result and complete matrix JSON. A green matrix with an unchanged starter rule is an error to investigate. Do not remove fixture files, move case markers or change expected vulnerability labels to get a pass.</p>
+<h2>Investigation decision</h2>
+<p>Draw the missing wrapper flow in text: source → SQL construction → helper parameter → JDBC SQL argument. Read the linked CodeQL Java guide&#39;s global taint section. Write down the sources, sinks and call connection your proposed query would need, plus one reason a missing result might be inconclusive.</p>
+<p>Choose a next action for this helper: model it explicitly in a rule, investigate interprocedural analysis, or retain a named manual review check. Explain the cost and maintenance obligation. No CodeQL installation is needed to complete this design investigation; label it unexecuted unless you actually create and analyze a database.</p>
+<h2>Handover and time</h2>
+<p>Write a short coverage statement with files, source revision, rule version, engine, findings verified, safe fixtures checked and unresolved misses. Prepare either a team-maintenance note for employment or a bounded assessment/retest note for consulting. Keep both career routes available.</p>
+<p>Plan 10–12 hours inside the 10–15-hour weekly budget: roughly 2 reading/setup, 3 guided execution, 3 independent rule work, and 2–4 triage, writing and delayed review. These are allowances to revise against actual time. Carry unfinished work forward; optional CodeQL setup should not silently expand the week.</p>
+<p>Record elapsed time, assistance and the next unresolved question. After a delay, explain why the passing wrapper expectation is evidence of a known limitation. Reading, following a hint and independently solving the changed task are distinct progress states.</p>
+</article><div class="practice-actions"><button onclick="window.print()">Print this page</button><a href="../essays/12-known-misses.html">Return to essay 12</a><a href="12-detector-review.html">Review after your attempt →</a></div></main><footer><span>Book 21 · Learn, practise, verify.</span><a href="https://github.com/AnthonyKot/book21">Source on GitHub</a></footer></body></html>

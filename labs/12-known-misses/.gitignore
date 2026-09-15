@@ -1,0 +1,4 @@
+target/
+.venv/
+results*.json
+__pycache__/

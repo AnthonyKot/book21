@@ -1,0 +1,13 @@
+rules:
+  - id: request-sql
+    languages: [java]
+    severity: WARNING
+    message: Request data reaches SQL text. Verify the flow and bind values separately.
+    mode: taint
+    pattern-sources:
+      - pattern: $REQ.getParameter(...)
+        exact: true
+    pattern-sinks:
+      - patterns:
+          - pattern: (org.springframework.jdbc.core.JdbcTemplate $J).queryForList($SQL, ...)
+          - focus-metavariable: $SQL
