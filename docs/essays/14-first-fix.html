@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>The highest severity is not automatically the first fix · Book 21</title><meta name="description" content="Use dated threat data and deployment evidence to defend remediation, investigation and deferral—and reopen decisions when their basis changes.">
-<meta property="og:title" content="The highest severity is not automatically the first fix"><meta property="og:description" content="Use dated threat data and deployment evidence to defend remediation, investigation and deferral—and reopen decisions when their basis changes.">
+<title>The highest severity is not automatically the first fix · Book 21</title><meta name="description" content="Use dated threat data and deployment evidence to defend remediation, investigation and deferral, then decide again when the evidence moves.">
+<meta property="og:title" content="The highest severity is not automatically the first fix"><meta property="og:description" content="Use dated threat data and deployment evidence to defend remediation, investigation and deferral, then decide again when the evidence moves.">
 <meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
 <link rel="stylesheet" href="../assets/style.css"></head>
 <body><a class="skip" href="#main">Skip to content</a><header class="site-header"><a href="../index.html">Security Is an Engineering Job</a><nav aria-label="Book"><a href="../index.html#essays">Essays</a><a href="../about.html">About</a></nav></header>
@@ -81,24 +81,21 @@
 <p>These actions can proceed together. Giving R2 the first bounded remediation slot does not require everyone to stop investigating R3 or preparing R1. The table describes different kinds of work, not a universal ordering of every vulnerability.</p>
 <p>A stricter organization might accelerate R1 as well. That is a defensible response if it explains the consequences and resources. The lab checks a stated decision contract; it cannot prove that our allocation maximizes security. NIST&#39;s SSDF calls for gathering enough risk information to plan a response and then implementing that response. It does not turn one public score into the whole decision. <a href="https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-218.pdf">SSDF 1.1, RV.2</a>.</p>
 <h2>Make the deferral expire in code as well as prose</h2>
-<p>From the lab directory:</p>
-<pre><code class="language-bash">python3 triage.py
-python3 contract_tests.py
-</code></pre>
-<p>The first command accepts the three supplied decision records at the frozen scenario time. The second runs <strong>12 checks</strong> on the record contract. Every decision needs an owner, rationale, plan, review time and reopening trigger. It must reference the packet&#39;s current artifact and evidence revision. The exercise allows no closure state, because a plan is not proof of remediation.</p>
-<p>A deferred record also needs the packet&#39;s documented basis for the narrow deferral. An unknown path cannot satisfy that condition. The validator reads the supplied classification; it does not discover the deployment or verify the truth of the prose. A sentence can be present and still be wrong. Human review remains necessary.</p>
-<p>Advance the explicit clock:</p>
-<pre><code class="language-bash">python3 triage.py --at 2026-09-16T09:00:00Z
-</code></pre>
-<p>All three old records are rejected. Their review times have arrived or passed. This is a verified control on decision freshness, not a simulated exploit. The clock is an argument so the exercise remains reproducible next month; running it without that argument does not certify today&#39;s decisions.</p>
-<p>Expiry is only half the problem. At noon on the first day, the changed exercise introduces a new R1 deployment: a WAR on Tomcat, now publicly exposed. The next-morning deadline is still in the future. A scheduler that checks only the clock would keep the old deferral alive after its stated basis has disappeared.</p>
-<p>The repair is to reopen review when the artifact or relevant evidence revision changes, as well as when time expires. Reopening is a request for a new decision. It does not automatically patch software or prove that an attacker succeeded.</p>
+<p>The <a href="https://github.com/AnthonyKot/book21/blob/main/labs/14-first-fix/README.html">lab README</a> runs a small validator over the three records at the frozen scenario time. Every decision needs an owner, rationale, plan, review time and reopening trigger, and it must reference the packet&#39;s current artifact and evidence revision. There is no closure state, because a plan is not proof of remediation. A deferred record also needs a documented basis for the narrow deferral; an unknown path cannot supply one.</p>
+<p>The validator reads the supplied classification. It does not discover the deployment or verify the prose, and a sentence can be present and still be wrong. Advance the explicit clock a day and all three records are rejected, because their review times have passed. That is a control on freshness, not on judgment.</p>
+<p>Time is only one way a decision goes stale. A deferral written at 09:00 rests on specific facts: this artifact, this packaging, this ingress. If any of those change before the review time, the decision is describing a deployment that no longer exists. So the lab&#39;s scheduler reopens a record when its review time arrives <em>or</em> when the current artifact or evidence revision differs from the one the decision cites, and it treats missing comparison evidence as a reason to look, not a reason to relax.</p>
+<p>Reopening is a request for a new decision. It does not patch software, prove that an attacker succeeded, or say what the new decision should be. A queue of reopened records is where the triage work starts again, with the same questions as before and different evidence.</p>
+<p>A record that passes every check can still be the wrong decision. The validator can insist that a deferral names its basis and expires; only a person can tell whether the basis still holds.</p>
 <hr>
 
-<h2>Exercise: the evidence changed before the deadline</h2>
-<p>Use the <a href="../practice/14-triage-worksheet.html">worksheet</a> before the <a href="../practice/14-triage-review.html">review guide</a>. First write your own three decisions, including what you would verify before trusting each scenario fact. Compare them with the supplied reasoning only after saving your attempt.</p>
-<p>Then run <code>python3 exercise_tests.py</code>. The supplied deadline-only scheduler passes five checks and fails four. Repair <code>reopen_exercise.py</code> so a changed artifact, changed evidence revision or missing required comparison evidence triggers review before expiry. Preserve an unchanged scheduled decision and avoid reopening an unrelated item&#39;s record. Do not overwrite the old decision to make it appear current.</p>
-<p>The unpublished reference passed all nine checks. Removing its evidence-revision comparison produces two failures, demonstrating why checking artifact identity alone misses a configuration change around unchanged bytes. Your written response must also explain what the new WAR and ingress facts do to R1&#39;s earlier reasoning.</p>
-<p>This unit uses real advisory and threat snapshots with fictional deployment evidence. No Grype or Trivy scan, vulnerability reproduction, dependency upgrade or production mitigation was executed. What was executed is the record validator and its repaired review trigger. The distinction keeps a useful practice artifact from becoming a false security claim.</p>
-<p>Plan <strong>10–12 hours within the existing 10–15-hour study week</strong> for source reading, your first decisions, the code exercise and a delayed reassessment. These are planning allowances, separate from the fictional team&#39;s remediation estimates. For employment, practise defending the decision to a service owner. For consulting, state the evidence available, exclusions, response ownership and retest conditions. Both routes need an explanation of why this action comes first—and what would make that explanation stop being true.</p>
+<h2>Practice: decide again at 13:00</h2>
+<p>Four hours later, the evidence has moved. The lab&#39;s 13:00 packet updates all three services and adds a fourth scanner match, and the team has limited engineering time for the afternoon. The scheduler reports which records need review. It does not say what to do about them.</p>
+<p>The <a href="../practice/14-triage-worksheet.html">worksheet</a> sets out what the records must contain. Produce:</p>
+<ol>
+<li>A decision record for each item at 13:00, in the lab&#39;s format, which passes the validator.</li>
+<li>For each item, a short note: what changed, whether the action changes and why, what you would verify before trusting the new evidence, and what would reverse your decision.</li>
+<li>The order in which the afternoon&#39;s engineering time goes, and the cost of that order.</li>
+</ol>
+<p>Changing a decision and keeping one are both legitimate outcomes; each needs its reason. Attempt it before opening the <a href="../practice/14-triage-review.html">review guide</a>, which holds a rubric and a worked set of decisions.</p>
+<p>The advisories and threat data are the real dated snapshots used above; every deployment fact, owner and timing is fictional. The worksheet gives provisional time estimates. The essay&#39;s claim is tested only if your 13:00 records say, for each service, what would make them stop being true.</p>
 </article><nav class="pager" aria-label="Adjacent essays"><a href="13-build-inventory.html">← Essay 13</a><a href="../index.html">Back to the book →</a></nav></main><footer><span>Book 21 · Learn, practise, verify.</span><a href="https://github.com/AnthonyKot/book21">Source on GitHub</a></footer></body></html>

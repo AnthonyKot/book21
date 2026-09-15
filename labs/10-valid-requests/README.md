@@ -49,24 +49,20 @@ mvn -Dtest=CreditRepairTest -Dtest.conditional=false test
 
 Expected negative control: three overlap failures and nine passes, no errors. Sequential replay and rollback still pass in vulnerable mode. This is why a green ordinary-request test and the presence of a transaction are insufficient evidence of the one-use rule.
 
-## Independent exercise: a worker loses the transaction
+## Independent practice: a second caller
 
-`CreditWorker.apply` already uses the conditional claim but calls the shared operation without an enclosing transaction. Its HTTP adapter is synchronous; tests invoke the Spring-managed worker from separate threads directly. No queue or delivery system is modeled.
+Start with [worksheet Part B](../../practice/10-credit-worksheet.md). The worker applies the same credits through `/api/credits/{id}/worker` or an injected `CreditWorker` bean. Its HTTP adapter is synchronous; no queue or delivery system is modeled. The `lab.conditional` switch selects the guided service mode; it does not change the worker. Keep lab controls and existing guided behavior intact.
 
-```sh
-python3 demo.py --worker
-mvn -Dtest=WorkerExercise test
-```
+Write your own tests in a class ending in `Test`. You may reuse `CreditHttp` for authenticated requests, state assertions and gates, or build your own fixture. Its `apply()` and `send()` helpers target the guided service; use `request(id, "worker", ...)` for HTTP worker calls or invoke the injected worker bean directly. The documented lane and fault controls work with either entry point. Use the Spring-managed bean for direct calls; do not construct a replacement object or put a transaction on the test itself. Reset only after calls finish. Read the two state values only after all tested calls complete.
 
-After a synthetic failure immediately after the claim, the starter has balance 0 and one applied credit. Retrying returns 409: the credit was consumed without its balance effect. A failure after the balance leaves both changes committed despite the exception. Repair the worker so the whole operation rolls back on these failures, while retaining the conditional claim and ordinary behavior. Invoke it through the Spring-managed transaction boundary; do not put transactions on the test itself.
-
-The worker overlap test releases B first; the guided service suite covers both orders and release-both. These cases do not enumerate every worker schedule.
-
-Starter: three failures and three passes. The private reference passes all 30 combined cases. `WorkerExercise` is deliberately outside Maven's default test-name filter. After your repair, run:
+`WorkerContractCheck.java` is a **post-attempt comparison**: keep it closed until you save your own tests, initial results and decision. It is excluded by Maven's default naming and disabled even in IDE “run all” unless explicitly enabled. After the attempt:
 
 ```sh
-mvn '-Dtest=*Test,WorkerExercise' test
+mvn -DreviewCheck=true -Dtest=WorkerContractCheck test
+mvn -DreviewCheck=true '-Dtest=*Test,WorkerContractCheck' test
 ```
+
+The check assesses observable behavior, not a particular annotation or code diff. Interpret differences with the [review guide](../../practice/10-credit-review.md); a passing supplied check does not substitute for your tests. The guided demo covers the service only; use your own calls/tests for the worker investigation.
 
 ## Limits
 

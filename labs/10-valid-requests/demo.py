@@ -2,7 +2,7 @@
 """Controlled local curl schedule; requires lab.gates=true. Never run demos concurrently."""
 import argparse,concurrent.futures,json,subprocess,tempfile,time
 from pathlib import Path
-p=argparse.ArgumentParser();p.add_argument('--port',type=int,default=8091);p.add_argument('--first',choices=['A','B'],default='A');p.add_argument('--worker',action='store_true');args=p.parse_args()
+p=argparse.ArgumentParser();p.add_argument('--port',type=int,default=8091);p.add_argument('--first',choices=['A','B'],default='A');args=p.parse_args()
 base=f'http://127.0.0.1:{args.port}'
 with tempfile.TemporaryDirectory(prefix='book21-credit-') as tmp:
  jar=str(Path(tmp)/'cookies')
@@ -33,11 +33,3 @@ with tempfile.TemporaryDirectory(prefix='book21-credit-') as tmp:
    print(json.dumps({'first':args.first,'statuses':[first[0],second[0]],'state':json.loads(body)}))
   finally:
    for lane in ['A','B']:call('/lab/release/'+lane,True)
- if args.worker:
-  assert call('/lab/reset',True)[0]==200
-  status,body=call('/api/credits/C-1001/worker',True,['X-Lab-Fault: claim'])
-  _,state=call('/api/state')
-  print(json.dumps({'workerFaultStatus':status,'stateAfterFault':json.loads(state)}))
-  status,body=call('/api/credits/C-1001/worker',True)
-  _,state=call('/api/state')
-  print(json.dumps({'workerRetryStatus':status,'stateAfterRetry':json.loads(state)}))

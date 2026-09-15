@@ -1,0 +1,52 @@
+{
+  "fictional": true,
+  "clock": "2026-09-15T13:00:00Z",
+  "description": "Authored update to the 09:00 triage exercise. Deployment observations, owners, capacity and timings are supplied scenario facts, not executed observations, scanner output or a real incident. Threat data is the same dated snapshot as the 09:00 packet; no newer EPSS or KEV data was consulted.",
+  "capacity": "Two engineers are free from 13:00 to 17:00 besides the service owners. Owners: Mira (ledger-admin), Jon (document-files), Lea (legacy-preview), Sam (report-renderer).",
+  "items": [
+    {
+      "id": "R1",
+      "service": "ledger-admin",
+      "cve": "CVE-2022-22965",
+      "component": "org.springframework:spring-webmvc",
+      "version": "5.3.17",
+      "artifact": "fixture-sha256:aaae61d54af487128773756a503fd0dcb4d2abdbee6182f6bdace824e15539fe",
+      "evidenceRevision": "R1-e2",
+      "evidence": "Ingress audit 12:40: the administrative ingress allows the corporate VPN range and the partner support network (41 external support accounts), not only the administrator subnet recorded at 09:00. Packaging unchanged: the same executable Spring Boot JAR on JDK 17. The prepared upgrade to a supported Spring Framework release passed unit tests; the integration environment is booked for 16:00 today.",
+      "observedAt": "2026-09-15T12:40:00Z"
+    },
+    {
+      "id": "R2",
+      "service": "document-files",
+      "cve": "CVE-2024-38816",
+      "component": "org.springframework:spring-webflux",
+      "version": "6.1.12",
+      "artifact": "fixture-sha256:bcb7d7f00ed8cff47f6bb3c32ea3d32fb22b0fadf7e6e132ddb58e47a9a56d57",
+      "evidenceRevision": "R2-e2",
+      "evidence": "Containment 10:05: the static file route was disabled by configuration. Verification 10:20: the traversal request now returns 404, and so do intended document downloads for the Birch Legal portal, which used the same route; 14 support tickets so far. Upgrade build passes; one integration test fails on resource caching headers. The product owner asks to re-enable the route until the upgrade ships. The application still runs on Reactor Netty without the Spring Security HTTP Firewall.",
+      "observedAt": "2026-09-15T12:30:00Z"
+    },
+    {
+      "id": "R3",
+      "service": "legacy-preview",
+      "cve": "CVE-2022-22965",
+      "component": "org.springframework:spring-webmvc",
+      "version": "5.3.17",
+      "artifact": "fixture-sha256:c184f8c73df75b0875aa281cf1d7ddd38a604ddb807fc759d4cc7e5df53d8bf5",
+      "evidenceRevision": "R3-e2",
+      "evidence": "Deployed artifact retrieved 09:52: a WAR on Apache Tomcat, JDK 11, spring-webmvc 5.3.17; the artifact identity differs from the inventory record used at 09:00. Public endpoint confirmed. The public-access restriction requested at 10:00 has not been applied: it needs the edge team, available from 14:00.",
+      "observedAt": "2026-09-15T12:50:00Z"
+    },
+    {
+      "id": "R4",
+      "service": "report-renderer",
+      "cve": "CVE-2024-38816",
+      "component": "org.springframework:spring-webflux",
+      "version": "6.1.12",
+      "artifact": "fixture-sha256:410ad316f82cb37a9505e49f83bfd26d7bc7af0afd50f9ab98169f1751a8dd91",
+      "evidenceRevision": "R4-e1",
+      "evidence": "New scanner match 12:15. A route listing captured from the deployed instance at 12:45 shows annotated @RestController endpoints only and no RouterFunctions resource handlers; static assets are served by the CDN. Internal service with no internet ingress; runs on Reactor Netty.",
+      "observedAt": "2026-09-15T12:45:00Z"
+    }
+  ]
+}

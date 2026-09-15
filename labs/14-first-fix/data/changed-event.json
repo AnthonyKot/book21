@@ -1,8 +1,0 @@
-{
-  "id": "R1",
-  "artifact": "fixture-sha256:new-war",
-  "evidenceRevision": "R1-e2",
-  "at": "2026-09-15T12:00:00Z",
-  "fictional": true,
-  "description": "A replacement artifact is deployed as a WAR on Tomcat / JDK 17 with Spring MVC 5.3.17; administrative ingress is now public. The old evidence summary does not describe this deployment. Reopen the decision immediately and plan containment/remediation; this is supplied scenario evidence, not an executed exploit."
-}

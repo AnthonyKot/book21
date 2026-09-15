@@ -1,39 +1,86 @@
-# Defend the next action
+# Triage decision worksheet
 
-Use [essay 14](../essays/14-first-fix.md) and the [decision lab](https://github.com/AnthonyKot/book21/tree/main/labs/14-first-fix). Save a first attempt before opening `guided-decisions.json` or this [review guide](14-triage-review.md).
+Use with [essay 14](../essays/14-first-fix.md) and the [decision lab](https://github.com/AnthonyKot/book21/tree/main/labs/14-first-fix). Save your part B records and notes before opening the [review guide](14-triage-review.md). The two Spring advisories linked in the essay are the only outside reading you need.
 
-## A first pass without the worked decisions
+## Plan the week
 
-Read `packet.json`, `threat-snapshot.json` and the two vendor advisories. Mark which statements come from public sources and which are supplied fictional deployment evidence. For real work, name the artifact, configuration, inventory or access test you would need to confirm each deployment statement.
+These are authoring estimates derived from the steps below, not measured learner times. Record your actual time.
 
-| Record | Your action | Evidence that changes priority | Missing evidence | Owner and review time |
-|---|---|---|---|---|
-| R1 | | | | |
-| R2 | | | | |
-| R3 | | | | |
+| Part | What it involves | Provisional estimate |
+|---|---|---|
+| Setup | Python 3.12; no packages or network | 0.25 hour |
+| Guided | Read the essay and both advisories, run the validator, scheduler and tests, part A | 1.5–2.5 hours |
+| Independent | Part B: read the 13:00 packet, write four records and notes, choose the afternoon order, validate | 2.5–4.5 hours |
+| Delayed check | The final evidence-record question, about a week later | 0.5 hour |
+| Optional | Part C, applying the record to a real advisory in a codebase you may inspect | 1–2 hours, later week |
 
-Explain your first remediation slot without multiplying CVSS, EPSS and estimated effort into an invented risk score. State what can proceed in parallel. Describe the availability cost of containment, permitted behavior to preserve, and what evidence would justify restoring service. Do not claim to have reproduced either CVE.
+The required parts total about 4.75–7.75 hours. Keep the week bounded:
 
-Identify the EPSS score date and KEV catalog version. Translate the probability and percentile in the second advisory separately. Explain why absence from KEV and missing deployment evidence cannot be used as equivalent reasons to defer.
+- If you have spent about two hours on part B without a first record for each item, save what you have, open only the first hint in the review guide, mark it as assistance, or carry the work into next week.
+- Leave part C for a later week unless the required parts finished early.
 
-## Make the record concrete
+Start of attempt:
 
-Run the README's guided commands after saving your decisions. If you wrote a JSON decision file, validate it with `python3 triage.py --decisions your-decisions.json`. The program checks the fixture contract, not the quality of your rationale. A more conservative response than the worked example can be valid if its tradeoff is explained.
+- Date and repository revision:
+- Material already seen (worked decisions, hints, AI assistance):
 
-Run the explicit next-day negative control. Record the three rejection reasons and distinguish an expired review from a completed patch. The default clock is a reproducibility device; it must not be mistaken for today's time.
+## A. Guided: the 09:00 decisions
 
-## Independent change: noon arrives before the deadline
+The essay gives its first-slot choice in its opening lines. Check that choice against the source: read `data/packet.json` and both advisories, and write in two sentences which evidence supports it and which evidence you would want to confirm. Then run the lab.
 
-Read `changed-event.json`. Write a new assessment of R1 before editing code. Which earlier statement no longer applies? What would you do now, who owns it, and what would you test before declaring the route contained or the software fixed?
+1. Mark which facts in the packet come from public sources and which are supplied fictional evidence. For one deployment fact, name the artifact, configuration or access test you would need in real work to confirm it.
+2. Translate the EPSS probability and percentile for CVE-2024-38816 into plain language. Why is absence from KEV not a reason to defer?
+3. The same CVE, score and threat data appear in R1 and R3. What makes their actions differ?
+4. Run the one-day negative control. What does its rejection establish, and what does it not?
 
-Run `python3 exercise_tests.py`. Save the initial failures. Repair `reopen_exercise.py` so an artifact change or relevant evidence revision change triggers review even if time remains. Missing comparison evidence should also reopen review. Preserve unrelated-item behavior and the old decision record.
+## B. Independent: decide again at 13:00
 
-After the nine cases pass, add one changed condition yourself: a new advisory interpretation represented by an evidence revision, an unchanged event just before expiry, or a different artifact under the same service name. Predict the result before running it. Explain why review is a human decision point rather than an automatic assertion that a CVE is exploitable.
+### The brief
 
-## Handover and retention
+`data/update-1300/packet.json` holds the evidence at 13:00: updates for the three services and a fourth scanner match, plus the team's capacity for the afternoon. Run the scheduler against it to see which records need review. The threat snapshot is unchanged.
 
-Prepare either an internal service-owner note or a bounded consulting triage note. Include the public-source dates, supplied versus verified evidence, action, owner, checkpoint, containment cost, remaining uncertainty and reopening conditions. Neither route should describe this exercise as a production assessment.
+**Requirements.**
 
-Plan 10–12 hours within the existing 10–15-hour week: about 2 source reading, 3 first-pass triage, 3 code and negative controls, and 2–4 handover and delayed review. Record actual time and assistance. The fictional team's remediation estimates are not your study timetable.
+1. Write one decision record per item in the lab's JSON format. The set must pass `triage.py` at the packet clock. The 13:00 packet carries no evidence classification, so a `deferred` record must state its own `deferralBasis` (`specific-exploit-blocked` or `prerequisites-absent`), and your note must show the evidence for it.
+2. Each record's rationale must rest on the 13:00 evidence and the advisories, not on the 09:00 record.
+3. Keeping an earlier action is a legitimate outcome; so is changing it. Either needs its reason.
+4. Availability costs count. If an action removes a legitimate function or keeps it removed, say who loses it and what evidence would justify restoring it.
+5. Do not treat a scheduled review, a plan or a passing validator as remediation.
 
-Later, explain why the highest score did not automatically receive the first patch slot, and identify a change that would reverse that decision. Missing reports of reader practice are not evidence of either success or failure.
+### Deliverable 1: records
+
+Save your decisions file and the validator output.
+
+### Deliverable 2: a note per item
+
+| Item | What changed since 09:00 | Action now, and whether it changed | Why | What you would verify before trusting the new evidence | What would reverse this decision |
+|---|---|---|---|---|---|
+| R1 | | | | | |
+| R2 | | | | | |
+| R3 | | | | | |
+| R4 | | | | | |
+
+### Deliverable 3: the afternoon
+
+- Order of work for the free engineering time, and who does what:
+- What that order delays, and the risk you accept by delaying it:
+- One decision you were least sure about, and the evidence that would settle it:
+
+### Limits
+
+Name one thing your records cannot establish, and one piece of evidence the packet does not contain that a real triage would ask for.
+
+## C. Optional: a real advisory
+
+Choose a published advisory for a dependency in a codebase you are permitted to inspect. Write one decision record in the same format: which prerequisites you could confirm, which you could not, the action, the owner and the reopening trigger. Do not test against systems you are not authorized to assess, and do not publish findings about a real system.
+
+## Handover
+
+Write a short triage note for the afternoon: decisions, order, costs, owners, checkpoints and reopening conditions, with public-source dates and supplied-versus-verified evidence distinguished. For an internal team, address the service owners. For a consulting client, add the evidence available to you, exclusions and retest conditions. Label the scenario as fictional.
+
+## Evidence record
+
+- Actual time per part:
+- Assistance used, including hints, AI suggestions and any look at the review guide:
+- What you could now explain without notes:
+- Delayed check, a week later: without reopening your records, state which 13:00 decision would reverse first if the evidence moved again, and why.
