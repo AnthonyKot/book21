@@ -17,6 +17,7 @@ const essays = [
   {slug:'08-fetch-authority',part:'Find and repair application failures',title:'A fetch endpoint borrows the server’s network access',payoff:'Trace an approved URL through a forbidden redirect, verify that the internal service receives no request, and safely restore one allowed hop.'},
   {slug:'09-file-consumer',part:'Find and repair application failures',title:'A file becomes a program in the component that opens it',payoff:'Trace stored XML into a parser’s file and network access, repair the interpretation boundary, and find the later consumer that still reopens it.'},
   {slug:'10-valid-requests',part:'Find and repair application failures',title:'Two valid requests can violate one business rule',payoff:'Reproduce a one-use credit race with controlled request ordering, repair the database claim, and preserve rollback in a later worker.'},
+  {slug:'11-security-property',part:'Find and repair application failures',title:'Review the security property, including in generated code',payoff:'Find the cache-hit path a tenant-check patch misses, verify model-supplied findings, and distinguish preview permission from current download authority.'},
 ];
 const escape = s => s.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
 const renderer = new Renderer();
@@ -42,7 +43,7 @@ function markdown(file) {return marked.parse(fs.readFileSync(path.join(root,file
 write('index.html',shell(title,'From experienced developer to application and product security in the age of AI.',`
 <p class="kicker">Book 21 · A book in progress</p><h1>${title}</h1><p class="lede">From experienced developer to application and product security in the age of AI.</p>
 <p>Learn to investigate a failure, repair its cause and verify the result. These essays connect security reasoning to the software you already know how to build, with worked examples and practice.</p>
-<p class="status">Ten essays available. New chapters will extend the path into application security, secure delivery and AI systems.</p>
+<p class="status">Eleven essays available. New chapters will extend the path into application security, secure delivery and AI systems.</p>
 <section id="essays"><h2>Start reading</h2><ol class="essay-list">${essays.map(e=>`<li><h3><a href="essays/${e.slug}.html">${escape(e.title)}</a></h3><p>${e.payoff}</p></li>`).join('')}</ol></section>
 <section><h2>Learn by making a decision</h2><p>The opening essays use a document-export service to connect roles, requirements and security evidence. Read in order, attempt the exercise, then compare your reasoning with the review notes where provided.</p><a href="essays/${essays[0].slug}.html">Begin with essay 1 →</a></section>`));
 for (const [i,e] of essays.entries()) {
@@ -59,6 +60,7 @@ const practice=[
   {n:8,essay:'08-fetch-authority',sheet:'08-fetch-worksheet',review:'08-fetch-review',name:'Fetch authority'},
   {n:9,essay:'09-file-consumer',sheet:'09-file-worksheet',review:'09-file-review',name:'Stored-file consumer'},
   {n:10,essay:'10-valid-requests',sheet:'10-credit-worksheet',review:'10-credit-review',name:'Credit invariant'},
+  {n:11,essay:'11-security-property',sheet:'11-review-worksheet',review:'11-review-guide',name:'Security review'},
 ];
 for (const p of practice) for (const slug of [p.sheet,p.review]) {
   const isSheet=slug===p.sheet, name=`${p.name} ${isSheet?'worksheet':'review'}`;

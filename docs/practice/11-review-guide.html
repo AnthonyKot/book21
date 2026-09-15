@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Security review review · Book 21</title><meta name="description" content="Security review review for essay 11.">
+<meta property="og:title" content="Security review review"><meta property="og:description" content="Security review review for essay 11.">
+<meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
+<link rel="stylesheet" href="../assets/style.css"></head>
+<body><a class="skip" href="#main">Skip to content</a><header class="site-header"><a href="../index.html">Security Is an Engineering Job</a><nav aria-label="Book"><a href="../index.html#essays">Essays</a><a href="../about.html">About</a></nav></header>
+<main id="main"><p class="kicker">Essay 11 · Practice</p><article><h1>Security review guide</h1>
+<p>Compare after your <a href="11-review-worksheet.html">worksheet</a> attempt.</p>
+<h2>Hint 1: the query is not every return path</h2>
+<p>On a cache hit, <code>computeIfAbsent</code> does not call the repository loader. Adding tenant filtering only there leaves the candidate’s shared-key return path unaffected. A denied cold request therefore cannot establish denial after another principal warms the cache.</p>
+<h2>Hint 2: preserve the trusted dimensions</h2>
+<p>The guided key contains trusted tenant and document ID. Caller input must not choose the tenant. Retain the tenant-scoped repository lookup and owner cache hits. A concurrent collection coordinates map operations; it does not infer which caller may receive a value.</p>
+<h2>Hint 3: download is a separate action</h2>
+<p><code>DownloadService</code> has access to the store’s <code>requireDownload</code> policy check. Use the current tenant, identifier and archive state before returning full content from either a cache hit or a miss. The preview deliberately permits archived summaries, so changing its loader to reject all archived data would break the legitimate preview requirement. This lab also caches full content during preview loading. Assess whether that extra cached data is needed; splitting cache data by action does not remove the need for a current download decision.</p>
+<h2>Expected evidence</h2>
+<p>The two cold candidate tests pass. The 20 guided tests also pass because the reproduction class expects the flaw. Restoring the shared key under repair expectations produces 2 failures and 8 passes. The exercise starter fails warm-after-archive and cold-archived downloads, while four other cases pass. The private reference passes all 26 cases. The body-load counter excludes the fresh policy query; do not claim the repair makes zero database calls.</p>
+<p>The model ledger is a record of your investigation, not a leaderboard. Findings that are technically possible but outside supplied evidence remain unresolved until checked. Context matters: a model shown the walkthrough has not independently discovered its answer. A suggested patch earns acceptance through its denied and permitted behavior.</p>
+<p>No cache TTL, distributed invalidation, membership/ownership change, concurrent revocation guarantee, production benchmark or human security audit is demonstrated. The exercise tests an authorization decision after a completed archive. A response authorized before a concurrent archive is outside that contract.</p>
+</article><div class="practice-actions"><button onclick="window.print()">Print this page</button><a href="../essays/11-security-property.html">Return to essay 11</a><a href="11-review-worksheet.html">Back to worksheet</a></div></main><footer><span>Book 21 · Learn, practise, verify.</span><a href="https://github.com/AnthonyKot/book21">Source on GitHub</a></footer></body></html>

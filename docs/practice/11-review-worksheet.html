@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Security review worksheet · Book 21</title><meta name="description" content="Security review worksheet for essay 11.">
+<meta property="og:title" content="Security review worksheet"><meta property="og:description" content="Security review worksheet for essay 11.">
+<meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
+<link rel="stylesheet" href="../assets/style.css"></head>
+<body><a class="skip" href="#main">Skip to content</a><header class="site-header"><a href="../index.html">Security Is an Engineering Job</a><nav aria-label="Book"><a href="../index.html#essays">Essays</a><a href="../about.html">About</a></nav></header>
+<main id="main"><p class="kicker">Essay 11 · Practice</p><article><h1>Security review worksheet</h1>
+<p>Use with <a href="../essays/11-security-property.html">essay 11</a>. Start from the <a href="https://github.com/AnthonyKot/book21/tree/main/labs/11-security-property/review">review brief and diff</a> before opening the walkthrough or <a href="11-review-guide.html">review guide</a>, if you want to preserve an unassisted first pass.</p>
+<ul>
+<li>Date, revision, Java/framework/database versions:</li>
+<li>Time available this week (10–15 hours total):</li>
+<li>Material already seen, hints and AI assistance:</li>
+</ul>
+<h2>First review</h2>
+<p>Write the security property without naming the proposed fix. Follow every preview return path from authenticated principal to response data. Record what the changed query establishes and which paths call it.</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Table; scroll horizontally on small screens"><table>
+<thead>
+<tr>
+<th>Sequence</th>
+<th>Prediction</th>
+<th>Observed status/body</th>
+<th>Branch and evidence</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Bob requests C-1001 cold</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Alice then Bob request C-1001</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Bob then Alice request B-2001</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Alice repeats own preview</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Anonymous request after warm-up</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+</div><p>Save your first finding before model assistance. Run the two cold tests, the full suite and the negative control from the lab README. Record actual failures versus setup errors. Explain how a passing assertion can be correct while the test collection misses the security property.</p>
+<h2>Compare a model-assisted pass</h2>
+<p>Use only this public synthetic code or other material you are authorized to share. Record tool/model/date, prompt, exact files, whether answer-bearing tests were included, output and elapsed investigation time. An optional reusable prompt:</p>
+<pre><code class="language-text">Review this candidate against this property: every preview response must belong to the authenticated tenant, regardless of prior cache population. Trace all response paths through the supplied callers, cache and repository. For each suspected violation give the input sequence, failing branch and evidence required to confirm it. Identify one legitimate behavior the fix must preserve. Separate suspected and verified claims. Do not edit or execute anything.
+</code></pre>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Table; scroll horizontally on small screens"><table>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Already in my first pass?</th>
+<th>Verification performed</th>
+<th>Confirmed/rejected/unresolved</th>
+<th>Time</th>
+</tr>
+</thead>
+<tbody><tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+</div><p>Validate every accepted finding and patch. Do not score a claim as correct merely because it sounds familiar. If no model is available, leave the comparison pending; the code investigation can still be completed. One small assisted task is not a productivity benchmark or proof of independent mastery.</p>
+<h2>Changed task: archive and download</h2>
+<p>Policy: own archived summaries stay visible; full downloads require an own-tenant, non-archived document at the current authorization check. The archive completes before the tested download begins. The starter’s tenant-partitioned cache remains populated after archive.</p>
+<p>Run <code>python3 demo.py --exercise</code>, then <code>mvn -Dtest=ArchiveExercise test</code>. Repair <code>DownloadService.download</code> using the existing fresh policy query. Required results:</p>
+<ul>
+<li>Active own document downloads its full content.</li>
+<li>Warm cache followed by archive denies full download without another body load.</li>
+<li>Archive before cache fill denies download without loading the body.</li>
+<li>Own archived summary remains visible.</li>
+<li>Foreign download is denied even after owner warm-up.</li>
+<li>An unaffected own document still downloads.</li>
+</ul>
+<p>Run <code>mvn &#39;-Dtest=*Test,ArchiveExercise&#39; test</code> for all 26 cases. Default <code>mvn test</code> excludes the unfinished exercise. Reintroduce the missing action check in a separate copy and demonstrate the failed regression. Record the original flaw, your change, permitted behavior and remaining limitations.</p>
+<h2>Independent transfer</h2>
+<p>Use only the authorized PortSwigger lab environments:</p>
+<ul>
+<li><a href="https://portswigger.net/web-security/access-control/lab-user-id-controlled-by-request-parameter">User ID controlled by request parameter</a>. Derive the object-authorization property from the observed endpoint; record the violating request and needed server decision.</li>
+<li><a href="https://portswigger.net/web-security/access-control/lab-user-id-controlled-by-request-parameter-with-password-disclosure">User ID controlled by request parameter with password disclosure</a>. Inspect the actual response fields when assessing impact rather than relying only on what the page visibly displays.</li>
+</ul>
+<p>These are black-box transfer tasks, not replicas of the cache. If you completed one earlier, record that and use it as delayed revalidation rather than claiming a new independent discovery. Record hints; unavailable tasks remain pending.</p>
+<h2>Handover</h2>
+<p>Write a concise engineering review with property, reproducer, branch, fix, retest and limits. For consulting, add assessed endpoints and exclusions. Record elapsed time, assistance, next gap and a delayed task: trace a changed response path a week later without reading your previous finding.</p>
+</article><div class="practice-actions"><button onclick="window.print()">Print this page</button><a href="../essays/11-security-property.html">Return to essay 11</a><a href="11-review-guide.html">Review after your attempt →</a></div></main><footer><span>Book 21 · Learn, practise, verify.</span><a href="https://github.com/AnthonyKot/book21">Source on GitHub</a></footer></body></html>
