@@ -5,18 +5,64 @@
 <meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
 <link rel="stylesheet" href="../assets/style.css"></head>
 <body><a class="skip" href="#main">Skip to content</a><header class="site-header"><a href="../index.html">Security Is an Engineering Job</a><nav aria-label="Book"><a href="../index.html#essays">Essays</a><a href="../about.html">About</a></nav></header>
-<main id="main"><p class="kicker">Essay 12 · Practice</p><article><h1>Measure the rule you can explain</h1>
-<p>Use this worksheet with <a href="../essays/12-known-misses.html">essay 12</a> and the <a href="https://github.com/AnthonyKot/book21/tree/main/labs/12-known-misses">local lab</a>. Open the <a href="12-detector-review.html">review guide</a> after saving an attempt. The supplied fixtures are deliberately small and vulnerable; keep the application on loopback.</p>
-<h2>Before scanning</h2>
-<p>Write the security property in one sentence. Name the source expression, SQL argument and method boundary in each of <code>SearchCases.direct</code>, <code>alias</code>, <code>wrapped</code> and <code>bound</code>. Predict the attack response separately from the expected scanner result. Explain what an apostrophe in an ordinary title tests.</p>
-<p>Record the repository revision, Java/Maven/Python/Semgrep versions, engine and commands. Follow the README to execute <code>mvn test</code>, the annotated rule tests, and <code>python3 check.py</code>. Inspect <code>results.json</code> for scanned paths and errors, not just a summary banner.</p>
+<main id="main"><p class="kicker">Essay 12 · Practice</p><article><h1>Detection maintenance worksheet</h1>
+<p>Use with <a href="../essays/12-known-misses.html">essay 12</a> and the <a href="https://github.com/AnthonyKot/book21/tree/main/labs/12-known-misses">local lab</a>. Save your part B ledger, rule, examples and coverage statement before opening the <a href="12-detector-review.html">review guide</a> or running <code>review_check.py</code>, whose source reveals the answers. The fixtures are deliberately vulnerable; keep the application on loopback.</p>
+<h2>Plan the week</h2>
+<p>These are authoring estimates derived from the steps below, not measured learner times. Record your actual time.</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Table; scroll horizontally on small screens"><table>
+<thead>
+<tr>
+<th>Part</th>
+<th>What it involves</th>
+<th>Provisional estimate</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Setup</td>
+<td>Python venv and pinned Semgrep; Java and Maven from earlier essays</td>
+<td>0.5–1 hour</td>
+</tr>
+<tr>
+<td>Guided</td>
+<td>Read the essay, run the tests, rule tests, matrix and both negative controls, part A</td>
+<td>2–2.5 hours</td>
+</tr>
+<tr>
+<td>Independent</td>
+<td>Part B: truth ledger by HTTP, rule decisions, annotated examples, measured matrix, coverage statement</td>
+<td>3.5–5.5 hours</td>
+</tr>
+<tr>
+<td>Delayed check</td>
+<td>The final evidence-record question, about a week later</td>
+<td>0.5 hour</td>
+</tr>
+<tr>
+<td>Optional</td>
+<td>Part C, the CodeQL investigation plan; running CodeQL is a separate week</td>
+<td>1–2 hours</td>
+</tr>
+</tbody></table>
+</div><p>The required parts total about 6.5–9.5 hours. Keep the week bounded:</p>
+<ul>
+<li>If the venv or scanner install blocks you for more than an hour, record the command and error, and do the HTTP truth ledger first; it needs only Java.</li>
+<li>If part B has not produced a complete ledger after about 2.5 hours, save it as it stands, open only the next hint in the review guide, marked as assistance, or carry the work into next week.</li>
+<li>Leave part C for a later week unless the required parts finished early.</li>
+</ul>
+<p>Start of attempt:</p>
+<ul>
+<li>Date, repository revision, Java, Maven, Python and Semgrep versions:</li>
+<li>Material already seen (hints, AI assistance, the review script):</li>
+</ul>
+<h2>A. Guided: search cases</h2>
+<p>Before scanning, write the security property in one sentence. For <code>direct</code>, <code>alias</code>, <code>wrapped</code> and <code>bound</code>, name the source expression, the SQL argument and the method boundary, and predict the HTTP result separately from the scanner result.</p>
 <div class="table-scroll" tabindex="0" role="region" aria-label="Table; scroll horizontally on small screens"><table>
 <thead>
 <tr>
 <th>Case</th>
 <th>Predicted HTTP result</th>
 <th>Predicted finding</th>
-<th>Actual result</th>
+<th>Actual</th>
 <th>Explanation</th>
 </tr>
 </thead>
@@ -49,18 +95,116 @@
 <td></td>
 </tr>
 </tbody></table>
-</div><p>The table focuses on the four primary search cases. The full matrix also checks the repaired endpoint, the constant query and three header routes; add predictions for these before measuring the exercise.</p>
-<p>Run both negative controls. Record the exact failed cases and whether they failed for the intended reason. Restore the ordinary configuration before using the demo.</p>
-<h2>Independent task: a header becomes SQL</h2>
-<p>Inspect <code>HeaderCases</code> without changing the application. A caller now controls <code>X-Title</code> instead of the title parameter. Extend the rule so <code>python3 check.py --exercise</code> reports the local unsafe header case. Preserve the original direct and alias findings and all four safe non-findings. Keep both wrapper misses documented.</p>
-<p>Add at least one positive and one negative annotated header example in <code>rules/request-sql.java</code>. Choose a further variation yourself: a different local variable name, a different header name, or a value transformed before concatenation. Predict its behavior before running the scanner. Explain the observed result; do not claim all transformations work from a single example.</p>
-<p>After the extension, also run <code>python3 check.py --exercise --negative</code>: all three required findings should disappear and fail their matrix checks. Keep using <code>--exercise</code> to measure your extended rule.</p>
-<p>Save the patch, rule-test result and complete matrix JSON. A green matrix with an unchanged starter rule is an error to investigate. Do not remove fixture files, move case markers or change expected vulnerability labels to get a pass.</p>
-<h2>Investigation decision</h2>
-<p>Draw the missing wrapper flow in text: source → SQL construction → helper parameter → JDBC SQL argument. Read the linked CodeQL Java guide&#39;s global taint section. Write down the sources, sinks and call connection your proposed query would need, plus one reason a missing result might be inconclusive.</p>
-<p>Choose a next action for this helper: model it explicitly in a rule, investigate interprocedural analysis, or retain a named manual review check. Explain the cost and maintenance obligation. No CodeQL installation is needed to complete this design investigation; label it unexecuted unless you actually create and analyze a database.</p>
-<h2>Handover and time</h2>
-<p>Write a short coverage statement with files, source revision, rule version, engine, findings verified, safe fixtures checked and unresolved misses. Prepare either a team-maintenance note for employment or a bounded assessment/retest note for consulting. Keep both career routes available.</p>
-<p>Plan 10–12 hours inside the 10–15-hour weekly budget: roughly 2 reading/setup, 3 guided execution, 3 independent rule work, and 2–4 triage, writing and delayed review. These are allowances to revise against actual time. Carry unfinished work forward; optional CodeQL setup should not silently expand the week.</p>
-<p>Record elapsed time, assistance and the next unresolved question. After a delay, explain why the passing wrapper expectation is evidence of a known limitation. Reading, following a hint and independently solving the changed task are distinct progress states.</p>
+</div><ol>
+<li>What does the passing expectation for <code>wrapped</code> establish, and what does it not?</li>
+<li>Why does the sink focus on the SQL argument rather than the whole call?</li>
+<li>Run both negative controls. What does each show that the ordinary passing run cannot?</li>
+</ol>
+<h2>B. Independent: the reporting module</h2>
+<h3>The brief</h3>
+<p><code>ReportCases</code> was added after the rule was written. Your job is to maintain the detector: establish what is actually vulnerable, measure what the rule reports, and decide what to change.</p>
+<p><strong>Requirements.</strong></p>
+<ol>
+<li><strong>Truth first.</strong> For each of the five <code>report-*</code> cases, decide whether request input can change the SQL grammar. Back each verdict with at least one HTTP observation (an attack input and an ordinary input) and the code path from input to query. Do this before relying on scanner output.</li>
+<li><strong>Decide each difference.</strong> Where the rule&#39;s result differs from your truth, choose one: change the rule (source, sink or sanitizer), or keep the difference as a documented known miss or false positive with a reason and a review obligation. Changing everything and accepting everything both need justification.</li>
+<li><strong>Preserve guided behavior.</strong> Your rule must still report <code>direct</code> and <code>alias</code> and must not report <code>bound</code>, <code>repaired</code> or <code>constant</code>. Reporting the vulnerable <code>wrapped</code> helper is optional. <code>check.py --ledger</code> enforces this.</li>
+<li><strong>Pin your choices.</strong> Add annotated examples in <code>rules/request-sql.java</code> for each behavior you changed or chose to keep: <code>ruleid</code> for required findings, <code>ok</code> for required non-findings, <code>todoruleid</code> for a miss you accept.</li>
+<li>Do not edit application code, case markers or <code>check.py</code> to make a result pass.</li>
+</ol>
+<h3>Deliverable 1: truth ledger</h3>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Table; scroll horizontally on small screens"><table>
+<thead>
+<tr>
+<th>Case</th>
+<th>Input used</th>
+<th>Attack request and observed response</th>
+<th>Ordinary request and observed response</th>
+<th>Code path</th>
+<th>Vulnerable?</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>report-by-owner</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>report-rows</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>report-sorted</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>report-page</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>report-owner-list</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+</div><p>Save it as a ledger file for <code>check.py</code> (format in the lab README).</p>
+<h3>Deliverable 2: rule decisions</h3>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Table; scroll horizontally on small screens"><table>
+<thead>
+<tr>
+<th>Case</th>
+<th>Rule result before</th>
+<th>Your decision (change rule / keep miss / keep false positive / already correct)</th>
+<th>Reason</th>
+<th>Risk of the decision</th>
+</tr>
+</thead>
+<tbody><tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+</div><ul>
+<li>For any sanitizer you add: why is it safe to trust for SQL grammar, and what similar-looking call would it wrongly bless?</li>
+<li>For any sink you add: which argument is SQL text, and which legitimately carries request data?</li>
+</ul>
+<h3>Deliverable 3: measured evidence</h3>
+<ul>
+<li><code>semgrep --test rules/</code> output after your changes:</li>
+<li><code>python3 check.py --ledger your-ledger.json</code> output:</li>
+<li>A negative control of your own: remove one change you made, show which annotated example or matrix row fails, and restore it.</li>
+</ul>
+<h3>Deliverable 4: coverage statement</h3>
+<p>Write five to eight sentences: the rule version and engine, the files and cases measured, what the rule now reports, each accepted miss or false positive with its reason, who reviews what the rule cannot see (including the <code>wrapped</code> helper), and one condition that would make you re-measure.</p>
+<h2>C. Optional: deeper analysis</h2>
+<p>Draw the <code>wrapped</code> flow in text: source → SQL construction → helper parameter → JDBC SQL argument. Read the linked CodeQL Java global taint guidance. Write the sources, sinks and call connection a query would need, and one reason a missing result could be inconclusive. Label it unexecuted unless you actually create and analyze a database.</p>
+<h2>Handover</h2>
+<p>For an internal team, write a maintenance note: the rule change, its annotated examples, the coverage statement and the review obligation for known misses. For a consulting client, add the source revision, files and rules assessed, and the unresolved cases. Label the fixtures as synthetic.</p>
+<h2>Evidence record</h2>
+<ul>
+<li>Actual time per part:</li>
+<li>Assistance used, including hints, AI suggestions and any look at <code>review_check.py</code>:</li>
+<li>What you could now explain without notes:</li>
+<li>Delayed check, a week later: without reopening your rule, explain why a clean scan of a new module is not evidence that it is safe, using one of your own ledger entries.</li>
+</ul>
 </article><div class="practice-actions"><button onclick="window.print()">Print this page</button><a href="../essays/12-known-misses.html">Return to essay 12</a><a href="12-detector-review.html">Review after your attempt →</a></div></main><footer><span>Book 21 · Learn, practise, verify.</span><a href="https://github.com/AnthonyKot/book21">Source on GitHub</a></footer></body></html>

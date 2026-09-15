@@ -1,8 +1,8 @@
 # A useful detector has known misses
 
-The rule reports two findings. The HTTP tests demonstrate five vulnerable paths. Both results are correct.
+The rule reports two findings. The HTTP tests demonstrate three vulnerable paths. Both results are correct.
 
-This is a constructed Java lab, deliberately small enough to inspect. A request supplies a document title. Several methods concatenate that title into SQL; others bind it as a value. One vulnerable method delegates execution to a helper. Another takes the title from a header. These are ordinary changes in code organization and input handling. They also change what our detector can see.
+This is a constructed Java lab, deliberately small enough to inspect. A request supplies a document title. Several methods concatenate that title into SQL; others bind it as a value. One vulnerable method delegates execution to a helper. That is an ordinary change in code organization. They also change what our detector can see.
 
 The useful result is a precise account of that difference. You can hand another engineer a rule, explain which regressions it catches, and show a failure that still requires another control. That is the first step from finding individual bugs to maintaining detection.
 
@@ -89,13 +89,10 @@ The second command scans the actual runnable application and checks exact findin
 | Parameter bound separately | No, tested attack stays data | No |
 | Repaired endpoint, default configuration | No, tested attack stays data | No |
 | Constant query ignoring the request | No request influence in this fixture | No |
-| Header value concatenated locally | Yes | No |
-| Header value bound separately | No, tested attack stays data | No |
-| Header SQL passed to helper | Yes | No |
 
-Nine matrix checks pass. Only two of the five known vulnerable cases are reported; none of the four SQL-safe cases is reported. These counts describe this authored set. It was chosen to expose boundaries, not sampled to estimate production precision or recall. Passing an expectation that says “miss this vulnerable case” documents a limitation; it does not resolve it.
+Six matrix checks pass. Two of the three known vulnerable cases are reported; none of the three SQL-safe cases is reported. These counts describe this authored set. It was chosen to expose boundaries, not sampled to estimate production precision or recall. Passing an expectation that says “miss this vulnerable case” documents a limitation; it does not resolve it.
 
-Run `python3 check.py --negative` as a separate control. It temporarily replaces the recognized source name with a nonexistent fixture method. The matrix must fail its two positive cases. A harness that still passed would not protect the rule's useful behavior.
+Run `python3 check.py --negative` as a separate control. It replaces the rule's sources with one that matches nothing, so the two positive cases must fail. A harness that still passed would not protect the rule's useful behavior.
 
 ## Fix the application while maintaining the detector
 
@@ -109,7 +106,7 @@ return jdbc.queryForList(
 
 The attack now returns `[]`. An ordinary `Budget` search still returns that title; `O'Brien` works without stripping its apostrophe. The JDBC overload passes arguments separately to a prepared statement. [Spring Framework 7.0.9 API](https://docs.spring.io/spring-framework/docs/7.0.9/javadoc-api/org/springframework/jdbc/core/JdbcTemplate.html#queryForList(java.lang.String,java.lang.Class,java.lang.Object...)).
 
-The executed Java suite contains **19 HTTP checks**: ten reproduce malicious and ordinary requests on the five vulnerable routes; nine verify attack handling and legitimate titles on the three bound routes. With `lab.bind=false`, the repaired route deliberately calls the concatenating implementation. Its attack and apostrophe checks fail, while its ordinary-title check still passes. That negative control explains why an ordinary success alone would have been weak evidence.
+The HTTP suite reproduces the attack and an ordinary request on each vulnerable route, and checks attack handling and legitimate titles on the bound routes. With `lab.bind=false`, the repaired route deliberately calls the concatenating implementation: its attack and apostrophe checks fail, while its ordinary-title check still passes. That negative control explains why an ordinary success alone would have been weak evidence.
 
 The vulnerable variants remain available for teaching. “Repaired endpoint” does not mean every route in this application is repaired. Nor does the absence of a finding prove the repair. We trust this particular conclusion because the code separates SQL and values, the relevant behavior was executed, and removing the control changes the result.
 
@@ -129,12 +126,15 @@ A clean report can therefore support a narrow statement: these files were scanne
 
 <!--mission-->
 
-## Exercise: the input moved
+## Practice: the code moved on, the rule did not
 
-Use the [worksheet](../practice/12-detector-worksheet.md) before the [review guide](../practice/12-detector-review.md). The changed fixture reads `X-Title` from a header. Extend the rule so the locally concatenated header case is reported, while bound header data remains unreported. Keep the original positive and negative cases. Add annotated examples of your own, then run `python3 check.py --exercise`; the supplied starter fails one matrix check.
+The lab now contains a reporting module written after the rule. Its five query methods take input from requests in ways the guided cases did not cover. The rule's current results on that module are a measurement, not a verdict: some findings may be missing and some may be wrong.
 
-Keep the header-wrapper miss visible. Explain whether you would model its helper, investigate global analysis or retain a manual review obligation. Do not fix the measurement by relabeling the vulnerable code as safe. The private reference rule was executed during authoring: it satisfies all nine exercise matrix checks while still missing both wrapper cases.
+The [worksheet](../practice/12-detector-worksheet.md) sets out the deliverables:
 
-Allow roughly **10–12 hours within the existing 10–15-hour study week** for reading, execution, rule changes, triage notes and delayed explanation. This is a planning allowance, not a measured completion time. CodeQL setup is optional follow-up; carry it into another week if needed.
+1. A truth ledger for the module's cases, each entry backed by an HTTP observation and the code path, established before you trust any scanner output.
+2. A rule change, or a decision not to change the rule, for each difference between the ledger and the findings, with annotated rule examples that pin the behavior you chose.
+3. A measured matrix over the guided and new cases that loses no guided finding and adds no false alarm on guided safe code.
+4. A coverage statement another engineer can challenge: what the rule now reports, what it deliberately misses or over-reports, and who must review what it cannot see.
 
-Your deliverable is a small rule package with a coverage statement another engineer can challenge. For employment, explain how a team would maintain it and investigate exceptions. For consulting, state exactly which source revision, files, rules and unresolved cases an assessment covered. Neither route needs a claim that one scanner found everything.
+Attempt it before opening the [review guide](../practice/12-detector-review.md), which holds hints, the authored ledger and a post-attempt check. The worksheet's time estimates are provisional. A clean scan of this module would prove as little as it did for the wrapper: the useful result is a rule whose blind spots are named.

@@ -27,6 +27,7 @@ public class SearchCases {
     }
     public List<String> wrapped(HttpServletRequest request) {
         String title = request.getParameter("title");
+        // case: wrapped
         return execute("SELECT title FROM documents WHERE title = '" + title + "' ORDER BY id");
     }
     private List<String> execute(String sql) {
