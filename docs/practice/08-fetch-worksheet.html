@@ -6,76 +6,94 @@
 <link rel="stylesheet" href="../assets/style.css"></head>
 <body><a class="skip" href="#main">Skip to content</a><header class="site-header"><a href="../index.html">Security Is an Engineering Job</a><nav aria-label="Book"><a href="../index.html#essays">Essays</a><a href="../about.html">About</a></nav></header>
 <main id="main"><p class="kicker">Essay 8 · Practice</p><article><h1>Fetch authority worksheet</h1>
-<p>Read the <a href="../essays/08-fetch-authority.html">essay</a> and run the <a href="https://github.com/AnthonyKot/book21/tree/main/labs/08-fetch-authority">local lab</a>. Use only its synthetic listeners and assigned Academy instances. Do not probe workplace networks or cloud metadata services.</p>
-<p>Before running a request, record:</p>
+<p>Status: blank practice artifact. Fill it in before opening the review guide, which holds the hints and the worked answer. Reproduce and repair the guided lab from the <a href="../essays/08-fetch-authority.html">essay</a> first; this task extends it. Use only the lab&#39;s synthetic loopback listeners and the assigned Academy instances. Do not probe workplace networks or cloud metadata services.</p>
+<h2>Time plan</h2>
+<p>Provisional; no learner has reported actual times. Maven and Java are already installed for the guided lab, so setup here is only rereading and running the fixture.</p>
 <div class="table-scroll" tabindex="0" role="region" aria-label="Table; scroll horizontally on small screens"><table>
 <thead>
 <tr>
-<th>Question</th>
-<th>Prediction</th>
-<th>Observation</th>
+<th>Part</th>
+<th>Work</th>
+<th>Estimate</th>
 </tr>
 </thead>
 <tbody><tr>
-<td>Who supplies the initial URL?</td>
-<td></td>
-<td></td>
+<td>Setup</td>
+<td>Reread the essay; run the guided lab once</td>
+<td>0.25–0.5 h</td>
 </tr>
 <tr>
-<td>Which component sends the outbound request?</td>
-<td></td>
-<td></td>
+<td>A — guided questions</td>
+<td>Three questions about the guided repair</td>
+<td>0.5–1 h</td>
 </tr>
 <tr>
-<td>Who supplies the redirected destination?</td>
-<td></td>
-<td></td>
+<td>B — independent</td>
+<td>Extend <code>/api/follow-one</code> and prove it</td>
+<td>3–5 h</td>
 </tr>
 <tr>
-<td>When does the destination policy run?</td>
-<td></td>
-<td></td>
+<td>Delayed check</td>
+<td>Two to four days later, without your notes</td>
+<td>0.5 h</td>
 </tr>
 <tr>
-<td>Did the internal fixture receive a request?</td>
+<td>Required total</td>
 <td></td>
-<td></td>
+<td>4.25–7 h of a 10-hour week</td>
+</tr>
+<tr>
+<td>C — optional transfer</td>
+<td>Two named Academy labs</td>
+<td>2–4 h</td>
 </tr>
 </tbody></table>
-</div><p>Compare direct partner content, a direct forbidden URL, a redirect internally and a relative partner redirect in both configurations. Retain status, body and counter changes. Counters are cumulative during manual work; compare before/after or restart. The test harness resets them between sequential cases.</p>
-<p>Explain why a 502 response alone cannot prove no internal contact. Explain why the incoming Basic credential is not necessary for this SSRF effect, and verify that the outgoing request does not copy it. Distinguish the policy-forbidden internal fixture from actual network isolation: your terminal can reach it directly.</p>
-<h2>Changed task: follow one approved 302</h2>
-<p>Keep <code>lab.follow-redirects=false</code>. Extend <code>/api/follow-one</code>; leave the guided <code>/api/fetch</code> behavior intact.</p>
+</div><p>Stop rules: if after about an hour of Part B the guided lab still fails to build or run, record the blocker and move on. If after about three hours you cannot make the mirror path work while keeping the internal origin unreachable, open Hint 1 in the review guide, record it as assistance, and continue. Carry unfinished work forward rather than reading the worked answer.</p>
+<h2>Part A — guided questions</h2>
+<p>Answer from the guided lab you already reproduced.</p>
 <ol>
-<li>Validate the initial URI with the existing policy; invalid initial input remains 403.</li>
-<li>Fetch once. A 200 succeeds. A 302 may supply one additional destination.</li>
-<li>Resolve Location against the first URI, including a relative path. Validate the resolved URI BEFORE contact.</li>
-<li>Permit only one additional request. Require its response to be 200. A further redirect, forbidden target, missing/invalid Location or upstream failure becomes 502.</li>
-<li>Never forward incoming cookies, Authorization or arbitrary caller headers.</li>
+<li>The vulnerable configuration validates the initial URL and still reaches the internal listener. Name the exact step at which the destination it connects to stopped being the destination it checked.</li>
+<li>Why does asserting &quot;the response body does not contain the report&quot; fail to prove the internal service was not contacted? What does the lab assert instead?</li>
+<li>The outbound request does not copy Alice&#39;s credential, yet the SSRF still matters. Why?</li>
 </ol>
-<p>Run <code>mvn -Dtest=OneHopExercise test</code> before repair. One test fails because the legitimate relative redirect is not supported; four pass. After repair, <code>mvn &#39;-Dtest=*Test,OneHopExercise&#39; test</code> should pass all 27 cases.</p>
-<p>The supplied tests cover direct success, relative success, forbidden internal redirect, a loop and a chain requiring two redirects. Add a changed regression, such as an absolute allowed Location, a user-info-bearing Location, a missing Location or another redirect status. State the expected behavior before coding it. Use only fixture-generated local destinations. Keep the fixture from becoming an open redirect to arbitrary outside addresses.</p>
-<p>Demonstrate that removing your redirect validation makes the no-internal-contact property fail. A meaningful negative control records an actual internal hit, not merely a failed compilation or unavailable server. Do not claim independent discovery from implementing supplied hints.</p>
-<details><summary>Hint 1 — the first permission expires at the redirect</summary>
-
-<p>The existing validator already describes the approved origin. The redirect response provides a new input to that same decision. Letting the HTTP client follow automatically skips your opportunity to decide.</p>
-</details>
-<details><summary>Hint 2 — resolve, then validate</summary>
-
-<p>Use URI resolution against the original URI. A Location may be relative; a string prefix check is not a substitute for inspecting the resolved scheme, host and port. Map a rejected upstream location to the specified 502 response.</p>
-</details>
-<details><summary>Hint 3 — a loop is a request budget problem</summary>
-
-<p>One initial request and at most one follow-up are enough for this contract. Do not recurse until something returns 200. Check both server hit counts and final status.</p>
-</details>
-
-<h2>Independent transfer</h2>
-<p>Attempt without opening solutions first:</p>
+<h2>Part B — extend the approved destinations</h2>
+<h3>The new requirement</h3>
+<p>The integration now has <strong>two approved origins</strong>: the original partner and a new documents <strong>mirror</strong> (a second loopback fixture the lab already runs). The feature must retrieve documents from either. For some documents the partner returns a single <code>302</code>: to the mirror&#39;s document (an absolute <code>Location</code> on the other approved origin) or to its own document (a relative <code>Location</code>). Both must be honoured.</p>
+<p>Unchanged and non-negotiable:</p>
+<ul>
+<li>The forbidden <strong>internal</strong> origin must never be contacted, whether requested directly or reached through a redirect. Denial must happen before the internal listener receives a request.</li>
+<li>The rejections already in the guided lab stay rejected: wrong scheme, user-information in the URL, a fragment, a look-alike host, a malformed URI.</li>
+<li>The outbound request carries no caller credential.</li>
+<li>At most one redirect is followed. An endless or multi-step redirect must not hang the endpoint or keep issuing requests.</li>
+<li>Automatic following stays off for this endpoint whatever the guided demo&#39;s <code>lab.follow-redirects</code> flag says. That flag exists to show the vulnerable mode of <code>/api/fetch</code>; the practice endpoint decides every destination itself.</li>
+</ul>
+<p>The endpoint to change is <code>/api/follow-one</code> in <code>FetchService.followOne</code>. Its starter reuses the guided single-origin fetch, so today it refuses the mirror and every redirect. How you structure the destination policy and map errors is your decision; the guided contract uses <code>403</code> for a denied caller destination and <code>502</code> for an upstream result the fetch cannot accept.</p>
+<h3>What to hand in</h3>
+<ol>
+<li><strong>Destination policy.</strong> State, in a sentence or two, which destinations this feature now permits and on what basis you decide a URL is one of them. Note one plausible policy you rejected and why.</li>
+<li><strong>Implementation.</strong> Your <code>followOne</code>, keeping automatic following disabled and the guided <code>/api/fetch</code> behaviour intact.</li>
+<li><strong>Your own tests.</strong> Decide what needs covering from the requirement: every approved path, every route to the forbidden origin, and the bound. Assert server-side hit counters, not just response bodies. Say in one line why your set is complete.</li>
+<li><strong>A negative control.</strong> Break your own policy in one deliberate way, show a test that now fails (for example it records an actual internal hit, or exceeds the one-redirect budget), then restore it. Describe the broken version in one line.</li>
+<li><strong>Untested limits.</strong> Name at least two properties your tests do not establish (for example DNS resolution and pinning, egress restrictions, IPv6, response-size or time budgets).</li>
+</ol>
+<p>A post-attempt check in two parts (<code>FetchPolicyCheck</code>, <code>FetchPolicyDemoFlagCheck</code>) encodes the required observable outcomes. Leave both closed until you have saved your own attempt and tests; they are excluded from the default <code>mvn test</code>. Run them with:</p>
+<pre><code class="language-sh">mvn -DreviewCheck=true -Dtest=&#39;FetchPolicy*&#39; test
+</code></pre>
+<p>Any design that produces the required outcomes passes; it does not grade your policy statement, your own tests or your stated limits. Success means another engineer can read your policy sentence, your tests and your negative control and see why the mirror is reachable and the internal origin is not.</p>
+<h2>Part C — optional transfer</h2>
+<p>Attempt without opening solutions first, using only the assigned Academy instances. Record hints or AI assistance.</p>
 <ul>
 <li><a href="https://portswigger.net/web-security/ssrf/lab-basic-ssrf-against-localhost">Basic SSRF against the local server</a>.</li>
-<li><a href="https://portswigger.net/web-security/ssrf/lab-ssrf-filter-bypass-via-open-redirection">SSRF with filter bypass via open redirection vulnerability</a>.</li>
+<li><a href="https://portswigger.net/web-security/ssrf/lab-ssrf-filter-bypass-via-open-redirection">SSRF with filter bypass via open redirection</a>.</li>
 </ul>
-<p>Use only the assigned Academy instances and record hints or AI assistance. These are verified assignments, not completed reader work. Explain where each application borrows authority and which check a redirect crosses.</p>
-<p>Plan 10–12 hours inside the 10–15-hour week. Keep an evidence pack with versions, commands, allowed/denied requests, counter changes, patch, negative control and untested limits. If interrupted, record the next command and continue later.</p>
-<p>For employment, write a concise code-review explanation. For consulting, delimit the assessed fetch workflow and explicitly exclude untested DNS, proxy, firewall and workload-resource controls. Compare your work with the <a href="08-fetch-review.html">review guide</a> after attempting it.</p>
+<p>For each, name where the application borrows authority and which check a redirect crosses. These are verified assignments, not completed reader work.</p>
+<h2>Your evidence</h2>
+<ul>
+<li>Date and time spent on A, B and C:</li>
+<li>Hints opened (which, when and why):</li>
+<li>The policy you rejected, and what decided it:</li>
+<li>Your negative control: the one-line broken version and the test that caught it:</li>
+<li>Delayed check (two to four days later, without notes): from memory, write the destination policy and the one redirect rule, then diff against your saved answer. What did you forget?</li>
+<li>Next unanswered question:</li>
+</ul>
 </article><div class="practice-actions"><button onclick="window.print()">Print this page</button><a href="../essays/08-fetch-authority.html">Return to essay 8</a><a href="08-fetch-review.html">Review after your attempt →</a></div></main><footer><span>Book 21 · Learn, practise, verify.</span><a href="https://github.com/AnthonyKot/book21">Source on GitHub</a></footer></body></html>

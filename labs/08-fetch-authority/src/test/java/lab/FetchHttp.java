@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.*;
 abstract class FetchHttp {
     @Value("${local.server.port}") int port;
     @Autowired Destinations destinations;
-    @BeforeEach void resetCounters() {destinations.partnerHits.set(0);destinations.internalHits.set(0);destinations.sawAuthorization.set(false);}
+    @BeforeEach void resetCounters() {destinations.partnerHits.set(0);destinations.mirrorHits.set(0);destinations.internalHits.set(0);destinations.sawAuthorization.set(false);}
     HttpResponse<String> call(String endpoint,String url,boolean auth) throws Exception {
         var req=HttpRequest.newBuilder(URI.create("http://127.0.0.1:"+port+endpoint+"?url="+URLEncoder.encode(url,StandardCharsets.UTF_8)));
         if(auth) req.header("Authorization","Basic "+Base64.getEncoder().encodeToString("alice:local-only".getBytes(StandardCharsets.UTF_8)));

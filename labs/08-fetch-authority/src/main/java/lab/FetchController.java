@@ -9,8 +9,8 @@ public class FetchController {
     @GetMapping(value="/api/fetch",produces="text/plain") String fetch(@RequestParam String url) { return service.fetch(url); }
     @GetMapping(value="/api/follow-one",produces="text/plain") String practice(@RequestParam String url) { return service.followOne(url); }
     @GetMapping("/lab/targets") Map<String,Object> targets() {
-        return Map.of("partner",destinations.partnerUrl(),"internal",destinations.internalUrl(),
-            "partnerHits",destinations.partnerHits.get(),"internalHits",destinations.internalHits.get(),
+        return Map.of("partner",destinations.partnerUrl(),"mirror",destinations.mirrorUrl(),"internal",destinations.internalUrl(),
+            "partnerHits",destinations.partnerHits.get(),"mirrorHits",destinations.mirrorHits.get(),"internalHits",destinations.internalHits.get(),
             "sawAuthorization",destinations.sawAuthorization.get());
     }
 }

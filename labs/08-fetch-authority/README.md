@@ -10,7 +10,7 @@ mvn -q package -DskipTests
 java -jar target/fetch-authority-1.0.jar --lab.follow-redirects=true
 ```
 
-The process starts the authenticated API at `127.0.0.1:8086`, partner fixture at port 8087 and synthetic internal fixture at 8088. Leave all three ports free. Stop with Ctrl-C; fixture servers stop with the application. HTTP Basic `alice` / `local-only` is only a local authentication convenience. All interfaces bind to loopback. Do not deploy this fixture publicly.
+The process starts the authenticated API at `127.0.0.1:8086`, the partner fixture at 8087, a documents mirror at 8089 and the synthetic internal fixture at 8088. Leave all four ports free. The mirror is a second approved origin used only by the practice task; the guided demonstration uses the partner and internal fixtures. Stop with Ctrl-C; fixture servers stop with the application. HTTP Basic `alice` / `local-only` is only a local authentication convenience. All interfaces bind to loopback. Do not deploy this fixture publicly.
 
 ```sh
 curl -sS -u alice:local-only --get \
@@ -26,30 +26,40 @@ Expect partner content for `/document`, internal synthetic content for `/to-inte
 
 Restart with `--lab.follow-redirects=false` (also the default). The partner document still returns 200. `/to-internal` returns 502 and the internal counter stays zero. `/to-document`, a relative redirect to a legitimate document, also returns 502: the guided policy deliberately permits no redirects.
 
-Normal tests: 22 real-HTTP cases across reproduction and repair. The fixture ports and API port are random in tests, with counters reset between sequential cases. Do not enable parallel test execution against a shared fixture. Reproduction tests intentionally assert the flaw. Negative control:
+Guided tests: 22 real-HTTP cases across reproduction and repair. Each configuration runs eleven cases:
+
+| Case | Automatic following | No following |
+|---|---|---|
+| Direct partner document | 200; one partner hit | Same |
+| Direct internal target | 403; no fixture hit | Same |
+| Partner redirects internally | 200; one internal hit | 502; zero internal hits |
+| Partner redirects to its document | 200; two partner hits | 502; one partner hit |
+| Wrong scheme | 403; no fixture hit | Same |
+| User information in URL | 403; no fixture hit | Same |
+| Fragment present | 403; no fixture hit | Same |
+| Host with added suffix | 403; no fixture hit | Same |
+| Malformed URI | 403; no fixture hit | Same |
+| Partner returns an error | 502 | Same |
+| No API authentication | 401; no partner hit | Same |
+
+Fixture and API ports are random in tests, with counters reset between sequential cases. Do not enable parallel test execution against a shared fixture. Reproduction tests intentionally assert the flaw. Negative control:
 
 ```sh
 mvn -Dtest=RedirectRepairTest -Dtest.follow=true test
 ```
 
-Expected nonzero exit: two redirect tests fail, nine pass. No DNS or network firewall is being tested. The internal fixture is reachable directly from your machine; the topology models a forbidden destination without creating actual client/server network separation. Initial input accepts only the exact configured partner origin. Its fixed redirect handlers point only to these local fixtures and never use a caller-supplied Location. Keep them that way.
+Expected nonzero exit: the two redirect rows fail, nine pass. No DNS or network firewall is being tested. The internal fixture is reachable directly from your machine; the topology models a forbidden destination without creating actual network separation. Guided input accepts only the exact configured partner origin. The fixed redirect handlers point only to local fixtures and never use a caller-supplied Location. Keep them that way.
 
-## One-hop practice
+## Practice: extend the approved destinations
 
-`/api/follow-one` initially delegates to the no-redirect fetch. With `lab.follow-redirects=false`, implement at most one 302 redirect: resolve Location against the first URI, validate the resolved URI with the same destination policy BEFORE sending, and require the final response to be 200. A denied redirected destination, missing/invalid Location, second redirect or non-200 result maps to 502. An invalid initial destination remains 403. Never enable automatic following to satisfy the exercise.
+`/api/follow-one` is the practice endpoint. Its starter reuses the guided single-origin, no-redirect fetch. The task, stated in `practice/08-fetch-worksheet.md`, is to support **two** approved origins — the partner and the mirror (port 8089) — and one `302` between them, while the internal origin stays unreachable and no redirect loop hangs the endpoint. The worksheet states the requirement; the review guide (`practice/08-fetch-review.md`) holds the hints and worked answer. Read the review guide only after saving your own attempt and tests.
 
-```sh
-mvn -Dtest=OneHopExercise test
-```
-
-Initially one fails (legitimate relative redirect) and four pass. After your repair:
+A post-attempt check in two parts encodes the required observable outcomes and is excluded from the default `mvn test`:
 
 ```sh
-mvn '-Dtest=*Test,OneHopExercise' test
+mvn -DreviewCheck=true -Dtest='FetchPolicy*' test
 ```
 
-The private reference passes 27 tests. Removing its redirected-destination validation makes the internal-target exercise test fail with one real internal hit. Add your own changed test; the supplied cases cover direct success, relative success, internal denial, a loop and a two-redirect chain. They do not cover every redirect status, malformed Location or timeout.
+Leave `FetchPolicyCheck.java` and `FetchPolicyDemoFlagCheck.java` closed until your attempt is saved. Any design that produces the required outcomes passes; it does not grade your policy statement, your own tests or your stated limits.
 
-Limits: this is a destination/redirect lab, not a production URL-fetching library. It allows HTTP loopback deliberately, has no DNS resolution/pinning policy, no egress firewall, no streaming body-size cap and no concurrent-work budget. Connection and request timeout settings are two seconds; stalled-body/resource-bound behavior is not verified. It buffers fixed small text responses. A production fetcher needs resource controls, TLS, reviewed proxy behavior, destination permissions and an error/response-handling policy suited to its actual use.
-
-Default `mvn test` runs only the 22 guided cases because `OneHopExercise` is outside the default test naming filter. Use the combined command above to verify your exercise together with the guided cases (27 total).
+Limits: this is a destination/redirect lab, not a production URL-fetching library. It allows HTTP loopback deliberately, has no DNS resolution/pinning policy, no egress firewall, no streaming body-size cap and no concurrent-work budget. Connection and request timeouts are two seconds; stalled-body and resource-bound behaviour are not verified. A production fetcher needs resource controls, TLS, reviewed proxy behaviour, destination permissions and an error-handling policy suited to its actual use.

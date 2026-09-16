@@ -3,7 +3,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest(webEnvironment=SpringBootTest.WebEnvironment.RANDOM_PORT,
- properties={"lab.partner-port=0","lab.internal-port=0","lab.follow-redirects=${test.follow:true}"})
+ properties={"lab.partner-port=0","lab.mirror-port=0","lab.internal-port=0","lab.follow-redirects=${test.follow:true}"})
 class RedirectReproductionTest extends FetchHttp {
     @Test void documentWorks() throws Exception {
         var r=fetch(destinations.partnerUrl()+"/document");assertEquals(200,r.statusCode());assertEquals("PARTNER-INVOICE-C-1001",r.body());

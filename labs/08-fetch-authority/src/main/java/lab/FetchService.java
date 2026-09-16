@@ -41,7 +41,10 @@ public class FetchService {
     }
     public String fetch(String url) { return requireSuccess(send(allowed(url))); }
     public String followOne(String url) {
-        // Unfinished practice: implement one validated redirect, keeping automatic following off.
+        // Practice endpoint. Its required behaviour is stated in the worksheet
+        // (practice/08-fetch-worksheet.md); the review guide holds hints and answers.
+        // The starter reuses the guided single-origin fetch, which does not yet meet
+        // that requirement.
         return fetch(url);
     }
 }
