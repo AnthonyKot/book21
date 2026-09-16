@@ -5,82 +5,133 @@
 <meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
 <link rel="stylesheet" href="../assets/style.css"></head>
 <body><a class="skip" href="#main">Skip to content</a><header class="site-header"><a href="../index.html">Security Is an Engineering Job</a><nav aria-label="Book"><a href="../index.html#essays">Essays</a><a href="../about.html">About</a></nav></header>
-<main id="main"><p class="kicker">Essay 3 · Practice</p><article><h1>Essay 3 — scheduled export boundary worksheet</h1>
-<p>Status: blank practice artifact. Fill this in before reading the review notes. Completing the essay&#39;s own example is not recorded as your own attempt.</p>
-<h2>Feature and selected policy</h2>
-<p>An administrator schedules a weekly folder export. A scheduler creates Monday&#39;s job, and an external email provider sends a download link to an address entered by the administrator. Folder contents and permissions can change between runs.</p>
-<p>For this exercise, the schedule acts on behalf of its creator. Each run requires that person&#39;s current tenant membership and per-document export permission. Download requires the authenticated job owner and current source-document permissions, as in essay 2. The recipient address does not grant download rights. Keep the job owner as the creator; sharing exports would require a separate policy.</p>
-<h2>Drawing</h2>
-<p>Sketch the path from the scheduling request to the recipient opening the link. Paper or a text diagram is fine.</p>
-<ul>
-<li>Components and data flows, including job, schedule and permission records:</li>
-<li>Trust boundaries, with labels you can refer to below:</li>
-<li>Who can read, create, update and administer the relevant records:</li>
-<li>What your drawing leaves out:</li>
-</ul>
-<h2>Identity along the path</h2>
+<main id="main"><p class="kicker">Essay 3 · Practice</p><article><h1>Essay 3 — scheduled export design review worksheet</h1>
+<p>Status: blank practice artifact. Fill this in before reading the review notes. The review notes contain the hints; open them only after saving an attempt, and record any hint you use.</p>
+<h2>Time plan</h2>
+<p>Estimates are provisional; no learner has reported actual times. There is no software to install.</p>
 <div class="table-scroll" tabindex="0" role="region" aria-label="Table; scroll horizontally on small screens"><table>
 <thead>
 <tr>
-<th>Operation</th>
-<th>Service or user performing it</th>
-<th>User whose product permission matters</th>
-<th>Trusted source of that identity</th>
+<th>Part</th>
+<th>Work</th>
+<th>Estimate</th>
 </tr>
 </thead>
 <tbody><tr>
-<td>Create schedule</td>
-<td></td>
-<td></td>
-<td></td>
+<td>Setup</td>
+<td>None</td>
+<td>0 h</td>
 </tr>
 <tr>
-<td>Create Monday&#39;s job</td>
-<td></td>
-<td></td>
-<td></td>
+<td>A — guided</td>
+<td>Reread the essay; answer three questions about its example</td>
+<td>0.75–1.25 h</td>
 </tr>
 <tr>
-<td>Generate archive</td>
-<td></td>
-<td></td>
-<td></td>
+<td>B — independent</td>
+<td>Review the design note below</td>
+<td>2.5–4 h</td>
 </tr>
 <tr>
-<td>Read source bytes from storage</td>
-<td></td>
-<td></td>
-<td></td>
+<td>Delayed check</td>
+<td>Two to four days later, without your notes</td>
+<td>0.5 h</td>
 </tr>
 <tr>
-<td>Send email</td>
+<td>Required total</td>
 <td></td>
-<td></td>
-<td></td>
+<td>3.75–5.75 h of a 10-hour week</td>
 </tr>
 <tr>
-<td>Authorize download</td>
+<td>C — optional</td>
+<td>Apply the method to a flow you know</td>
+<td>1–2 h</td>
+</tr>
+</tbody></table>
+</div><p>Stop rules: if after about two hours of Part B you have not listed the facts and writers for every decision, open Hint 1 in the review notes, record it as assistance, and continue. If Part B is unfinished after about four hours, save what you have and carry the rest over rather than reading the answers.</p>
+<h2>Part A — guided questions about the essay</h2>
+<ol>
+<li>For the repaired generation decision, list the facts it reads and every party able to write each fact. Which writer is still undecided?</li>
+<li>In the 60-second link design, what does the download decision read once the link has been issued, and who can supply it?</li>
+<li>Why does restricting queue publishers not, by itself, repair job 81?</li>
+</ol>
+<h2>Part B — review the design note</h2>
+<h3>Product policy the design must satisfy</h3>
+<p>These rules are fixed for this exercise. If one seems wrong for the product, record it as a product question rather than changing it.</p>
+<ul>
+<li>A schedule acts on behalf of its creator. Each run may include only documents from the scheduled folder that the creator may export, using the creator&#39;s tenant membership and permissions current when the archive is generated.</li>
+<li>Documents the creator may not export are skipped rather than failing the run.</li>
+<li>Metadata is as confidential as the content it describes: a document&#39;s title only for people who may read that document, a folder&#39;s name only for people who may read that folder.</li>
+<li>Tenant administrators manage users, tenant settings and schedules. Being an administrator grants no read or export permission on folders.</li>
+<li>Only the job owner, who for a scheduled run is the schedule&#39;s creator, may download an archive, and only while holding current export permission for every document in it.</li>
+<li>The email is a notification. Receiving it grants no rights.</li>
+<li>Out of scope: the email provider&#39;s internal security, availability and load, and the user interface.</li>
+</ul>
+<h3>Design note: scheduled folder exports (draft 2)</h3>
+<blockquote>
+<p><strong>Goal.</strong> Let a tenant administrator receive a weekly archive of a folder by email without clicking &quot;export&quot; every Monday.</p>
+<p><strong>Components.</strong> Schedules API and download endpoint (<code>api-svc</code>); <code>schedules</code> and <code>jobs</code> tables; scheduler (<code>scheduler-svc</code>); export queue; export worker (<code>worker-svc</code>); document store; archive store; notifier (<code>notify-svc</code>) using an external email provider.</p>
+<ol>
+<li><strong>Creating a schedule.</strong> An administrator signs in and submits a folder, a weekday and a recipient address. The API checks that the administrator currently has export permission in that folder, then stores <code>creator_id</code> from the authenticated session together with <code>folder_id</code>, <code>weekday</code> and <code>recipient</code>.</li>
+<li><strong>Editing a schedule.</strong> Any administrator in the tenant can edit a schedule&#39;s folder, weekday or recipient, so that schedules keep working through holidays and staff changes. Edits do not change <code>creator_id</code>, so runs keep the creator&#39;s permissions.</li>
+<li><strong>Starting a run.</strong> At 02:00 on the scheduled day, <code>scheduler-svc</code> reads due schedules and inserts a job row (<code>job_id</code>, <code>schedule_id</code>, <code>creator_id</code>, <code>folder_id</code>). To avoid one permission-service call per document in the worker, the scheduler asks the permission service which documents in the folder the creator may export and publishes <code>{job_id, allowed_document_ids}</code>.</li>
+<li><strong>Generating.</strong> <code>worker-svc</code> loads the job row, fetches exactly the documents in <code>allowed_document_ids</code> from the document store, writes the archive and a manifest of included document IDs, and marks the job complete. If generation fails, the broker redelivers the same message for up to 72 hours.</li>
+<li><strong>Queue access.</strong> Broker ACLs allow only <code>scheduler-svc</code> and <code>api-svc</code> to publish to the export queue. <code>api-svc</code> publishes on-demand exports in the same message format.</li>
+<li><strong>Notifying.</strong> When a job completes, <code>notify-svc</code> emails the schedule&#39;s recipient. The subject is &quot;Weekly export: <folder name>&quot;; the body lists the file names in the archive and links to <code>https://app.example/exports/&lt;job_id&gt;</code>.</li>
+<li><strong>Email protection.</strong> Connections to the email provider require TLS 1.3. Recipient addresses must belong to one of the tenant&#39;s verified email domains.</li>
+<li><strong>Downloading.</strong> The link opens the application. The endpoint requires sign-in, loads the job, requires the signed-in user to equal <code>creator_id</code>, checks that user&#39;s current export permission for every document in the manifest, and streams the archive from the archive store. No storage URL is issued.</li>
+<li><strong>Audit.</strong> Schedule creation, edits, runs and downloads are written as events recording the acting identity, schedule or job, changed fields, outcome and time. Application identities can append events but not modify or delete them.</li>
+</ol>
+</blockquote>
+<h3>What to produce</h3>
+<ol>
+<li><strong>Drawing.</strong> Components, data flows and the trust boundaries the note implies, labelled so you can refer to them. State what you left out.</li>
+<li><strong>Decisions table.</strong> Every decision the design makes about what to generate, send or release. For each: the facts it reads, where each fact is stored or carried, and every identity or event able to write or change it.</li>
+<li><strong>Verdicts.</strong> One row for each of the nine note items: <em>no change needed</em>; <em>helps but insufficient</em>; <em>protects a different crossing</em>; or <em>does not satisfy the policy</em> (change needed). An item with two controls can have a verdict for each. Give the reason and the note sentence it rests on.</li>
+<li><strong>Findings.</strong> As many as your evidence supports; there is no quota. For each: actor and starting capability, consequence under the policy, STRIDE label if useful, response and owner, proposed control, a case that must be denied, and a legitimate run that must still succeed.</li>
+<li><strong>Open decisions.</strong> Any product question the policy does not settle, with who must decide and before which event. Any accepted risk, with reason and owner. &quot;None&quot; is a valid answer to either.</li>
+<li><strong>Reassessment trigger.</strong> One change to the design or policy that would require this review to be repeated, and why.</li>
+</ol>
+<p>Success criteria: another engineer can follow each verdict from a sentence in the note to a fact and its writer, and can tell which runs must still succeed. Your review may conclude that parts of the note need no change.</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Table; scroll horizontally on small screens"><table>
+<thead>
+<tr>
+<th>Decision</th>
+<th>Facts it reads</th>
+<th>Stored or carried in</th>
+<th>Who or what can write or change each fact</th>
+</tr>
+</thead>
+<tbody><tr>
+<td></td>
 <td></td>
 <td></td>
 <td></td>
 </tr>
 </tbody></table>
-</div><ul>
-<li>What happens if the creator leaves the tenant on Sunday:</li>
-<li>What happens if one new folder document is not exportable by the creator:</li>
-<li>What can a recipient other than the creator do with the email link:</li>
-</ul>
-<h2>Three threats and decisions</h2>
-<p>For each, describe an actor, starting capability and consequence. A control proposed on paper is not implemented or verified.</p>
-<div class="table-scroll" tabindex="0" role="region" aria-label="Table; scroll horizontally on small screens"><table>
+</div><div class="table-scroll" tabindex="0" role="region" aria-label="Table; scroll horizontally on small screens"><table>
 <thead>
 <tr>
-<th>Boundary or component</th>
-<th>Threat scenario and STRIDE category</th>
+<th>Note item</th>
+<th>Verdict</th>
+<th>Reason and supporting sentence</th>
+</tr>
+</thead>
+<tbody><tr>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+</div><div class="table-scroll" tabindex="0" role="region" aria-label="Table; scroll horizontally on small screens"><table>
+<thead>
+<tr>
+<th>Actor and capability</th>
+<th>Consequence under the policy</th>
 <th>Response and owner</th>
 <th>Proposed control</th>
-<th>Verification case</th>
-<th>Remaining limit</th>
+<th>Must be denied</th>
+<th>Must still succeed</th>
 </tr>
 </thead>
 <tbody><tr>
@@ -91,33 +142,20 @@
 <td></td>
 <td></td>
 </tr>
-<tr>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
-</tr>
 </tbody></table>
 </div><ul>
-<li>Legitimate weekly run that must still succeed:</li>
-<li>An unresolved decision, if any, and who must resolve it before which event:</li>
-<li>Any risk explicitly accepted, with reason and owner (none is a valid answer):</li>
+<li>Open decisions:</li>
+<li>Accepted risks:</li>
+<li>Reassessment trigger:</li>
 </ul>
+<h2>Part C — optional transfer</h2>
+<p>Pick one flow from a system you know well. Write its decisions table: decision, facts read, and who can write each. Keep employer or client details private; this is for your own review, not for publication.</p>
 <h2>Your evidence</h2>
 <ul>
-<li>Date and time spent:</li>
-<li>Assistance/hints used:</li>
-<li>The identity row you found hardest, and what you decided:</li>
+<li>Date and time spent on A, B and C:</li>
+<li>Hints opened (which, when and why):</li>
+<li>The verdict you changed your mind about, and what changed it:</li>
+<li>Delayed check (two to four days later, without notes): choose one note item, rebuild its decisions-table row, then compare with your saved answer. What differed?</li>
 <li>Next unanswered question:</li>
 </ul>
 </article><div class="practice-actions"><button onclick="window.print()">Print this page</button><a href="../essays/03-draw-the-boundary.html">Return to essay 3</a><a href="03-boundary-review.html">Review after your attempt →</a></div></main><footer><span>Book 21 · Learn, practise, verify.</span><a href="https://github.com/AnthonyKot/book21">Source on GitHub</a></footer></body></html>
