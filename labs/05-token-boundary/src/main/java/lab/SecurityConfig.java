@@ -34,7 +34,8 @@ class SecurityConfig {
             checks.add(new JwtClaimValidator<List<String>>("aud",
                     audiences -> audiences != null && audiences.contains(TokenFixtures.AUDIENCE)));
         }
-        // Practice: extend this profile to reject password-reset and missing-purpose tokens.
+        // This validator list is the API's acceptance profile. The practice task in
+        // practice/05-token-worksheet.md states what it must satisfy.
         decoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(checks));
         return decoder;
     }

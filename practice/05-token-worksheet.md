@@ -1,6 +1,21 @@
 # Essay 5 — token acceptance worksheet
 
-Status: blank practice artifact. Record your attempt separately from the worked example. Start from [lab 5](https://github.com/AnthonyKot/book21/tree/main/labs/05-token-boundary) with `lab.audience-check=true`.
+Status: blank practice artifact. Record your attempt separately from the worked example. Start from [lab 5](https://github.com/AnthonyKot/book21/tree/main/labs/05-token-boundary) with `lab.audience-check=true`. Save your attempt before opening the review notes, which hold the hints.
+
+## Time plan
+
+Provisional; no learner has reported actual times.
+
+| Part | Work | Estimate |
+|---|---|---|
+| Setup | Guided lab already built; reread the essay | 0.25–0.5 h |
+| A — API profile | Predict, write your own failing tests, decide and implement the rule | 1.5–3 h |
+| B — recovery review | Design review of the reset fragment | 1.5–2.5 h |
+| Delayed check | Two to four days later, without notes | 0.5 h |
+| Required total | | 3.75–6.5 h of a 10-hour week |
+| C — optional | Two named Academy labs | 2–3 h |
+
+Stop rules: if the lab fails to build for more than an hour, record the blocker and move on. Your new tests should fail against the unrepaired API; if after about two hours of Part A they do not (a setup problem), or your repair still does not make them pass, open Hint 1 in the review notes and record it as assistance.
 
 ## Predict before changing code
 
@@ -14,7 +29,7 @@ Both `reset` and `no-purpose` have a valid signature, the expected issuer, the d
 
 Create `PurposeRepairTest` extending `TokenHttp`, with the same `@SpringBootTest` configuration as `AudienceRepairTest` (`lab.audience-check=true`). Put the two new rejection tests there. Existing valid and foreign-invoice checks already run in the original suites.
 
-For this exercise require the signed claim `token_use` to equal `api-access`. Reject missing or other values. Preserve issuer, signature, time, required-claim and audience checks. Do not change the existing reproduction or repair assertions to make the new tests pass.
+Decide the rule the API's acceptance profile needs so that a credential issued for one operation cannot be presented as a credential for another. Inspect the issued fixtures at `/lab/tokens/<kind>` to see what distinguishes them. State which values your rule accepts, what an absent value means, and why the obvious alternative is weaker. Preserve issuer, signature, time, required-claim and audience checks. Do not change the existing reproduction or repair assertions to make the new tests pass.
 
 | Test | Expected result | Observed before repair | Observed after repair |
 |---|---|---|---|
@@ -25,7 +40,8 @@ For this exercise require the signed claim `token_use` to equal `api-access`. Re
 | All existing tests | Still pass | | |
 
 - Which test failure demonstrates acceptance of the wrong token, rather than a setup problem:
-- Where the purpose check is enforced:
+- The rule you chose, the alternative you rejected, and what an absent value means under each:
+- Where the rule is enforced, and why there rather than in the controller:
 - How the issuer's matching token contract is documented:
 
 ## Review the separate recovery path

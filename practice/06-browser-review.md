@@ -1,6 +1,19 @@
 # Browser authority review
 
-Read after attempting the [worksheet](06-browser-worksheet.md). This is a review guide, not evidence that you completed the task.
+Read after attempting the [worksheet](06-browser-worksheet.md). This is a review guide, not evidence that you completed the task. The hints below help without giving the answer; everything after the stop line is the worked answer.
+
+## Hints, in order
+
+Record each hint you open and when.
+
+**Hint 1 — find the interpretation.** Trace `title` from `location.search` into the DOM assignment in `summary.js`. Determine which operation treats the combined string as markup.
+
+**Hint 2 — two things must survive.** The requirement keeps one real `strong` element *and* the exact title text. Ask which of those the note repair's technique preserves on its own, and which needs a separate step.
+
+**Hint 3 — inspect the resulting DOM.** Check the title element's exact text, its children and the server-side approval flag. Absence of an alert is weak evidence. The negative control should fail because a security property is violated, not because the server failed to start.
+
+**Stop here if you are still attempting.** Everything below is the worked answer.
+
 
 The foreign form can send a credentialed write without permission to read a response in JavaScript. The form-shaped fetch demonstrates the distinction especially clearly: with CSRF disabled, its promise rejects under CORS while the invoice changes. The custom-header request adds a preflight; in this configuration the actual POST is not sent. The two origins are same-site, so Strict does not suppress the session cookie in the tested requests.
 

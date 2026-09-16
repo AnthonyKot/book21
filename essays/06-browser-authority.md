@@ -138,8 +138,4 @@ The professional skill is tracing authority to its enforcement point. Server-sid
 
 The lab's `/summary?title=...` page builds a bold title by concatenating input inside `<strong>` markup. Repair it while preserving one real `strong` element and the exact supplied title as text. Keep both guided repairs enabled. Add browser evidence for executable input and for ordinary punctuation, then run the existing suite to check the approval path still works.
 
-Use the [worksheet](../practice/06-browser-worksheet.md) before the [review guide](../practice/06-browser-review.md). The authoring reference was built and executed privately; the public project deliberately leaves this task unsolved.
-
-Budget 10–12 hours: two for reading and prediction, four for reproduction and repair, two for evidence and explanation, and two to four for independent transfer. Stay within the established 10–15-hour week; carry an unfinished task forward instead of adding study debt. Attempt **CSRF vulnerability with no defenses** and **DOM XSS in document.write sink using source location.search** in PortSwigger Academy, linked in the worksheet. Record any hints or AI assistance.
-
-For employment, explain the defect and repair as a focused code-review conversation. For consulting, describe the exact pages, browser and actions assessed, the retest evidence and the untested scope. Both routes need a claim another engineer can verify. Neither route gains evidence of mastery merely because the supplied tests pass.
+Use the [worksheet](../practice/06-browser-worksheet.md); save your attempt before opening the [review guide](../practice/06-browser-review.md), which holds the hints. The task is the note repair's mechanism applied to a second sink with one more thing to preserve. Finding that sink and deciding what must survive the repair is the work; the worksheet names two optional Academy labs for transfer.

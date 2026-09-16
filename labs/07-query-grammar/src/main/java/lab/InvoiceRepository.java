@@ -31,7 +31,7 @@ public class InvoiceRepository {
         return jdbc.query(COLUMNS + " WHERE id = ?", ROW, id);
     }
     public List<Invoice> sorted(String tenant, String sort) {
-        // Unfinished practice: caller controls SQL structure, despite binding tenant.
+        // Practice endpoint. Its contract is stated in practice/07-query-worksheet.md.
         return jdbc.query(COLUMNS + " WHERE tenant_id = ? ORDER BY " + sort + ", id", ROW, tenant);
     }
 }

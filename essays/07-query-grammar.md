@@ -173,8 +173,4 @@ This lab does not establish safety for every query or database. It tests H2, one
 
 Repair `/api/sorted` so it accepts exactly `id`, `title` and `amount`, ascending, with ID as the final tie-breaker. Missing or empty input defaults to `id`; unknown keys and expressions such as `amount DESC` must return `400`. Retain tenant binding and verify the actual order of legitimate results.
 
-Use the [worksheet](../practice/07-query-worksheet.md), then the [review guide](../practice/07-query-review.md). The public starter includes explicit exercise checks; the privately executed reference passes them without publishing the solution as your completed work.
-
-Allow 10–12 hours within the 10–15-hour study week: two for reading and tracing the query, four for reproduction and repair, two for evidence, and two to four for independent transfer. Carry unfinished work forward. The worksheet names two authorized Academy labs; record hints, supplied tests and AI assistance separately from your own discoveries.
-
-For employment, explain why the original prepared-statement call was insufficient and show the regression evidence in a code review. For consulting, state the endpoints and query paths assessed, the retest results and the remaining authorization gap. Both routes require a precise account of what the fix establishes.
+Use the [worksheet](../practice/07-query-worksheet.md); save your attempt before opening the [review guide](../practice/07-query-review.md), which holds the hints. The title repair showed that a value belongs in a parameter. This task is the other half of the same distinction: a request that chooses query structure needs a different contract, and deciding how to enforce it and where an invalid choice is refused is the work. A post-attempt check is available once your attempt and your own regression are saved.

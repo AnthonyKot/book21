@@ -1,6 +1,21 @@
 # Browser authority worksheet
 
-Work only against the synthetic [essay 6 lab](https://github.com/AnthonyKot/book21/tree/main/labs/06-browser-authority) and your assigned Academy instances. Start with the [essay](../essays/06-browser-authority.md). Reserve 10–12 hours within your 10–15-hour study week; carry work forward if setup takes longer. These are planning allowances, not measured learner completion times.
+Work only against the synthetic [essay 6 lab](https://github.com/AnthonyKot/book21/tree/main/labs/06-browser-authority) and your assigned Academy instances. Start with the [essay](../essays/06-browser-authority.md). Save your attempt before opening the review guide, which holds the hints.
+
+## Time plan
+
+Provisional; no learner has reported actual times. Browser setup is the largest first-time cost and is reused by nothing later in the series.
+
+| Part | Work | Estimate |
+|---|---|---|
+| Setup | Maven, Node, Playwright Chromium (first time only) | 0.5–1.5 h |
+| A — guided | Predictions, three modes reproduced, trace kept | 2–3 h |
+| B — independent | The summary title task below | 2–3.5 h |
+| Delayed check | Two to four days later, without notes | 0.5 h |
+| Required total | | 5–8.5 h of a 10-hour week |
+| C — optional | Two named Academy labs | 2–4 h |
+
+Stop rules: if Playwright or its system libraries are not working after about an hour, record the blocker, finish the Java part and carry the browser part over. If after about two hours of Part B the executable-title check still fails, open Hint 1 in the review guide and record it as assistance.
 
 Before executing, predict these separately for a form POST, a form-shaped credentialed fetch and a JSON/custom-header fetch from port 8084:
 
@@ -27,23 +42,9 @@ With both guided repairs enabled, inspect `/summary?title=...`. Its title comes 
 
 Keep a short evidence record: date, versions, time spent, reproduction, patch, allowed/denied outcomes, help used and remaining uncertainty. AI-written code and supplied checks are assisted evidence. Neither reading this worksheet nor passing its tests establishes independent mastery.
 
-<details><summary>Hint 1 — find the interpretation</summary>
+Deliverables: the source-to-sink trace in one or two sentences; your patch; the practice checks passing; your own added test with its failure against the original renderer; and the scope statement from step 5.
 
-Trace `title` from `location.search` into the DOM assignment. Determine which operation treats the combined string as markup.
-
-</details>
-<details><summary>Hint 2 — preserve structure separately</summary>
-
-Create the required formatting element as structure. Insert the untrusted title through a text-only operation. Avoid concatenating it into the HTML string.
-
-</details>
-<details><summary>Hint 3 — inspect the resulting DOM</summary>
-
-Check the title element's exact text, its children and the server-side approval flag. Absence of an alert is weak evidence. The negative control should fail because a security property is violated, not because the server failed to start.
-
-</details>
-
-## Independent transfer
+## Independent transfer (optional)
 
 Attempt these without a solution tab first:
 
@@ -52,6 +53,12 @@ Attempt these without a solution tab first:
 
 Use the authorized Academy lab environment only. Lab pages were checked while authoring; completion by the reader has not been reported. If you use hints, walkthroughs or AI, label that attempt assisted and retry a changed case later.
 
-Write a five-sentence handover. For employment, address the engineer reviewing your patch. For consulting, address the owner of a narrowly scoped assessment and include the retest and exclusions. Do not present a local fixture as a comprehensive product assessment.
+## Your evidence
+
+- Date and time spent on A, B and C:
+- Hints opened (which, when and why):
+- Your added test, and what it failed against:
+- Delayed check (two to four days later, without notes): from memory, name the sink and the two things the repair had to preserve; compare with your saved answer.
+- Next unanswered question:
 
 Then compare with the [review guide](06-browser-review.md).

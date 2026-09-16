@@ -6,7 +6,49 @@
 <link rel="stylesheet" href="../assets/style.css"></head>
 <body><a class="skip" href="#main">Skip to content</a><header class="site-header"><a href="../index.html">Security Is an Engineering Job</a><nav aria-label="Book"><a href="../index.html#essays">Essays</a><a href="../about.html">About</a></nav></header>
 <main id="main"><p class="kicker">Essay 7 · Practice</p><article><h1>Query grammar worksheet</h1>
-<p>Start with the <a href="../essays/07-query-grammar.html">essay</a> and <a href="https://github.com/AnthonyKot/book21/tree/main/labs/07-query-grammar">local lab</a>. Work only on synthetic fixtures or your assigned Academy instances. Reserve 10–12 hours inside the 10–15-hour week; these are planning allowances, not measured learner times.</p>
+<p>Start with the <a href="../essays/07-query-grammar.html">essay</a> and <a href="https://github.com/AnthonyKot/book21/tree/main/labs/07-query-grammar">local lab</a>. Work only on synthetic fixtures or your assigned Academy instances. Save your attempt before opening the review guide, which holds the hints.</p>
+<h2>Time plan</h2>
+<p>Provisional; no learner has reported actual times.</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Table; scroll horizontally on small screens"><table>
+<thead>
+<tr>
+<th>Part</th>
+<th>Work</th>
+<th>Estimate</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Setup</td>
+<td>Guided lab already built; reread the essay</td>
+<td>0.25–0.5 h</td>
+</tr>
+<tr>
+<td>A — guided</td>
+<td>Assembled-SQL trace, recorded results, four explanations</td>
+<td>1–2 h</td>
+</tr>
+<tr>
+<td>B — independent</td>
+<td>The sort contract below, with your own regression</td>
+<td>2–3.5 h</td>
+</tr>
+<tr>
+<td>Delayed check</td>
+<td>Two to four days later, without notes</td>
+<td>0.5 h</td>
+</tr>
+<tr>
+<td>Required total</td>
+<td></td>
+<td>3.75–6.5 h of a 10-hour week</td>
+</tr>
+<tr>
+<td>C — optional</td>
+<td>Two named Academy labs</td>
+<td>2–3 h</td>
+</tr>
+</tbody></table>
+</div><p>Stop rules: if the lab fails to build for more than an hour, record the blocker and move on. If after about two hours of Part B the expression case still reaches the database, open Hint 1 in the review guide and record it as assistance.</p>
 <p>Before running the attack, write the complete SQL after the title is concatenated. Mark the opening and closing string quotes, the tenant parameter, the new Boolean operator and the comment. Explain whether the tenant check was removed or whether its effect was changed.</p>
 <p>Record the returned IDs and HTTP status for ordinary Office, O&#39;Brien and both attack titles, before and after binding. The actual SQL result matters more than seeing a database error. Preserve the failing negative-control summary as well as the passing suite. The test harness prints only synthetic paths and response bodies.</p>
 <p>Explain these distinctions in your own words:</p>
@@ -52,30 +94,27 @@
 </tbody></table>
 </div><p>Spring&#39;s <code>@RequestParam(defaultValue=&quot;id&quot;)</code> applies to absent and empty values, so <code>sort=</code> uses the default rather than becoming a rejected key. <a href="https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/bind/annotation/RequestParam.html">Spring RequestParam contract</a></p>
 <p>All results must remain Cedar-only. Valid choices are ascending and use ID as the final tie-breaker. The supplied data has distinct titles and amounts, so the existing cases do not verify ties.</p>
-<p>First run <code>mvn -Dtest=SortRepairExercise test</code>. Expect four passes and two failures. The expression currently executes; the unknown column currently becomes a database error. They must instead be rejected as invalid input.</p>
-<p>Choose where invalid input becomes HTTP 400. You can validate at the web boundary with <code>ResponseStatusException(HttpStatus.BAD_REQUEST)</code>, or throw a specific invalid-sort exception from the repository and map it to 400 in the controller. A plain unchecked exception is not automatically a client-error response. Keep this translation explicit.</p>
-<p>Repair the code and run <code>mvn &#39;-Dtest=*Test,SortRepairExercise&#39; test</code>. Do not “repair” it by always sorting by ID, removing the tenant predicate, or treating the requested column name as a bound string value. The legitimate-order assertions should catch a change that stops honoring the feature.</p>
-<p>Add one independent regression: an unapproved expression with another shape, a whitespace/case policy check, or tied values requiring the ID tie-breaker. State its expected behavior first and show its meaningful failure on the original or deliberately regressed implementation. If adding rows, isolate that fixture so you do not silently change the other tests&#39; expectations.</p>
-<details><summary>Hint 1 — classify the input</summary>
-
-<p>A title is a comparison value. A sort key chooses query structure. Trace whether the caller&#39;s actual characters need to enter the SQL text at all.</p>
-</details>
-<details><summary>Hint 2 — separate the public key from SQL</summary>
-
-<p>Use a finite mapping or switch whose outputs are fixed column expressions written by the application. Reject the unmatched case before calling the database. Continue binding the tenant.</p>
-</details>
-<details><summary>Hint 3 — inspect both outcomes</summary>
-
-<p>Check 400 for unsupported choices and the exact ID order for valid choices. Empty or unordered results do not preserve the feature. A SQL error is not the intended validation response.</p>
-</details>
-
-<h2>Independent transfer</h2>
+<p>Before changing code, call <code>/api/sorted</code> with an unknown key and with an expression such as <code>amount DESC</code>, and record what the service and the database each do now. Then decide how the contract is enforced and where an invalid request becomes a client error, and make the guided suite still pass.</p>
+<p>Deliverables: your repair; a one-paragraph explanation of where the rejection happens and why there; one independent regression for something the contract promises but the supplied data cannot show, or an input the contract forbids that nobody has tried yet — state its expected behaviour first and show its meaningful failure against the original or a deliberately regressed implementation; and a line on what the fixture cannot verify. If you add rows, isolate that fixture so the other tests&#39; expectations do not change.</p>
+<p>A post-attempt check, <code>SortContractCheck</code>, encodes the contract&#39;s observable outcomes and is excluded from the default <code>mvn test</code>. Leave it closed until your attempt and regression are saved, then run:</p>
+<pre><code class="language-sh">mvn -DreviewCheck=true -Dtest=SortContractCheck test
+</code></pre>
+<p>It accepts any design that meets the contract; it does not grade your explanation or your regression.</p>
+<h2>Independent transfer (optional)</h2>
 <p>Attempt the following PortSwigger Academy labs without opening their solutions first:</p>
 <ul>
 <li><a href="https://portswigger.net/web-security/sql-injection/lab-retrieve-hidden-data">SQL injection vulnerability in WHERE clause allowing retrieval of hidden data</a>.</li>
 <li><a href="https://portswigger.net/web-security/sql-injection/lab-login-bypass">SQL injection vulnerability allowing login bypass</a>.</li>
 </ul>
 <p>Explain the condition whose meaning changed in each. Use only the assigned training instance. These assignments were inspected while authoring; no completion by the reader is claimed. Record hints, walkthroughs and AI use as assistance; retry a changed case later when necessary.</p>
-<p>Keep the evidence pack small: versions, original query, reproduction, patch, allowed/denied behavior, negative control, time spent and remaining scope. For employment, write a focused patch explanation. For consulting, add the assessed endpoint scope and retest limits. Do not call this a complete application assessment.</p>
+<h2>Your evidence</h2>
+<ul>
+<li>Date and time spent on A, B and C:</li>
+<li>Hints opened (which, when and why):</li>
+<li>Where the rejection happens and the alternative you did not choose:</li>
+<li>Your regression, and what it failed against:</li>
+<li>Delayed check (two to four days later, without notes): from memory, say why a bound value cannot select a column; compare with your saved explanation.</li>
+<li>Next unanswered question:</li>
+</ul>
 <p>Compare with the <a href="07-query-review.html">review guide</a> after your attempt.</p>
 </article><div class="practice-actions"><button onclick="window.print()">Print this page</button><a href="../essays/07-query-grammar.html">Return to essay 7</a><a href="07-query-review.html">Review after your attempt →</a></div></main><footer><span>Book 21 · Learn, practise, verify.</span><a href="https://github.com/AnthonyKot/book21">Source on GitHub</a></footer></body></html>

@@ -162,13 +162,13 @@ This distinction connects back to the export worker. Preserving an old valid tok
 
 ## Practice: keep recovery credentials out of the API
 
-Use the [worksheet](../practice/05-token-worksheet.md). Keep audience checking enabled. Add a `PurposeRepairTest` class extending `TokenHttp`, configured like `AudienceRepairTest`. Write tests showing that `reset` and `no-purpose` tokens are refused by the invoice API, while `valid` still works and every existing repair test remains intact. First observe the new assertions fail because the API accepts those tokens, then implement the purpose rule in the validation path.
+Use the [worksheet](../practice/05-token-worksheet.md). Keep audience checking enabled. Write your own tests, in a new class extending `TokenHttp`, showing that `reset` and `no-purpose` tokens are refused by the invoice API while `valid` still works and every existing repair test remains intact. Observe your assertions fail against the current API first. Then decide the rule the acceptance profile needs, including what an absent value means, and enforce it without weakening any existing check.
 
 Write a separate recovery review: trace a reset credential to the account it may change, its permitted effect and its consumption record. Specify the outcomes for Alice's token paired with Bob's username, a second use, two simultaneous uses, and ordinary API use. This part is a design artifact; no recovery endpoint exists in the lab.
 
 Then attempt two independent Academy labs: [JWT authentication bypass via unverified signature](https://portswigger.net/web-security/jwt/lab-jwt-authentication-bypass-via-unverified-signature) and [Password reset broken logic](https://portswigger.net/web-security/authentication/other-mechanisms/lab-password-reset-broken-logic). The first tests a more basic missing boundary than our audience case; the second changes the credential format and workflow. Record hints or solution use as assistance.
 
-If stuck, compare the claims of `valid` and `reset`. Next locate the list of validators, not the invoice controller. For the recovery review, underline which value determines the account being changed. Try the work before opening the [review notes](../practice/05-token-review.md).
+Save your attempt before opening the [review notes](../practice/05-token-review.md), which hold the hints for both parts.
 
 Completion means your evidence distinguishes an acceptable API credential from a recovery credential, preserves legitimate reads, and explains which recovery guarantees you have specified but not implemented.
 

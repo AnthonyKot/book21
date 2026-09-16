@@ -1,5 +1,22 @@
 # Essay 5 — review after attempting the worksheet
 
+Open this only after saving your worksheet. The hints below help without giving the answer; everything after the stop line is the worked answer.
+
+## Hints, in order
+
+Record each hint you open and when.
+
+**Hint 1 — compare the fixtures.** Fetch `valid` and `reset` from `/lab/tokens/` and decode their claims. One signed field differs. Ask which of the existing validators looks at it.
+
+**Hint 2 — the profile is a list.** The API's acceptance rule is the list of validators in `SecurityConfig`, not the invoice controller. A rule that lives in one controller method protects one endpoint.
+
+**Hint 3 — decide what absent means before coding.** Write down the two ways to express the rule (name what is acceptable, or name what is forbidden) and check each against the `no-purpose` fixture.
+
+**Hint 4 — recovery review.** Underline the value in the fragment that decides which account changes, and ask what authenticated it.
+
+**Stop here if you are still attempting.** Everything below is the worked answer.
+
+
 The programming task adds one condition to token acceptance. The recovery task asks you to specify a different operation; a passing API suite does not establish a working password-reset system.
 
 ## The API must distinguish the purpose
@@ -7,6 +24,8 @@ The programming task adds one condition to token acceptance. The recovery task a
 Before repair, both `reset` and `no-purpose` should reach the invoice endpoint as Alice and return Cedar's data. Your new assertions should fail because they expected refusal. A compilation error, stale token signed before restart or server startup failure does not demonstrate the missing purpose check.
 
 A sound repair requires `token_use=api-access` alongside the existing validators. It handles a missing value as refusal. It does not substitute a purpose-only validator for issuer, audience or timestamp validation, and it does not defer the check to one invoice controller method.
+
+Designs that look finished. A rule that only *forbids* `password-reset` names the tokens you thought of, not the ones you accept, so on its own it says nothing about a token with no purpose at all. Executed: written as a `JwtClaimValidator` predicate, that deny-list still refused the `no-purpose` fixture (2 of 2 tests pass) — because `JwtClaimValidator` in Spring Security 7.1.1 fails an absent claim before consulting your predicate, which is worth knowing and worth not relying on unknowingly. A hand-written check that reads the claim and returns success when it is null would accept the missing-purpose token; state which behaviour your rule has and why. By inspection: a check placed in the invoice controller would pass these tests and leave every other endpoint unprotected; a validator that replaces the default list instead of adding to it would pass the purpose tests and silently drop issuer and timestamp checks.
 
 The reference solution adds a null-safe claim validator to the existing list. Its two new tests were run before the repair and failed with actual 200 responses, then the full suite was run after the repair. The code remains unpublished so the worksheet still requires an implementation decision. Exact results are recorded in the author's evidence rather than treated as proof of your solution.
 

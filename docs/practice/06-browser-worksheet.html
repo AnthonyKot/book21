@@ -6,7 +6,49 @@
 <link rel="stylesheet" href="../assets/style.css"></head>
 <body><a class="skip" href="#main">Skip to content</a><header class="site-header"><a href="../index.html">Security Is an Engineering Job</a><nav aria-label="Book"><a href="../index.html#essays">Essays</a><a href="../about.html">About</a></nav></header>
 <main id="main"><p class="kicker">Essay 6 · Practice</p><article><h1>Browser authority worksheet</h1>
-<p>Work only against the synthetic <a href="https://github.com/AnthonyKot/book21/tree/main/labs/06-browser-authority">essay 6 lab</a> and your assigned Academy instances. Start with the <a href="../essays/06-browser-authority.html">essay</a>. Reserve 10–12 hours within your 10–15-hour study week; carry work forward if setup takes longer. These are planning allowances, not measured learner completion times.</p>
+<p>Work only against the synthetic <a href="https://github.com/AnthonyKot/book21/tree/main/labs/06-browser-authority">essay 6 lab</a> and your assigned Academy instances. Start with the <a href="../essays/06-browser-authority.html">essay</a>. Save your attempt before opening the review guide, which holds the hints.</p>
+<h2>Time plan</h2>
+<p>Provisional; no learner has reported actual times. Browser setup is the largest first-time cost and is reused by nothing later in the series.</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Table; scroll horizontally on small screens"><table>
+<thead>
+<tr>
+<th>Part</th>
+<th>Work</th>
+<th>Estimate</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Setup</td>
+<td>Maven, Node, Playwright Chromium (first time only)</td>
+<td>0.5–1.5 h</td>
+</tr>
+<tr>
+<td>A — guided</td>
+<td>Predictions, three modes reproduced, trace kept</td>
+<td>2–3 h</td>
+</tr>
+<tr>
+<td>B — independent</td>
+<td>The summary title task below</td>
+<td>2–3.5 h</td>
+</tr>
+<tr>
+<td>Delayed check</td>
+<td>Two to four days later, without notes</td>
+<td>0.5 h</td>
+</tr>
+<tr>
+<td>Required total</td>
+<td></td>
+<td>5–8.5 h of a 10-hour week</td>
+</tr>
+<tr>
+<td>C — optional</td>
+<td>Two named Academy labs</td>
+<td>2–4 h</td>
+</tr>
+</tbody></table>
+</div><p>Stop rules: if Playwright or its system libraries are not working after about an hour, record the blocker, finish the Java part and carry the browser part over. If after about two hours of Part B the executable-title check still fails, open Hint 1 in the review guide and record it as assistance.</p>
 <p>Before executing, predict these separately for a form POST, a form-shaped credentialed fetch and a JSON/custom-header fetch from port 8084:</p>
 <div class="table-scroll" tabindex="0" role="region" aria-label="Table; scroll horizontally on small screens"><table>
 <thead>
@@ -49,26 +91,21 @@
 <li>Explain what the fix does not establish about rich HTML, URLs, another page or another browser engine.</li>
 </ol>
 <p>Keep a short evidence record: date, versions, time spent, reproduction, patch, allowed/denied outcomes, help used and remaining uncertainty. AI-written code and supplied checks are assisted evidence. Neither reading this worksheet nor passing its tests establishes independent mastery.</p>
-<details><summary>Hint 1 — find the interpretation</summary>
-
-<p>Trace <code>title</code> from <code>location.search</code> into the DOM assignment. Determine which operation treats the combined string as markup.</p>
-</details>
-<details><summary>Hint 2 — preserve structure separately</summary>
-
-<p>Create the required formatting element as structure. Insert the untrusted title through a text-only operation. Avoid concatenating it into the HTML string.</p>
-</details>
-<details><summary>Hint 3 — inspect the resulting DOM</summary>
-
-<p>Check the title element&#39;s exact text, its children and the server-side approval flag. Absence of an alert is weak evidence. The negative control should fail because a security property is violated, not because the server failed to start.</p>
-</details>
-
-<h2>Independent transfer</h2>
+<p>Deliverables: the source-to-sink trace in one or two sentences; your patch; the practice checks passing; your own added test with its failure against the original renderer; and the scope statement from step 5.</p>
+<h2>Independent transfer (optional)</h2>
 <p>Attempt these without a solution tab first:</p>
 <ul>
 <li><a href="https://portswigger.net/web-security/csrf/lab-no-defenses">CSRF vulnerability with no defenses</a>: describe the source of the victim&#39;s request authority and the evidence needed by a repaired action.</li>
 <li><a href="https://portswigger.net/web-security/cross-site-scripting/dom-based/lab-document-write-sink">DOM XSS in document.write sink using source location.search</a>: find the changed sink; explain why the local <code>textContent</code> repair cannot simply be assumed to exist there.</li>
 </ul>
 <p>Use the authorized Academy lab environment only. Lab pages were checked while authoring; completion by the reader has not been reported. If you use hints, walkthroughs or AI, label that attempt assisted and retry a changed case later.</p>
-<p>Write a five-sentence handover. For employment, address the engineer reviewing your patch. For consulting, address the owner of a narrowly scoped assessment and include the retest and exclusions. Do not present a local fixture as a comprehensive product assessment.</p>
+<h2>Your evidence</h2>
+<ul>
+<li>Date and time spent on A, B and C:</li>
+<li>Hints opened (which, when and why):</li>
+<li>Your added test, and what it failed against:</li>
+<li>Delayed check (two to four days later, without notes): from memory, name the sink and the two things the repair had to preserve; compare with your saved answer.</li>
+<li>Next unanswered question:</li>
+</ul>
 <p>Then compare with the <a href="06-browser-review.html">review guide</a>.</p>
 </article><div class="practice-actions"><button onclick="window.print()">Print this page</button><a href="../essays/06-browser-authority.html">Return to essay 6</a><a href="06-browser-review.html">Review after your attempt →</a></div></main><footer><span>Book 21 · Learn, practise, verify.</span><a href="https://github.com/AnthonyKot/book21">Source on GitHub</a></footer></body></html>

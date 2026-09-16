@@ -53,7 +53,7 @@ class TokenFixtures {
                     : kind.equals("future") ? now.plusSeconds(900) : now.plusSeconds(300)));
         if (!kind.equals("no-purpose"))
             claims.claim("token_use", kind.equals("reset") ? "password-reset" : "api-access");
-        // The reset fixture deliberately has the document audience. Purpose checking is the exercise.
+        // The reset fixture deliberately carries the document audience (see essay 5).
         try {
             var token = new SignedJWT(new JWSHeader(JWSAlgorithm.RS256), claims.build());
             KeyPair key = kind.equals("wrong-key") ? otherKey : issuerKey;

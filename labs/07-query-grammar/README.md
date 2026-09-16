@@ -39,20 +39,14 @@ Expected: three failures (two injections and the apostrophe), eight passes, zero
 
 `GET /api/invoices/B-2001` denies Alice with 404. `GET /api/unscoped/B-2001` returns it despite using a bound ID: it is a deliberately faulty authorization counterexample in both modes. Do not treat `bind-title=true` as a secure mode for the entire project.
 
-`GET /api/sorted?sort=amount` binds the tenant but concatenates a sort expression. The practice contract permits exactly `id`, `title` and `amount`, ascending, with ID as the final tie-breaker. Missing or empty sort defaults to `id`; unknown keys and expressions must receive 400. Repair this path using a mapping from public keys to fixed SQL fragments. Keep the title repair and tenant predicate.
+`GET /api/sorted?sort=amount` is the practice endpoint. Its contract, stated in `practice/07-query-worksheet.md`, permits exactly `id`, `title` and `amount`, ascending, with ID as the final tie-breaker; missing or empty sort defaults to `id`; unknown keys and expressions must receive 400. Keep the title repair and tenant predicate. The review guide holds the hints and worked answer; read it after saving your attempt.
 
-The exercise checks are excluded from the normal `*Test` suite so the public starter remains runnable with its deliberate unfinished task. Run them explicitly:
-
-```sh
-mvn -Dtest=SortRepairExercise test
-```
-
-Initially four pass and two fail. After your repair, run:
+A post-attempt check is excluded from the default `mvn test` and gated behind a system property. Leave `SortContractCheck.java` closed until your attempt and your own regression are saved, then run:
 
 ```sh
-mvn '-Dtest=*Test,SortRepairExercise' test
+mvn -DreviewCheck=true -Dtest=SortContractCheck test
 ```
 
-The authoring reference passes all 28 cases. It remains private; no reader completion is implied. Add your own changed regression and demonstrate its failure on the original sort implementation.
+The authoring reference passes its six cases plus the 22 guided cases. It remains private; no reader completion is implied.
 
 The database user is a fixture bootstrap account, not a least-privilege production role. H2 reproduces this mechanism; it is not evidence about every SQL dialect, ORM or driver. No database console is exposed. Error bodies hide SQL details but do not prevent injection. The app retains default CSRF settings and exposes only GET handlers.

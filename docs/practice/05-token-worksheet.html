@@ -6,7 +6,49 @@
 <link rel="stylesheet" href="../assets/style.css"></head>
 <body><a class="skip" href="#main">Skip to content</a><header class="site-header"><a href="../index.html">Security Is an Engineering Job</a><nav aria-label="Book"><a href="../index.html#essays">Essays</a><a href="../about.html">About</a></nav></header>
 <main id="main"><p class="kicker">Essay 5 · Practice</p><article><h1>Essay 5 — token acceptance worksheet</h1>
-<p>Status: blank practice artifact. Record your attempt separately from the worked example. Start from <a href="https://github.com/AnthonyKot/book21/tree/main/labs/05-token-boundary">lab 5</a> with <code>lab.audience-check=true</code>.</p>
+<p>Status: blank practice artifact. Record your attempt separately from the worked example. Start from <a href="https://github.com/AnthonyKot/book21/tree/main/labs/05-token-boundary">lab 5</a> with <code>lab.audience-check=true</code>. Save your attempt before opening the review notes, which hold the hints.</p>
+<h2>Time plan</h2>
+<p>Provisional; no learner has reported actual times.</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Table; scroll horizontally on small screens"><table>
+<thead>
+<tr>
+<th>Part</th>
+<th>Work</th>
+<th>Estimate</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Setup</td>
+<td>Guided lab already built; reread the essay</td>
+<td>0.25–0.5 h</td>
+</tr>
+<tr>
+<td>A — API profile</td>
+<td>Predict, write your own failing tests, decide and implement the rule</td>
+<td>1.5–3 h</td>
+</tr>
+<tr>
+<td>B — recovery review</td>
+<td>Design review of the reset fragment</td>
+<td>1.5–2.5 h</td>
+</tr>
+<tr>
+<td>Delayed check</td>
+<td>Two to four days later, without notes</td>
+<td>0.5 h</td>
+</tr>
+<tr>
+<td>Required total</td>
+<td></td>
+<td>3.75–6.5 h of a 10-hour week</td>
+</tr>
+<tr>
+<td>C — optional</td>
+<td>Two named Academy labs</td>
+<td>2–3 h</td>
+</tr>
+</tbody></table>
+</div><p>Stop rules: if the lab fails to build for more than an hour, record the blocker and move on. Your new tests should fail against the unrepaired API; if after about two hours of Part A they do not (a setup problem), or your repair still does not make them pass, open Hint 1 in the review notes and record it as assistance.</p>
 <h2>Predict before changing code</h2>
 <p>Both <code>reset</code> and <code>no-purpose</code> have a valid signature, the expected issuer, the document audience, valid timestamps and Alice&#39;s subject. Only the purpose differs from <code>valid</code>.</p>
 <ul>
@@ -16,7 +58,7 @@
 </ul>
 <h2>Implement the API profile</h2>
 <p>Create <code>PurposeRepairTest</code> extending <code>TokenHttp</code>, with the same <code>@SpringBootTest</code> configuration as <code>AudienceRepairTest</code> (<code>lab.audience-check=true</code>). Put the two new rejection tests there. Existing valid and foreign-invoice checks already run in the original suites.</p>
-<p>For this exercise require the signed claim <code>token_use</code> to equal <code>api-access</code>. Reject missing or other values. Preserve issuer, signature, time, required-claim and audience checks. Do not change the existing reproduction or repair assertions to make the new tests pass.</p>
+<p>Decide the rule the API&#39;s acceptance profile needs so that a credential issued for one operation cannot be presented as a credential for another. Inspect the issued fixtures at <code>/lab/tokens/&lt;kind&gt;</code> to see what distinguishes them. State which values your rule accepts, what an absent value means, and why the obvious alternative is weaker. Preserve issuer, signature, time, required-claim and audience checks. Do not change the existing reproduction or repair assertions to make the new tests pass.</p>
 <div class="table-scroll" tabindex="0" role="region" aria-label="Table; scroll horizontally on small screens"><table>
 <thead>
 <tr>
@@ -59,7 +101,8 @@
 </tbody></table>
 </div><ul>
 <li>Which test failure demonstrates acceptance of the wrong token, rather than a setup problem:</li>
-<li>Where the purpose check is enforced:</li>
+<li>The rule you chose, the alternative you rejected, and what an absent value means under each:</li>
+<li>Where the rule is enforced, and why there rather than in the controller:</li>
 <li>How the issuer&#39;s matching token contract is documented:</li>
 </ul>
 <h2>Review the separate recovery path</h2>
