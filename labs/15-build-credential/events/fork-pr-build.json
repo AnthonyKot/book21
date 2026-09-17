@@ -1,0 +1,9 @@
+{
+  "event_name": "pull_request",
+  "repository": "doc-approval/service",
+  "head_repository": "mallory/service",
+  "from_fork": true,
+  "base_ref": "main",
+  "pull_request": {"number": 42, "title": "Add build telemetry"},
+  "contribution": "repo/contribution-build"
+}

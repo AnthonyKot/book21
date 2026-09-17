@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Release trust review · Book 21</title><meta name="description" content="Release trust review for essay 15.">
+<meta property="og:title" content="Release trust review"><meta property="og:description" content="Release trust review for essay 15.">
+<meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
+<link rel="stylesheet" href="../assets/style.css"></head>
+<body><a class="skip" href="#main">Skip to content</a><header class="site-header"><a href="../index.html">Security Is an Engineering Job</a><nav aria-label="Book"><a href="../index.html#essays">Essays</a><a href="../about.html">About</a></nav></header>
+<main id="main"><p class="kicker">Essay 15 · Practice</p><article><h1>Release trust review</h1>
+<p>Open this after saving your <a href="15-release-worksheet.html">worksheet</a> verifier, tests and note. Everything below counts as assistance once you have read it. If you are stuck partway, read only the next hint in section 2 and record that you did.</p>
+<h2>1. Judge the attempt before comparing designs</h2>
+<p>No single verifier is correct. A sound one shows the following.</p>
+<p><strong>Expectations come from the consumer.</strong> The builder key, builder id, repository, workflow, ref and event are configured on the consumer&#39;s side. A verifier that reads the builder id from the statement and then &quot;checks&quot; it against itself has checked nothing.</p>
+<p><strong>Signature before content.</strong> Every field in the statement is untrusted until the signature verifies with the configured key. A verifier that inspects fields first may still be correct, but only if nothing is accepted before the signature check passes.</p>
+<p><strong>Identity is the digest.</strong> The artifact is identified by its SHA-256 matching a subject digest, not by its file name. A renamed delivery of the same bytes is the same artifact.</p>
+<p><strong>Authority, not just authenticity.</strong> A valid signature from the trusted platform shows the platform made the statement. It does not show the build was a release. The same platform signs builds of pull requests, of other branches and of forks; the ref, event, repository and workflow path are what distinguish a release from a preview.</p>
+<p><strong>Over-rejection is a defect.</strong> An earlier release from <code>main</code> is still a genuine release. Provenance does not say whether a commit is the newest, and a verifier that demands the newest commit is enforcing something provenance cannot tell it.</p>
+<p><strong>Unrecognised parameters are a decision.</strong> SLSA&#39;s guidance is to reject unrecognised external parameters. A verifier may accept them if it says so; it should not ignore them silently.</p>
+<p><strong>The constructed rejection is real.</strong> The reader&#39;s own negative test produces a delivery the runner or an edit actually creates, and the reason the verifier prints is the reason the delivery is bad.</p>
+<p><strong>The limits note names a residual.</strong> Something specific remains unproven after acceptance: what the source commit contains, whether the merge was reviewed, whether the platform itself was compromised, whether the build&#39;s dependencies were what the script expected.</p>
+<p><strong>A handover someone could act on.</strong> It states what is verified, what is rejected, what is still trusted, and what changes if the producer moves.</p>
+<h2>2. Progressive hints, if you are stuck</h2>
+<ol>
+<li>Write the trust facts from the worksheet as a table with two columns, &quot;expected&quot; and &quot;where the verifier reads it from&quot;. Every row&#39;s second column must be something other than the provenance statement.</li>
+<li>Ask who else can obtain a signature from the same platform key. Run <code>ci.yml</code> on a fork&#39;s pull request: it cannot attest, but a pull request from a branch in the same repository, or a push to any other branch, can. Build one with the runner (a workflow copy with <code>id-token</code> and <code>attestations</code> write) and look at what its statement says about <code>ref</code> and <code>event</code>.</li>
+<li>Take a genuine delivery and change one thing at a time: a byte of the artifact, a byte of the statement, the signature, the file name. For each, say what a correct verifier must do and why.</li>
+</ol>
+<h2>3. What the check&#39;s deliveries contain</h2>
+<p>The post-attempt check builds nine deliveries at run time from the lab&#39;s runner and platform key.</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Table; scroll horizontally on small screens"><table>
+<thead>
+<tr>
+<th>Delivery</th>
+<th>Intended outcome</th>
+<th>What it exercises</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Release from <code>main</code>, unmodified</td>
+<td>Accept</td>
+<td>The baseline</td>
+</tr>
+<tr>
+<td>Artifact bytes appended after the build</td>
+<td>Reject</td>
+<td>Digest match</td>
+</tr>
+<tr>
+<td>Provenance re-signed with a key that is not the platform&#39;s</td>
+<td>Reject</td>
+<td>Signature against the configured key</td>
+</tr>
+<tr>
+<td>Preview build of an unmerged pull request from an in-repository branch, platform-signed</td>
+<td>Reject</td>
+<td>Authenticity is not authority: ref <code>refs/pull/57/merge</code>, event <code>pull_request</code></td>
+</tr>
+<tr>
+<td>That preview provenance edited to claim <code>refs/heads/main</code>, <code>push</code>, <code>release-v2.yml</code></td>
+<td>Reject</td>
+<td>Signature covers the statement; the edit breaks it</td>
+</tr>
+<tr>
+<td>Push to <code>refs/heads/experiment</code> by a second workflow, platform-signed</td>
+<td>Reject</td>
+<td>Ref and workflow path</td>
+</tr>
+<tr>
+<td>A fork&#39;s own <code>main</code>, same workflow file, same platform</td>
+<td>Reject</td>
+<td>Canonical repository</td>
+</tr>
+<tr>
+<td>Same bytes delivered as <code>service-1.4.tar.gz</code></td>
+<td>Accept</td>
+<td>Digest, not name</td>
+</tr>
+<tr>
+<td>An earlier release from <code>main</code></td>
+<td>Accept</td>
+<td>Provenance does not prove newest</td>
+</tr>
+</tbody></table>
+</div><h2>4. Verifiers that look finished</h2>
+<p>Each was run through the check. Counts are mismatches out of nine.</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Table; scroll horizontally on small screens"><table>
+<thead>
+<tr>
+<th>Verifier</th>
+<th>Mismatches</th>
+<th>What it gets wrong</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Signature and digest only</td>
+<td>3</td>
+<td>Accepts the preview, the experiment branch and the fork: all genuinely platform-signed</td>
+</tr>
+<tr>
+<td>Every field checked, signature not verified</td>
+<td>2</td>
+<td>Accepts the re-signed statement and the edited preview</td>
+</tr>
+<tr>
+<td>Signature, digest and repository; no ref, event or workflow</td>
+<td>2</td>
+<td>Accepts the preview and the experiment branch</td>
+</tr>
+<tr>
+<td>Full checks, but requires the file name to match the subject name</td>
+<td>1</td>
+<td>Rejects the renamed delivery of the same bytes</td>
+</tr>
+<tr>
+<td>Reference design (section 5)</td>
+<td>0</td>
+<td></td>
+</tr>
+</tbody></table>
+</div><p>The first row is the common shape of a first attempt: it treats &quot;signed by the platform&quot; as &quot;a release&quot;. The last row is not wrong about security; it is wrong about identity.</p>
+<h2>5. Reference evidence</h2>
+<p>Recorded while authoring. None of it is evidence of your attempt.</p>
+<ul>
+<li>Guided tests against <code>release-v2.yml</code>: 10 pass (3 vulnerable-workflow cases, 7 repair cases).</li>
+<li>Negative control, repair tests against <code>release-v1.yml</code>: 3 fail (release triggers on pull requests; token persisted in the build checkout; no provenance), 7 pass.</li>
+<li>Trace matrix: 3 workflows × 5 events; the release token appears in an outbound request to a non-registry path only under <code>release-v1.yml</code> with the telemetry pull request.</li>
+<li>Private reference verifier: signature with the configured key, predicate type, builder id, subject digest, build type, recognised external parameters only, repository, workflow path, ref, event, source commit present. 0 mismatches. The four incomplete variants above were derived from it by removing one check each.</li>
+</ul>
+<h2>6. Limits</h2>
+<p>The runner is a model of documented rules, not the service; the documentation pages and their read dates are in the lab README, and the rules can change. Dummy credentials were used throughout; nothing was sent to GitHub, and no real secret was exposed. The check judges accept and reject on nine deliveries; it cannot judge the policy text, the reader&#39;s tests or the limits note, and a verifier can pass it while reading its expectations from the wrong place. Provenance in the lab is signed with a local key; real attestations use Sigstore and an OIDC identity, whose verification adds certificate and transparency-log checks this lab does not model. Nothing here establishes that the artifact&#39;s source is safe, that the merge was reviewed, or that the platform was not compromised.</p>
+</article><div class="practice-actions"><button onclick="window.print()">Print this page</button><a href="../essays/15-build-credential.html">Return to essay 15</a><a href="15-release-worksheet.html">Back to worksheet</a></div></main><footer><span>Book 21 · Learn, practise, verify.</span><a href="https://github.com/AnthonyKot/book21">Source on GitHub</a></footer></body></html>

@@ -1,0 +1,29 @@
+name: release
+# Version 1. Builds and publishes a preview for every pull request so reviewers can try it,
+# and publishes the release when main changes.
+on:
+  pull_request_target:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+env:
+  RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Build the contributor's commit, not the base branch.
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - run: bash scripts/build.sh
+      - name: publish
+        run: |
+          curl -sS -X POST "$LAB_REGISTRY_URL/upload" \
+            -H "Authorization: Bearer $RELEASE_TOKEN" \
+            --data-binary @dist/app.tar.gz

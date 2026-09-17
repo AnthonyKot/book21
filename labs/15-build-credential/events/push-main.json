@@ -1,0 +1,7 @@
+{
+  "event_name": "push",
+  "repository": "doc-approval/service",
+  "ref": "refs/heads/main",
+  "base_tree": "repo/base",
+  "contribution": "repo/contribution-feature"
+}

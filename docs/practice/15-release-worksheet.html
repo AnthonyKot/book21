@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Release trust worksheet · Book 21</title><meta name="description" content="Release trust worksheet for essay 15.">
+<meta property="og:title" content="Release trust worksheet"><meta property="og:description" content="Release trust worksheet for essay 15.">
+<meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
+<link rel="stylesheet" href="../assets/style.css"></head>
+<body><a class="skip" href="#main">Skip to content</a><header class="site-header"><a href="../index.html">Security Is an Engineering Job</a><nav aria-label="Book"><a href="../index.html#essays">Essays</a><a href="../about.html">About</a></nav></header>
+<main id="main"><p class="kicker">Essay 15 · Practice</p><article><h1>Release trust worksheet</h1>
+<p>Use with <a href="../essays/15-build-credential.html">essay 15</a> and the <a href="https://github.com/AnthonyKot/book21/tree/main/labs/15-build-credential">companion lab</a>. Save your part B verifier, tests and note before opening <code>consumer_check.py</code> or the <a href="15-release-review.html">review guide</a>. The GitHub and SLSA pages linked from the essay are the only outside reading you need.</p>
+<h2>Plan the week</h2>
+<p>These are authoring estimates derived from the steps below, not measured learner times. Record your actual time.</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Table; scroll horizontally on small screens"><table>
+<thead>
+<tr>
+<th>Part</th>
+<th>What it involves</th>
+<th>Provisional estimate</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Setup</td>
+<td>Python 3.12, PyYAML, openssl, curl; no network, Docker or account</td>
+<td>0.25–0.5 hour</td>
+</tr>
+<tr>
+<td>Guided</td>
+<td>Read the essay and the four documentation pages, run the trace matrix and the guided tests, part A</td>
+<td>1.5–2.5 hours</td>
+</tr>
+<tr>
+<td>Independent</td>
+<td>Part B: policy, verifier, own tests with a constructed rejection, note on limits, then the post-attempt check</td>
+<td>3–5 hours</td>
+</tr>
+<tr>
+<td>Delayed check</td>
+<td>The final evidence-record question, about a week later</td>
+<td>0.5 hour</td>
+</tr>
+<tr>
+<td>Optional</td>
+<td>Part C, reading a real workflow you are permitted to inspect</td>
+<td>1–2 hours, later week</td>
+</tr>
+</tbody></table>
+</div><p>The required parts total about 5.25–8.5 hours. Keep the week bounded:</p>
+<ul>
+<li>If setup or a tool fails for more than an hour, record what failed and answer part A from the transcript quoted in the essay and the documentation pages; the guided questions do not need a working runner.</li>
+<li>If you have spent about three hours on part B without a verifier that accepts the lab&#39;s own release, save what you have, open only the first hint in the review guide, mark it as assistance, or carry the work into next week.</li>
+<li>Leave part C for a later week unless the required parts finished early.</li>
+</ul>
+<p>Start of attempt:</p>
+<ul>
+<li>Date and repository revision:</li>
+<li>Material already seen (hints, AI assistance, the check file):</li>
+</ul>
+<h2>A. Guided: trace the change</h2>
+<p>Run the vulnerable and repaired workflows against the lab&#39;s events as the README shows, then answer from the transcripts and the documentation, not from the essay&#39;s summary.</p>
+<ol>
+<li>For the telemetry pull request under <code>release-v1.yml</code>, list each credential that reached the contributor&#39;s script and the line of the workflow that made it available. Which of those lines would a code reviewer of the <em>pull request</em> ever see?</li>
+<li>The same pull request under <code>ci.yml</code> still runs the contributor&#39;s script. Name the two documented rules that make that acceptable, and one thing the script can still do.</li>
+<li>Version 2 checks out with <code>persist-credentials: false</code> in the build job. What does that remove, and why is it not sufficient on its own?</li>
+<li>Run the negative control (the repair tests against <code>release-v1.yml</code>). Which tests fail, and does each failure correspond to a real difference in authority or only to a difference in workflow layout?</li>
+</ol>
+<h2>B. Independent: the trusted consumer</h2>
+<h3>The brief</h3>
+<p>A deployment system you operate receives, from a producer you do not control, an artifact and a provenance statement signed by the build platform. You must decide whether to deploy it.</p>
+<p><strong>Trust facts.</strong> These are the deployment&#39;s policy inputs; they are stated here so that the task is designing the check, not guessing the expectations.</p>
+<ul>
+<li>The only builder you trust is the lab platform, identified by the public key <code>platform/builder.pub</code> and the builder id <code>https://lab.local/platform/hosted-runner</code>.</li>
+<li>A real release is one the release workflow <code>release-v2.yml</code> of the canonical repository <code>doc-approval/service</code> built from a commit on <code>refs/heads/main</code> in response to a <code>push</code>.</li>
+<li>The artifact you deploy must be the bytes that build produced.</li>
+</ul>
+<p><strong>Requirements.</strong></p>
+<ol>
+<li>Implement <code>consumer/verify.py</code> under the command-line contract in the starter file: exit 0 to accept, 1 to reject, first output line <code>ACCEPT: …</code> or <code>REJECT: …</code>. The signature helper in <code>attest.py</code> is available; the policy is yours.</li>
+<li>Decide, and write down before coding, what a delivery must establish and from which source each expected value comes. A value the provenance asserts about itself is not an expectation.</li>
+<li>Accept every genuine release. Rejecting a good delivery is a defect, not caution.</li>
+<li>Write your own tests. At least one must be a delivery you construct and expect to be rejected, produced with the lab&#39;s runner or by editing a genuine delivery, with the reason your verifier gives.</li>
+<li>Write a note on what an accepted delivery still does not establish.</li>
+</ol>
+<h3>Deliverable 1: policy</h3>
+<ul>
+<li>What the verifier checks, in order, and what each check rules out:</li>
+<li>Where each expected value lives, and who can change it:</li>
+<li>What the verifier does with a field it does not recognise:</li>
+</ul>
+<h3>Deliverable 2: verifier and tests</h3>
+<p>Save <code>consumer/verify.py</code>, your test file, and the output of your tests including the constructed rejection.</p>
+<h3>Deliverable 3: the post-attempt check</h3>
+<p>After deliverables 1 and 2 are saved, run <code>python3 consumer_check.py</code>. Record the result. For each mismatch, say whether the check exposed a missing check, an over-strict one, or a disagreement with the stated trust facts that you can defend.</p>
+<h3>Limits</h3>
+<ul>
+<li>One thing a correctly signed, fully verified release does not tell you:</li>
+<li>One thing your verifier would need that this lab&#39;s provenance does not carry:</li>
+</ul>
+<h2>C. Optional: a real workflow</h2>
+<p>Read a workflow you are permitted to inspect. For each job, write which event starts it, which tree it checks out, which secrets and token scopes it holds, and whether it executes code from the checked-out tree. Do not change the workflow or run anything against a repository you do not own. Record only the authority table.</p>
+<h2>Handover</h2>
+<p>Write a short note for the team that owns the deployment: what the consumer now verifies, what it rejects, what it still trusts without evidence, and what would have to change if the producer moved to a different platform or repository. For a consulting client, add what you could and could not verify about their pipeline from the outside, and the retest that would confirm the boundary holds.</p>
+<h2>Evidence record</h2>
+<ul>
+<li>Actual time per part:</li>
+<li>Assistance used, including hints, AI suggestions and any look at the check or the review guide before your attempt was saved:</li>
+<li>What you could now explain without notes:</li>
+<li>Delayed check, a week later: without reopening your code, describe one delivery your verifier would wrongly accept if the platform&#39;s signing key were stolen, and one it would still reject.</li>
+</ul>
+</article><div class="practice-actions"><button onclick="window.print()">Print this page</button><a href="../essays/15-build-credential.html">Return to essay 15</a><a href="15-release-review.html">Review after your attempt →</a></div></main><footer><span>Book 21 · Learn, practise, verify.</span><a href="https://github.com/AnthonyKot/book21">Source on GitHub</a></footer></body></html>

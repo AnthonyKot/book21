@@ -1,0 +1,9 @@
+{
+  "event_name": "pull_request",
+  "repository": "doc-approval/service",
+  "head_repository": "casey/service",
+  "from_fork": true,
+  "base_ref": "main",
+  "pull_request": {"number": 41, "title": "Allow authors to withdraw a submitted document"},
+  "contribution": "repo/contribution-feature"
+}
