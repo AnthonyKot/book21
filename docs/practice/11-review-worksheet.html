@@ -6,7 +6,7 @@
 <link rel="stylesheet" href="../assets/style.css"></head>
 <body><a class="skip" href="#main">Skip to content</a><header class="site-header"><a href="../index.html">Security Is an Engineering Job</a><nav aria-label="Book"><a href="../index.html#essays">Essays</a><a href="../about.html">About</a></nav></header>
 <main id="main"><p class="kicker">Essay 11 · Practice</p><article><h1>Security review worksheet</h1>
-<p>Use with <a href="../essays/11-security-property.html">essay 11</a> and the <a href="https://github.com/AnthonyKot/book21/tree/main/labs/11-security-property">lab</a>. Save your attempt before opening the <a href="11-review-guide.html">review guide</a> or the lab&#39;s <code>ReleaseReviewCheck</code> (leave it closed in your IDE&#39;s project tree too; it skips itself unless <code>-DreviewCheck=true</code> is set). Work only with the lab&#39;s synthetic users and documents.</p>
+<p>Use with <a href="../essays/11-security-property.html">essay 11</a> and the <a href="https://github.com/AnthonyKot/book21/tree/main/labs/11-security-property">lab</a>. Save your attempt before opening the <a href="11-review-guide.html">review guide</a> or the lab&#39;s <code>ReleaseReviewCheck</code> (leave it closed in your IDE&#39;s project tree too; it skips itself unless <code>-DreviewCheck=true</code> is set). Use command-line <code>mvn test</code> during the attempt and avoid expanding the post-attempt class in an IDE test explorer, which may expose its scenario names. Work only with the lab&#39;s synthetic users and documents.</p>
 <h2>Plan the week</h2>
 <p>These are authoring estimates derived from the steps below, not measured learner times. Record your actual time.</p>
 <div class="table-scroll" tabindex="0" role="region" aria-label="Table; scroll horizontally on small screens"><table>
@@ -29,7 +29,7 @@
 </tr>
 <tr>
 <td>Independent review</td>
-<td>Part B: read the release 2 packet, inventory, reproduction, review comment, any fix, your own tests</td>
+<td>Part B: read the release 2 packet, inventory, reproduction, defended review comment, any fix, your own tests</td>
 <td>3.5–6 hours</td>
 </tr>
 <tr>
@@ -55,7 +55,7 @@
 <li>Material already seen (walkthrough, hints, AI assistance):</li>
 </ul>
 <h2>A. Guided review: release 1</h2>
-<p>Before reading the essay walkthrough, read <code>review/release-1-BRIEF.md</code> and its diff. Write the property in one sentence without naming the fix, and list every branch that can return a summary. Then run the lab.</p>
+<p>Before reading the essay walkthrough, read <code>review/release-1-BRIEF.md</code> and its diff. Write the property in one sentence without naming the fix, and list every branch that can return a summary. Then run the lab. If you have already read the walkthrough, record that as assistance and use this part to rehearse the method.</p>
 <div class="table-scroll" tabindex="0" role="region" aria-label="Table; scroll horizontally on small screens"><table>
 <thead>
 <tr>
@@ -100,6 +100,7 @@
 <li>The two cold-cache tests pass against the flawed candidate. What exactly do they establish?</li>
 <li>Why does the body-load counter support the explanation without being the decisive evidence?</li>
 <li>Run the negative control from the README. Which cases fail, and why do the cold denials stay green?</li>
+<li>Write three separate sentences: an observed violation, the behavior a named test establishes, and a remaining uncertainty. Which would justify requesting changes, and which needs more evidence?</li>
 </ol>
 <h2>B. Independent review: release 2</h2>
 <h3>The brief</h3>
@@ -110,6 +111,7 @@
 <li>Archiving a document withdraws access to its full content from that moment, whichever operation delivers the content. The summary stays visible to the owning tenant.</li>
 <li>Both rules hold whether the application cache is empty or populated.</li>
 </ol>
+<p>Assess sequential requests, with each state change completed before the next request. Cancellation of a response already authorized before a concurrent archive is outside this task.</p>
 <p><strong>Behaviour to preserve.</strong></p>
 <ul>
 <li>An owner&#39;s repeated preview is served from the cache without another body load, including after the document is archived.</li>
@@ -118,17 +120,18 @@
 <li>Unknown documents and unknown export links return 404, with no private content in the body.</li>
 </ul>
 <p><strong>Constraints.</strong> Keep the cache and the export feature. Do not change <code>Tenants</code>, the fixture endpoints or the guided tests. Any design is acceptable if it satisfies the property and preserves the behaviour above.</p>
+<p>Use one review note for the five deliverables below; link to your traces and tests rather than repeating them. Before running additional tests, save your initial scope and one candidate-summary claim you intend to challenge. Predict an allowed case and a denied case from the property, with your reasons. You may revise those predictions; preserve the original.</p>
 <h3>Deliverable 1: path inventory</h3>
-<p>List every operation that can return a summary or full content. Base each verdict on observation or inspected code, not on the change summary.</p>
+<p>List every operation that can return a summary or full content. Base each verdict on observation or inspected code, not on the change summary. Include earlier operations that establish a later response&#39;s authority even if they return no document bytes. Mark each conclusion <strong>violation observed</strong>, <strong>supported within tested scope</strong>, or <strong>unresolved</strong>; use <strong>not applicable</strong> where a rule does not govern that effect. An inspected branch and an executed case are different evidence—label which you have. For an operation using the cache, distinguish its hit and miss paths in separate rows or within the same row; add rows as needed. For an operation establishing authority, trace the record it creates and its source of decision inputs.</p>
 <div class="table-scroll" tabindex="0" role="region" aria-label="Table; scroll horizontally on small screens"><table>
 <thead>
 <tr>
 <th>Operation</th>
-<th>Where the returned data comes from (cache, repository, other)</th>
+<th>Source of returned data or authority record</th>
 <th>What enforces property 1 on that source</th>
 <th>What enforces property 2 on that source</th>
-<th>Evidence</th>
-<th>Holds?</th>
+<th>Evidence and untested assumptions</th>
+<th>Conclusion</th>
 </tr>
 </thead>
 <tbody><tr>
@@ -158,8 +161,10 @@
 </tbody></table>
 </div><h3>Deliverable 2: reproduction</h3>
 <p>For any violation, give the shortest request sequence that shows it, with the observed status and body and the cache state (warm or cold). For each operation you judge correct, give the observation that supports that verdict, including the cache state you tested.</p>
-<h3>Deliverable 3: review comment</h3>
-<p>Write the comment you would leave on the pull request: approve, or request changes. Separate what the candidate gets right from any unsupported claim in its summary. If you request changes, give the author a reproducible sequence and the behaviour a fix must preserve. If you approve, state the evidence that each operation satisfies the property.</p>
+<h3>Deliverable 3: review comment and defense</h3>
+<p>Write the comment you would leave on the pull request: approve within a stated scope, request changes, or hold for missing evidence. Separate what the candidate gets right from claims you have refuted or have not established. If you request changes, give the author a reproducible sequence and the behaviour a fix must preserve. If you approve, state the evidence for each relevant path and the exclusions. If you hold, name the unresolved question, the next discriminating check and what each possible result would mean. A hold is an honest intermediate result; record the task as unfinished until you resolve it or explicitly hand off the missing investigation.</p>
+<p>Defend one consequential conclusion. Give a plausible competing explanation of your result, choose an observation that would distinguish it from yours, predict both outcomes, then run the check and record what it supports. You can use one of your reproduction or regression cases for this check; explain the two predictions rather than adding a redundant test. If you found no violation, challenge your strongest reason for approving in the same way. The competing explanation concerns why the program behaved as it did; deliverable 4 separately compares repair choices.</p>
+<p>Finish with the specific code, policy or deployment change that would invalidate your reasoning and require another review. A reviewer should be able to tell what would change your mind.</p>
 <h3>Deliverable 4: decision</h3>
 <p>If you approved the candidate unchanged, name a change to the code that would break the property and skip to the tests.</p>
 <ul>
@@ -179,7 +184,7 @@
 <thead>
 <tr>
 <th>Test</th>
-<th>What it proves</th>
+<th>Behavior established and scope</th>
 <th>Result on the candidate or broken copy</th>
 <th>Result on the final code</th>
 </tr>
@@ -193,7 +198,7 @@
 </tbody></table>
 </div><p>Final command and summary line:</p>
 <h3>Limits</h3>
-<p>Name one thing your tests do not establish, and one other source of response data that would need its own review in a real service.</p>
+<p>Name one thing your tests do not establish, and one other source of response data that would need its own review in a real service. Explain whether your gap prevents a verdict on the stated task or belongs to an excluded deployment concern. This is near transfer within the essay&#39;s category; diagnosing an unknown vulnerability category belongs to the later independent assessment.</p>
 <h2>C. Optional transfer</h2>
 <p><strong>Model-assisted comparison.</strong> After saving part B, give a model the property, the change summary and the relevant callers, not only the diff. Record the tool, date, prompt, files supplied and whether your own findings were included. A starting prompt:</p>
 <pre><code class="language-text">Review this candidate against the property below. Trace every operation that can return a summary or full content, including cache hits and misses. For each suspected violation give an executable request sequence, the branch that permits it, and the evidence needed to confirm it. Name one legitimate behaviour a fix must preserve. Separate suspected from verified claims. Do not edit or execute anything.
@@ -225,6 +230,6 @@
 <li>Actual time per part:</li>
 <li>Assistance used, including hints, AI suggestions and any look at the review check:</li>
 <li>What you could now explain without notes:</li>
-<li>Delayed check, a week later: without looking at your fix, pick an endpoint in a codebase you may inspect and list every source its response can come from and what authorizes each.</li>
+<li>Delayed check, a week later: without looking at your fix, pick an endpoint in a codebase you may inspect and list every source its response can come from and what authorizes each. Choose one claim, propose a counterexample, and state what you would need to observe before approving it; execution is optional and requires an authorized environment.</li>
 </ul>
 </article><div class="practice-actions"><button onclick="window.print()">Print this page</button><a href="../essays/11-security-property.html">Return to essay 11</a><a href="11-review-guide.html">Review after your attempt →</a></div></main><footer><span>Book 21 · Learn, practise, verify.</span><a href="https://github.com/AnthonyKot/book21">Source on GitHub</a></footer></body></html>

@@ -6,13 +6,15 @@ Open this after saving your [worksheet](11-review-worksheet.md) attempt. Everyth
 
 A sound release review shows the following, whatever fix it chose.
 
-**Inventory.** Each operation that returns a summary or full content is listed with the source its data can come from on a cache hit and on a cache miss, and with what enforces each property on each source. A verdict rests on an observed response or on code that was then exercised, not on the change summary.
+**Inventory.** Each operation that returns a summary or full content is listed with the source its data can come from on a cache hit and on a cache miss, and with what enforces each property on each source. Earlier operations that establish authority for a later response are included too. Evidence distinguishes inspected code from exercised cases, and conclusions distinguish an observed violation, support within tested scope and unresolved questions. A conclusion does not rest on the change summary.
 
 **Reproduction.** A violation is shown by a short request sequence with the observed response body, and the cache state is stated. A correct operation is supported by tests in both cache states where the cache is involved.
 
 **Review comment.** It acknowledges what the candidate does correctly, identifies the claim in the summary that the code does not support, gives a reproducible sequence and names the behaviour a fix must keep. It does not overstate: no claim of cross-tenant exposure unless one was observed.
 
-**Verdict.** Approving the candidate is a legitimate conclusion when every operation's evidence supports it and the negative control uses a deliberately broken copy. For release 2 that verdict does not survive the archive-after-export sequence in section 3.
+**Defense.** The reader saved an initial prediction, chose a plausible competing explanation, predicted a distinguishing observation and performed the check. Assess whether the result actually separates the explanations; repeating the same passing test or naming another possible repair does not do that. The note names a concrete change that would reopen the review.
+
+**Verdict.** A hold names missing evidence and the next check without calling an unconfirmed concern a vulnerability. It is an honest intermediate result, not completion of the independent review. Approving the candidate is a legitimate conclusion when every operation's evidence supports it and the negative control uses a deliberately broken copy. For release 2 that verdict does not survive the archive-after-export sequence in section 3.
 
 **Decision.** If a change was made, the write-up says where the check now sits and why that placement suits future operations that return content. It records an alternative that was considered or tried and rejected with evidence.
 
@@ -35,6 +37,12 @@ A sound release review shows the following, whatever fix it chose.
 **Export creation checks current state; export delivery does not.** `create` calls `requireDownload`, so an archived document cannot be exported. `fetch` checks that the caller's tenant created the export, then returns `previews.preview(...).content()`, which runs no archive check on a cache hit or on a miss. Create an export, archive the document and fetch the link: the full content is still delivered, in both cache states. Another tenant still gets 404, so the summary's tenant claim holds.
 
 Two sentences in the summary go further than the code. "Authorizes the document against its current state" is true only of the request that creates the link. "Both new operations reuse ... the existing current-state authorization query" is false for the fetch. The seven candidate tests pass because none archives a document after an export exists.
+
+### Defend the mechanism, not just the failure
+
+A useful competing explanation is that the export failure comes only from stale cached data. Predict the difference: if that explanation were sufficient, clearing the cache would prevent the forbidden delivery. If delivery lacks a current-state decision, the cold path may still return the content. The recorded warm and cold failures support the latter explanation. Eviction alone is therefore not justified by the trace. This is an example to compare after your own attempt, not the only acceptable defense.
+
+Also bound the finding: the observed failure withdraws too little access after archive; it does not establish cross-tenant exposure. The tenant checks and corresponding denied requests support a separate, narrower conclusion. A future ownership-transfer feature would require reopening that reasoning because the fixture keeps ownership fixed.
 
 ## 4. Designs that look finished
 
@@ -69,7 +77,7 @@ To compare after your attempt:
 mvn -DreviewCheck=true '-Dtest=*Test,ReleaseReviewCheck' test
 ```
 
-The check covers the stated property and preserved behaviour through HTTP. It cannot judge your inventory, your comment or tests you did not write. Passing it after reading this guide is assisted evidence.
+The check covers the stated property and preserved behaviour through HTTP. It cannot judge your inventory, your competing explanation, your verdict or tests you did not write. A green check with only “all tests pass, approve” does not meet the rubric. A warm-only trace may establish a violation, but it cannot settle a claim that stale data is the sole cause; the distinguishing observation is still needed. Passing it after reading this guide is assisted evidence.
 
 ## 6. Limits of the task
 

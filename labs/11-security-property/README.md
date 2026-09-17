@@ -60,12 +60,12 @@ Use the [worksheet](https://anthonykot.github.io/book21/practice/11-review-works
 - [review/release-2/candidate.diff](review/release-2/candidate.diff), the change against release 1;
 - `ExportCandidateTest`, the tests supplied with the candidate. Default `mvn test` runs them with the guided suites: 27 cases.
 
-The property, the behaviour to preserve and the deliverables are in the worksheet. Release 2 adds two endpoints:
+The property, the behaviour to preserve and the deliverables are in the worksheet. Save your initial scope and predictions before additional tests. Keep one review note linking the path inventory, observations, verdict, a competing explanation you tested, any repair, and your own regression tests. An unresolved question needs a named next check; a passing supplied suite is not a review verdict. Release 2 adds two endpoints:
 
 - `POST /api/documents/{id}/export` returns an export identifier (CSRF token required).
 - `GET /api/exports/{exportId}` returns the exported content.
 
-To exercise archive state by hand, start with `--lab.fixtures=true` and use `POST /lab/archive/{id}` as the document's owner (CSRF token required). Reuse the cookie and token pattern:
+For manual state changes, `POST /lab/archive/{id}` is available with `--lab.fixtures=true`; it requires the document's owner and a CSRF token. Choose state changes and request ordering from your own predictions. The following snippet demonstrates only an active export round trip and the cookie/token pattern:
 
 ```sh
 curl -sS -u alice:local-only -c cookies.txt http://127.0.0.1:8092/csrf > csrf.json
@@ -79,7 +79,7 @@ Write your own tests under `src/test/java/lab/`. Extending `ReviewHttp` gives yo
 
 ### After saving your attempt
 
-`ReleaseReviewCheck` checks the stated property through HTTP. Default `mvn test` does not run it, and it skips itself unless `-DreviewCheck=true` is set, so an IDE's "run all tests" will not show its results early. It compares with your own evidence; it does not replace it. Opening the file first turns the review into a guided one, so leave it closed in your IDE's project tree until you have saved your attempt.
+`ReleaseReviewCheck` checks the stated property through HTTP. Default `mvn test` does not run it, and it skips itself unless `-DreviewCheck=true` is set, so an IDE's "run all tests" will not show its results early. It compares with your own evidence; it does not replace it. Opening the file first turns the review into a guided one, so leave it closed in your IDE's project tree until you have saved your attempt. Avoid expanding it in an IDE test explorer; scenario names can also disclose the check before execution.
 
 ```sh
 mvn -DreviewCheck=true '-Dtest=*Test,ReleaseReviewCheck' test

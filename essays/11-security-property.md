@@ -52,6 +52,24 @@ The review question becomes concrete: **where can this endpoint obtain its respo
 
 The [lab](https://github.com/AnthonyKot/book21/tree/main/labs/11-security-property) reproduces this in Spring Boot. Run the two cold-cache tests first and they pass against the flaw; keep that result, because it shows exactly what the candidate's tests established. Then the README's script, or three curl commands, show Bob's request for C-1001 change from `404` to `200` with `CEDAR-PRIVATE-SUMMARY` after Alice's read, and the same leak in the other direction. A counter of repository body loads stays still on the leaking hit. That supports the explanation, but the decisive evidence is the other tenant's summary in an actual HTTP response.
 
+## Turn the trace into a review method
+
+Start with the effect the rule protects: here, returning a private summary. Write who may receive it, under which conditions, without naming a database or a proposed fix. Then work backwards from each place the response can be produced. For each path, record the source of the value, the decision that permits its release, and where that decision gets its facts. Include branches outside the diff. A caller can bypass a correct helper.
+
+Use that record to choose a counterexample. In this case, the property is unchanged while another request changes the source from repository to cache. Predict what both requests should return before running them. Keep a legitimate request beside the denied one: blocking every response would satisfy the denial while breaking the feature.
+
+The method fits on a small review note:
+
+| Step | Question to answer | Evidence from this case |
+|---|---|---|
+| State the property | Which effect is allowed, for whom, under what conditions? | Only the authenticated tenant may receive its document's summary. |
+| Trace the paths | Where can that effect be produced? | The cache hit and the repository loader can supply the response. |
+| Locate authority | What permits the effect on each path, and who supplies those facts? | The loader uses the trusted tenant; the shared cache key omits it. |
+| Challenge the claim | Which sequence would distinguish enforcement from an apparent fix? | Compare Bob's request before and after Alice's read; preserve Alice's repeat. |
+| Bound the verdict | What was established, and what remains open? | A warm response disclosed Cedar's summary to Birch in this fixture. |
+
+This is a way to organize an investigation, not a complete test catalogue. For another feature, the protected effect might be a payment or a queued operation; follow each place that effect can occur. If you cannot enumerate the relevant paths, record that gap before claiming coverage.
+
 ## Write the finding so someone can act on it
 
 A useful review comment names a failure and gives the recipient a way to test it:
@@ -74,6 +92,24 @@ Run the repair assertions against the shared key and exactly the two warm cross-
 
 The repair fits this fixture's stable tenant mapping. A tenant in the key is not a permission model: membership changes, ownership transfers and per-user grants are outside this fixture and would need their own analysis.
 
+## Decide what the evidence permits you to say
+
+Three statements that sound reassuring carry different weight:
+
+| Statement | What supports it | What it leaves open |
+|---|---|---|
+| “I reproduced a violation.” | The property, starting state, requests and observed forbidden response. | How broadly the failure occurs and whether other failures exist. |
+| “These tests establish this behavior.” | Named cases on a recorded revision and configuration, with assertions that detect the failure. | Other states, paths and configurations. |
+| “I have not found a violation.” | An honest account of the investigation performed. | Any unexamined path or unresolved assumption; this alone does not justify approval. |
+
+Bob's cold denial supports a precise claim about a cache miss. It does not support a claim about a hit. Conversely, once a warm request discloses Cedar's summary, you can request changes without proving that every document leaks. A reproducible counterexample is enough to refute this property's universal claim.
+
+When the mechanism is uncertain, choose the next observation that separates competing explanations. Suppose you suspect Bob received the summary because his identity was mapped incorrectly. Compare his cold and warm requests with the same credentials, inspect the mapping, and watch the repository counter. The identity stays fixed while the path changes. The response proves the disclosure; the other observations help locate its cause. Keep observation and explanation separate in the review comment.
+
+Continue investigating when a path lacks an identified authorization decision, a result contradicts your trace, or a proposed fix relies on an assumption you have not checked. If you cannot resolve one of those within the review, say what evidence is missing and recommend holding the merge for that evidence. An unresolved concern is not a confirmed vulnerability, and elapsed review time does not turn it into an approval.
+
+For this bounded fixture, a scoped approval after repair needs the path inventory, tests of the challenged states, preserved legitimate behavior and a negative control showing that the tests detect the original failure. State the remaining exclusions. In a larger service, someone must also decide whether those exclusions are acceptable for the release; a passing local suite cannot make that decision. Reopen the review when a new response source, caller or permission rule changes the reasoning.
+
 ## A fluent explanation is a claim, not evidence
 
 Code written with an AI assistant usually arrives with a confident summary and a set of passing tests. Read both as an account of what the author checked, not of what the program does. Every sentence of the form "X is enforced" names a property; the review is to find each path by which a response could violate it and see whether that path actually carries the check. The same applies to a colleague's pull request. Provenance changes how much explanation you receive, not what counts as evidence.
@@ -90,10 +126,10 @@ The lab's source already contains the next candidate, produced with an AI coding
 
 The [worksheet](../practice/11-review-worksheet.md) states the property it must satisfy and the behaviour to preserve. It does not say whether the candidate is correct. Produce:
 
-1. An inventory of every operation that can return a summary or full content, with the source of its data and what authorizes that source.
+1. An inventory of operations that return protected data or establish authority for a later response, with the sources and checks on each relevant branch.
 2. A request sequence that violates the property, if one exists, with observed responses.
-3. A review comment the candidate's author can act on: approve, or request changes with evidence.
-4. If changes are needed, a fix, with your reason for putting the check where you did.
+3. A defended review comment: approve within scope, request changes with evidence, or hold for named missing evidence. Test a competing explanation of your observations and name a change that would require review again.
+4. If changes are needed, a fix, with your reason for putting the check where you did and an alternative you rejected.
 5. Your own tests with a negative control: failing against the candidate and passing after your fix, or, if you approve, failing against a deliberately broken copy you describe.
 
-Attempt it before opening the [review guide](../practice/11-review-guide.md), which holds the hints, the findings and a post-attempt check. An optional part compares your review with a model-assisted pass. Time estimates in the worksheet are provisional; record what the work actually takes.
+Attempt it before opening the [review guide](../practice/11-review-guide.md), which holds the hints, the findings and a post-attempt check. An optional part compares your review with a model-assisted pass. Use the worksheet's stop rules if setup or investigation stalls; its time estimates are provisional. Record what the work actually takes.
