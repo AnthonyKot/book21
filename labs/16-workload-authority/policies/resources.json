@@ -1,0 +1,11 @@
+{
+  "artifacts:releases/service/1.3.tar.gz": "the shipped release",
+  "artifacts:releases/service/1.4.tar.gz": "the current release",
+  "artifacts:staging/service/pr-41.tar.gz": "a preview build, 3 days old",
+  "artifacts:staging/service/pr-38.tar.gz": "a preview build, 41 days old",
+  "artifacts:reports/": "job reports (prefix)",
+  "secrets:prod/db-password": "the production database password",
+  "secrets:staging/db-password": "the staging database password",
+  "deploy:production": "the production deployment action",
+  "deploy:staging": "the staging deployment action"
+}

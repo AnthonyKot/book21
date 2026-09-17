@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Workload authority worksheet · Book 21</title><meta name="description" content="Workload authority worksheet for essay 16.">
+<meta property="og:title" content="Workload authority worksheet"><meta property="og:description" content="Workload authority worksheet for essay 16.">
+<meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
+<link rel="stylesheet" href="../assets/style.css"></head>
+<body><a class="skip" href="#main">Skip to content</a><header class="site-header"><a href="../index.html">Security Is an Engineering Job</a><nav aria-label="Book"><a href="../index.html#essays">Essays</a><a href="../about.html">About</a></nav></header>
+<main id="main"><p class="kicker">Essay 16 · Practice</p><article><h1>Workload authority worksheet</h1>
+<p>Use with <a href="../essays/16-workload-authority.html">essay 16</a> and the <a href="https://github.com/AnthonyKot/book21/tree/main/labs/16-workload-authority">companion lab</a>. Save your part B policy, tests and note before opening <code>policy_check.py</code> or the <a href="16-authority-review.html">review guide</a>. The GitHub and AWS pages listed in the lab README are the only outside reading you need.</p>
+<h2>Plan the week</h2>
+<p>These are authoring estimates derived from the steps below, not measured learner times. Record your actual time.</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Table; scroll horizontally on small screens"><table>
+<thead>
+<tr>
+<th>Part</th>
+<th>What it involves</th>
+<th>Provisional estimate</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Setup</td>
+<td>Python 3.12 and openssl; no packages, network or account</td>
+<td>0.25 hour</td>
+</tr>
+<tr>
+<td>Guided</td>
+<td>Read the essay and the documentation pages, run the trace, the tests and the negative control, part A</td>
+<td>1.5–2 hours</td>
+</tr>
+<tr>
+<td>Independent</td>
+<td>Part B: policy written with reasons, own tests, the widened requirement, note on limits, then the post-attempt check</td>
+<td>2.5–4 hours</td>
+</tr>
+<tr>
+<td>Delayed check</td>
+<td>The final evidence-record question, about a week later</td>
+<td>0.5 hour</td>
+</tr>
+<tr>
+<td>Optional</td>
+<td>Part C, reading a real role or service account you are permitted to inspect</td>
+<td>1–2 hours, later week</td>
+</tr>
+</tbody></table>
+</div><p>The required parts total about 4.75–6.75 hours. Keep the week bounded:</p>
+<ul>
+<li>If setup fails for more than an hour, record what failed and answer part A from the trace quoted in the essay and the documentation pages.</li>
+<li>If you have spent about two hours on part B without a policy that admits the cleanup job and allows its four task requests, save what you have, open only the first hint in the review guide, mark it as assistance, or carry the work into next week.</li>
+<li>Leave part C for a later week unless the required parts finished early.</li>
+</ul>
+<p>Start of attempt:</p>
+<ul>
+<li>Date and repository revision:</li>
+<li>Material already seen (hints, AI assistance, the check file):</li>
+</ul>
+<h2>A. Guided: read the refusals</h2>
+<p>Run the trace, the tests and the negative control, then answer from the transcripts and the documentation, not from the essay&#39;s summary.</p>
+<ol>
+<li>For the leaked static key, name the three properties that make the leak expensive and, for each, the line of <code>policies/v1.json</code> that sets it.</li>
+<li>The publish job&#39;s secret read is denied by &quot;implicit deny&quot;. What would a reader of the permission policy have to add for it to be allowed, and what would have to be added for it to be denied even if someone later added that allow?</li>
+<li>Three jobs with valid tokens are refused the publisher role. For each, name the claim that refused it and say what a trust policy that omitted that claim would admit.</li>
+<li>The negative control passes 13 of 16 tests. Which of the properties from question 1 does it still get right, and which failures show that &quot;uses OIDC&quot; is not the same as &quot;carries only the authority its task needs&quot;?</li>
+</ol>
+<h2>B. Independent: the cleanup job&#39;s role</h2>
+<h3>The brief</h3>
+<p>A scheduled workflow runs on <code>main</code> nightly: it lists the staging artifacts, deletes those older than thirty days and writes a run report. It runs for a few minutes and today uses the static key. You are replacing that key with a role.</p>
+<p><strong>Trust facts and task facts.</strong> These are the policy&#39;s inputs; they are stated so that the task is designing the policy, not guessing the job.</p>
+<ul>
+<li>The job&#39;s identity token carries <code>repository</code> <code>doc-approval/service</code>, <code>ref</code> <code>refs/heads/main</code>, <code>event_name</code> <code>schedule</code>, <code>job_workflow_ref</code> <code>doc-approval/service/.github/workflows/cleanup.yml@refs/heads/main</code>, and <code>aud</code> <code>lab-broker</code>. It carries no <code>environment</code>.</li>
+<li>The task needs to list <code>artifacts:staging/service/</code> (the prefix is the list resource), read and delete artifacts under <code>artifacts:staging/service/</code>, and write one file under <code>artifacts:reports/</code>. The action names are <code>artifacts:list</code>, <code>artifacts:get</code>, <code>artifacts:delete</code> and <code>artifacts:put</code>.</li>
+<li>Releases live under <code>artifacts:releases/</code>; secrets under <code>secrets:</code>; deployments are <code>deploy:run</code> on <code>deploy:staging</code> or <code>deploy:production</code>. The job needs none of these.</li>
+<li>The job finishes within ten minutes, and its credential is issued when the job starts. An organisation rule for this exercise: a job&#39;s credential must not be usable thirty minutes after the job started.</li>
+</ul>
+<p><strong>Requirements.</strong></p>
+<ol>
+<li>Write the <code>staging-cleanup</code> role in <code>policies/cleanup.json</code> in the lab&#39;s schema, keeping the role name.</li>
+<li>Before writing it, decide and write down: which claims the trust policy names and why each one is there; which actions and resources the permissions name and why each statement is as wide as it is and no wider; the session maximum and why.</li>
+<li>The job must be able to do its task. Refusing the job its own work is a defect, not caution.</li>
+<li>Write your own tests, as a Python file using the lab&#39;s <code>authority</code> module: the task requests allowed; requests beyond the task denied; at least two other workloads the same platform signs for refused the role, with the refusing claim; the session dead at a time you choose from the organisation rule.</li>
+<li><strong>The widened requirement.</strong> Partway through the quarter the team asks the same job to also record, in its report, the sizes of the current releases, which needs <code>artifacts:get</code> on <code>artifacts:releases/service/*</code>. Decide whether to widen this role, split the work into a second role, or refuse, and record what each option lets a leaked session do. Your policy file reflects your decision; your note gives the reason and the rejected alternatives.</li>
+<li>Write a note on what the role cannot protect against.</li>
+</ol>
+<h3>Deliverable 1: the policy with reasons</h3>
+<ul>
+<li>Trust policy, claim by claim, each with the workload it excludes:</li>
+<li>Permission statements, each with the reason for its width:</li>
+<li>Session maximum and the rule it satisfies:</li>
+</ul>
+<h3>Deliverable 2: tests</h3>
+<p>Save your test file and its output.</p>
+<h3>Deliverable 3: the widened requirement</h3>
+<ul>
+<li>Decision, and what a leaked session can do under it:</li>
+<li>Rejected alternatives, and what a leaked session could do under each:</li>
+</ul>
+<h3>Deliverable 4: the post-attempt check</h3>
+<p>After deliverables 1–3 are saved, run <code>python3 policy_check.py</code>. Record the result. For each mismatch, say whether it exposed a missing condition, an over-wide statement, an over-strict one, or a disagreement with the stated facts that you can defend.</p>
+<h3>Limits</h3>
+<ul>
+<li>One thing the role cannot prevent a job with this identity from doing:</li>
+<li>One claim you would want in the token that this lab&#39;s issuer does not provide:</li>
+</ul>
+<h2>C. Optional: a real role</h2>
+<p>Read one role, service account or workload identity you are permitted to inspect, in any provider. Write its trust conditions, its permission statements and its session maximum in the same three-part form, and mark each statement as needed by the task, wider than the task, or unknown. Do not change anything and do not test against systems you are not authorised to assess.</p>
+<h2>Handover</h2>
+<p>Write a short note for the team that owns the account: which job the new role admits, what it can do, when its sessions die, what the old static key still protects until it is revoked, and the order of the cut-over (create role, switch job, verify, revoke key). For a consulting client, add what you could verify from the outside and the retest that would confirm the key is dead.</p>
+<h2>Evidence record</h2>
+<ul>
+<li>Actual time per part:</li>
+<li>Assistance used, including hints, AI suggestions and any look at the check or the review guide before your attempt was saved:</li>
+<li>What you could now explain without notes:</li>
+<li>Delayed check, a week later: without reopening your policy, name one workload that could obtain your role if a single trust claim were dropped, and which claim.</li>
+</ul>
+</article><div class="practice-actions"><button onclick="window.print()">Print this page</button><a href="../essays/16-workload-authority.html">Return to essay 16</a><a href="16-authority-review.html">Review after your attempt →</a></div></main><footer><span>Book 21 · Learn, practise, verify.</span><a href="https://github.com/AnthonyKot/book21">Source on GitHub</a></footer></body></html>

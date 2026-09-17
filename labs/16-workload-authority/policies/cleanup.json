@@ -1,0 +1,10 @@
+{
+  "comment": "Your policy for the staging-cleanup workload. Keep the role name; fill in max_session_seconds, trust and permissions per the worksheet's trust facts and task description. The broker, roles and permission schema are the same as in v2.json.",
+  "roles": {
+    "staging-cleanup": {
+      "max_session_seconds": null,
+      "trust": {},
+      "permissions": []
+    }
+  }
+}

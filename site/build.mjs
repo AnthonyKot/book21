@@ -22,6 +22,7 @@ const essays = [
   {slug:'13-build-inventory',part:'Make secure delivery repeatable',title:'An SBOM records what a particular build contains',payoff:'Compare a Maven dependency BOM with two finished images, find the separately copied component, then decide which inventory records actually describe a selected release.'},
   {slug:'14-first-fix',part:'Make secure delivery repeatable',title:'The highest severity is not automatically the first fix',payoff:'Use dated threat data and deployment evidence to defend remediation, investigation and deferral, then decide again when the evidence moves.'},
   {slug:'15-build-credential',part:'Make secure delivery repeatable',title:'The build system is a production credential',payoff:'Trace a fork’s change into the job that holds the release token, split the workflow so it never can, then verify as the consumer what a signed release proves and what it does not.'},
+  {slug:'16-workload-authority',part:'Make secure delivery repeatable',title:'A workload carries only the authority its task needs',payoff:'Replace a shared, never-expiring key with a job identity, a trust policy and a short session, then write the role for a job that deletes things and defend every claim in it.'},
 ];
 const escape = s => s.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
 const renderer = new Renderer();
@@ -69,6 +70,7 @@ const practice=[
   {n:13,essay:'13-build-inventory',sheet:'13-inventory-worksheet',review:'13-inventory-review',name:'Build inventory'},
   {n:14,essay:'14-first-fix',sheet:'14-triage-worksheet',review:'14-triage-review',name:'Triage decisions'},
   {n:15,essay:'15-build-credential',sheet:'15-release-worksheet',review:'15-release-review',name:'Release trust'},
+  {n:16,essay:'16-workload-authority',sheet:'16-authority-worksheet',review:'16-authority-review',name:'Workload authority'},
 ];
 for (const p of practice) for (const slug of [p.sheet,p.review]) {
   const isSheet=slug===p.sheet, name=`${p.name} ${isSheet?'worksheet':'review'}`;

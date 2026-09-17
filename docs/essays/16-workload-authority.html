@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A workload carries only the authority its task needs · Book 21</title><meta name="description" content="Replace a shared, never-expiring key with a job identity, a trust policy and a short session, then write the role for a job that deletes things and defend every claim in it.">
+<meta property="og:title" content="A workload carries only the authority its task needs"><meta property="og:description" content="Replace a shared, never-expiring key with a job identity, a trust policy and a short session, then write the role for a job that deletes things and defend every claim in it.">
+<meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
+<link rel="stylesheet" href="../assets/style.css"></head>
+<body><a class="skip" href="#main">Skip to content</a><header class="site-header"><a href="../index.html">Security Is an Engineering Job</a><nav aria-label="Book"><a href="../index.html#essays">Essays</a><a href="../about.html">About</a></nav></header>
+<main id="main"><p class="kicker">Essay 16 · Make secure delivery repeatable</p><article><h1>A workload carries only the authority its task needs</h1>
+<p>The release token that leaked in <a href="15-build-credential.html">essay 15</a> was a string somebody generated in March 2024, pasted into a repository secret, and never thought about again. Ask what it can do and the answer is the same today as on the day it was made: anything the account allows, from anywhere, for as long as nobody notices. Ask which job it was for and there is no answer. The token is a credential without an identity.</p>
+<p>That is the ordinary state of automation credentials, and it is why a leak from one build job becomes an incident for the whole account. The repair in essay 15 stopped a contributor&#39;s script from reaching the token. This essay is about the token itself: what a job should hold instead, for how long, and who decides.</p>
+<p>The <a href="https://github.com/AnthonyKot/book21/tree/main/labs/16-workload-authority">companion lab</a> is a local model of the three parties involved: an issuer that signs a short-lived identity token describing a job, a broker that exchanges that token for a temporary credential bound to a role, and an authorizer that decides each request from the role&#39;s permissions. It is the shape of GitHub&#39;s OpenID Connect token and a cloud provider&#39;s web-identity role assumption, with an explicit clock so expiry and rotation can be shown. It contacts no provider. Its rules come from the documentation listed with read dates in the lab README; treat its output as a trace of those rules.</p>
+<h2>What the leaked key can do</h2>
+<p>Run the lab&#39;s first design: one static key, <code>deployer</code>, shared by every job.</p>
+<pre><code>key created 2024-03-02T10:00:00Z, expires None
+  allow artifacts:put    artifacts:releases/service/1.5.tar.gz   (the task)
+  allow secrets:get      secrets:prod/db-password
+  allow artifacts:delete artifacts:releases/service/1.4.tar.gz
+  allow deploy:run       deploy:production
+A year later, the same key:  allow secrets:get secrets:prod/db-password
+</code></pre>
+<p>Three properties of the key make the leak expensive, and they are separate. Its <strong>scope</strong> is everything, because a key made for &quot;the pipeline&quot; is granted what any pipeline step might ever need. Its <strong>lifetime</strong> is unbounded, because nobody wants to rotate a secret that a dozen jobs depend on. And it has no <strong>identity</strong>: when the authorizer sees it, it learns nothing about which job, which commit or which event is behind the request, so it cannot refuse a request on those grounds even if it wanted to.</p>
+<p>Improving any one of these on its own helps less than it seems. A narrowly scoped key that lives forever still gives an attacker its full scope forever. A key rotated weekly that allows everything still gives a week of everything. The three properties are one design decision, and the mechanism that ties them together is identity.</p>
+<h2>The job proves who it is; the broker decides what that is worth</h2>
+<p>The second design has no static key. When the publish job runs, it asks the platform for an identity token. The platform signs a set of claims about the job that the job cannot alter:</p>
+<pre><code class="language-json">{&quot;sub&quot;: &quot;repo:doc-approval/service:ref:refs/heads/main&quot;,
+ &quot;repository&quot;: &quot;doc-approval/service&quot;, &quot;ref&quot;: &quot;refs/heads/main&quot;, &quot;event_name&quot;: &quot;push&quot;,
+ &quot;job_workflow_ref&quot;: &quot;doc-approval/service/.github/workflows/release-v2.yml@refs/heads/main&quot;,
+ &quot;exp&quot;: &quot;2026-09-17T09:05:00Z&quot;}
+</code></pre>
+<p>GitHub&#39;s token carries these claims and more, with a default subject of the form <code>repo:ORG/REPO:ref:refs/heads/BRANCH</code>, or <code>:pull_request</code>, or <code>:environment:NAME</code>. The token is short-lived and is issued only to a job whose workflow grants it <code>id-token: write</code>.</p>
+<p>The job presents the token to the broker and names the role it wants. The broker verifies the signature against the issuer keys it trusts, checks that the token was minted for this broker and has not expired, then evaluates the role&#39;s <strong>trust policy</strong>: a list of claim values the token must carry. The lab&#39;s <code>release-publisher</code> role trusts exactly the release workflow on <code>main</code> in the canonical repository, on a push. If the claims satisfy it, the broker issues a <strong>role session</strong>, a credential that carries the role&#39;s permissions and an expiry. In AWS terms this is <code>AssumeRoleWithWebIdentity</code>: no long-term credential is needed to call it, the session lasts from fifteen minutes up to the role&#39;s maximum, and any session policy can only narrow what the role allows.</p>
+<p>The trace of the same four requests under this design:</p>
+<pre><code>release-publisher session issued, expires 09:15:00Z (role maximum 900s)
+  allow artifacts:put    artifacts:releases/service/1.5.tar.gz   (the task)
+  deny  secrets:get      secrets:prod/db-password                implicit deny
+  deny  artifacts:delete artifacts:releases/service/1.4.tar.gz   implicit deny
+  deny  deploy:run       deploy:production                       implicit deny
+Same credential, sixteen minutes later:  deny (credential expired at 09:15:00Z)
+The identity token, presented six minutes after issue:  refused (token expired at 09:05:00Z)
+</code></pre>
+<p>The permission policy is written the way cloud policies are evaluated: every request is denied unless a statement allows it, and an explicit deny overrides any allow. The publisher role has one allow statement, <code>artifacts:put</code> on <code>artifacts:releases/service/*</code>. Nothing had to deny the secret read; it was never allowed.</p>
+<h2>The trust policy is where &quot;which job&quot; is enforced</h2>
+<p>The same platform signs tokens for every job it runs. That is the part people miss when they say a pipeline &quot;uses OIDC now&quot;. The lab asks the broker for the publisher role on behalf of three other jobs, all with valid signatures from the same issuer:</p>
+<pre><code>preview job of an unmerged pull request:   refused: ref=&#39;refs/pull/57/merge&#39; does not satisfy &#39;refs/heads/main&#39;
+ci.yml on main (right branch, wrong workflow): refused: job_workflow_ref ... ci.yml ... does not satisfy ... release-v2.yml
+a fork&#39;s own release-v2.yml on its main:   refused: repository=&#39;mallory/service&#39; does not satisfy &#39;doc-approval/service&#39;
+</code></pre>
+<p>Each refusal names a claim. The trust policy is the boundary from essay 15 written down a second time, now on the consumer&#39;s side of the credential: a release is a push to <code>main</code> of the canonical repository by the release workflow, and only that identity gets the release credential. GitHub&#39;s own configuration guide puts the minimum bluntly: you must define at least one condition on the subject, so that untrusted repositories cannot obtain tokens for your role. A trust policy that names only the repository lets every pull request, branch and workflow in it assume the role; the lab&#39;s negative control shows exactly that, while still expiring on time and still refusing forks.</p>
+<p>Two more refusals complete the picture. A token minted for a different audience is refused before its claims are read: a token meant for one service must not be accepted by another, which is the lesson of <a href="05-token-boundary.html">essay 5</a> applied to machines. And the publisher&#39;s token is refused the deployer role, whose trust policy requires an <code>environment</code> claim the publish job does not carry. One job, one role, one task.</p>
+<h2>Rotation is the platform&#39;s problem now</h2>
+<p>The lab ends its trace by retiring the issuer&#39;s signing key and generating a new one. Tokens signed with the retired key are refused; a fresh token is accepted; no job&#39;s configuration changed, because no job ever held a key. Lifetime and rotation have moved from something each team must remember to something the platform does.</p>
+<p>The limits are worth stating as plainly as the gains. A role session is still a credential; leaked within its lifetime, it does what the role allows, which is why the lab&#39;s roles keep sessions to fifteen minutes and why the scope still has to be narrow. The trust policy is only as precise as the claims: a job that runs arbitrary code, like the fork&#39;s build script in essay 15, can request a token in that job&#39;s name, so the identity is the job&#39;s, not the code&#39;s. The model omits things a real provider adds, among them a short clock-skew window after expiry, session policies, permission boundaries and organisation-wide policies. And nothing here decides <em>which</em> actions a task needs; that remains a design judgment, and it is the practice.</p>
+<hr>
+
+<h2>Practice: write the policy for a job that deletes things</h2>
+<p>A scheduled workflow, <code>cleanup.yml</code>, runs on <code>main</code> every night. It lists the staging artifacts, deletes the ones older than thirty days and writes a short report. It runs for a few minutes. Today it uses the static key.</p>
+<p>Write the <code>staging-cleanup</code> role in the lab&#39;s <code>policies/cleanup.json</code>: the trust policy that admits this job and no other workload the platform signs for, the permission statements that allow the task and nothing beyond it, and a session lifetime you can defend. The <a href="../practice/16-authority-worksheet.html">worksheet</a> states the job&#39;s identity claims and the resource names. Then write your own tests: the task&#39;s requests allowed, requests beyond it denied, other workloads refused the role, and a time at which the session must be dead.</p>
+<p>The lab&#39;s <code>policy_check.py</code> runs its own requests against your policy after your attempt is saved. Leave it closed until then. The worksheet also adds a second requirement partway through; how you change the policy for it, and what you refuse to change, is part of the deliverable.</p>
+<p>The essay&#39;s claim is that scope, lifetime and identity are one decision. Your policy tests that claim if a reader can see, from the trust policy alone, which job it was written for.</p>
+</article><nav class="pager" aria-label="Adjacent essays"><a href="15-build-credential.html">← Essay 15</a><a href="../index.html">Back to the book →</a></nav></main><footer><span>Book 21 · Learn, practise, verify.</span><a href="https://github.com/AnthonyKot/book21">Source on GitHub</a></footer></body></html>

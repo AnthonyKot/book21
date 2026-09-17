@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Workload authority review · Book 21</title><meta name="description" content="Workload authority review for essay 16.">
+<meta property="og:title" content="Workload authority review"><meta property="og:description" content="Workload authority review for essay 16.">
+<meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
+<link rel="stylesheet" href="../assets/style.css"></head>
+<body><a class="skip" href="#main">Skip to content</a><header class="site-header"><a href="../index.html">Security Is an Engineering Job</a><nav aria-label="Book"><a href="../index.html#essays">Essays</a><a href="../about.html">About</a></nav></header>
+<main id="main"><p class="kicker">Essay 16 · Practice</p><article><h1>Workload authority review</h1>
+<p>Open this after saving your <a href="16-authority-worksheet.html">worksheet</a> policy, tests and notes. Everything below counts as assistance once you have read it. If you are stuck partway, read only the next hint in section 2 and record that you did.</p>
+<h2>1. Judge the attempt before comparing policies</h2>
+<p>No single policy is correct. A sound one shows the following.</p>
+<p><strong>Every trust claim excludes a named workload.</strong> The reasons column says what each claim keeps out: the repository keeps out forks, the ref keeps out branches, the event keeps out pushes and pull requests of the same workflow, the workflow reference keeps out other workflows on the same branch. A claim with no named exclusion is either redundant or not understood; a missing claim admits a workload the reader did not intend.</p>
+<p><strong>The subject is not enough on its own.</strong> The default subject encodes repository and ref (or pull request, or environment) but not the workflow. Trusting <code>sub</code> alone admits every workflow on <code>main</code>.</p>
+<p><strong>Statements name the task&#39;s prefixes.</strong> Deletion is allowed under the staging prefix, not under <code>artifacts:*</code>. A wildcard that also covers releases is the defect the task exists to expose. An explicit deny on releases, secrets and deployments is a good defence in depth, but it does not excuse an over-wide allow, because the next statement someone adds will not have it.</p>
+<p><strong>The job can do its task.</strong> Listing needs the prefix resource; writing the report needs the reports prefix. A policy that fails the task while refusing everything else has moved the problem, not solved it.</p>
+<p><strong>The session bound follows from the job.</strong> Fifteen minutes is the smallest session the modelled provider issues and it covers a ten-minute job. Thirty minutes meets the stated rule at its boundary and needs a reason for the extra fifteen. A one-hour maximum breaks the rule; a reader who chooses it must argue the rule is wrong, not ignore it.</p>
+<p><strong>The widening is decided, not absorbed.</strong> Adding <code>artifacts:get</code> on releases to this role gives a leaked cleanup session read access to every release. Splitting the read into a second role with its own trust conditions, or reading sizes from an inventory the job does not need credentials for, keeps the deletion role narrow. Any of the three is defensible with its consequence stated; silently widening the role is not.</p>
+<p><strong>Own tests exercise the refusing claim.</strong> A test that only checks &quot;refused&quot; is weaker than one that checks which claim refused, because a policy can refuse the right workload for the wrong reason and admit it later when that reason changes.</p>
+<p><strong>The limits note names what identity cannot do.</strong> The role is granted to the job, not to the code the job runs; a job that executes untrusted code can still spend the role&#39;s authority inside the session. The token says which workflow asked, not whether that workflow was reviewed.</p>
+<p><strong>A handover someone could act on.</strong> Order of cut-over, what the old key still protects until revoked, and the retest that shows it dead.</p>
+<h2>2. Progressive hints, if you are stuck</h2>
+<ol>
+<li>Write the cleanup job&#39;s five claims in a column. For each, write one workload the platform also signs tokens for that differs only in that claim. That column is your trust policy and its reasons.</li>
+<li>List the four task requests and, next to each, the narrowest resource pattern that matches it and nothing under <code>releases/</code>. Then run the lab&#39;s authorizer against a release deletion with your draft.</li>
+<li>Set the session maximum to the smallest value the model allows and ask whether the job can finish in it. Only widen with a reason.</li>
+</ol>
+<h2>3. What the check sends</h2>
+<p>The post-attempt check issues tokens at 02:00 and asks for the longest session your role permits.</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Table; scroll horizontally on small screens"><table>
+<thead>
+<tr>
+<th>Request</th>
+<th>Intended outcome</th>
+<th>What it exercises</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>The scheduled cleanup job on <code>main</code> assumes the role</td>
+<td>Admitted</td>
+<td>The trust policy admits the job</td>
+</tr>
+<tr>
+<td>List staging; get and delete a 41-day-old staging artifact; write the report</td>
+<td>Allow</td>
+<td>The task&#39;s four requests</td>
+</tr>
+<tr>
+<td>Delete the current release; publish a release</td>
+<td>Deny</td>
+<td>Resource scoping under <code>artifacts:</code></td>
+</tr>
+<tr>
+<td>Read the staging and production database passwords</td>
+<td>Deny</td>
+<td>Action families the task does not use</td>
+</tr>
+<tr>
+<td>Deploy to staging</td>
+<td>Deny</td>
+<td>The deployment family</td>
+</tr>
+<tr>
+<td>The session thirty minutes after the job started</td>
+<td>Deny</td>
+<td>The session bound against the organisation rule</td>
+</tr>
+<tr>
+<td>A pull request run of <code>cleanup.yml</code></td>
+<td>Refused</td>
+<td>The ref or event claim</td>
+</tr>
+<tr>
+<td>A manual (<code>workflow_dispatch</code>) run of <code>cleanup.yml</code> on <code>main</code></td>
+<td>Refused</td>
+<td>The event claim</td>
+</tr>
+<tr>
+<td><code>ci.yml</code> on <code>main</code></td>
+<td>Refused</td>
+<td>The workflow claim</td>
+</tr>
+<tr>
+<td><code>cleanup.yml</code> on a feature branch</td>
+<td>Refused</td>
+<td>The ref claim</td>
+</tr>
+<tr>
+<td>A fork&#39;s <code>cleanup.yml</code> on its <code>main</code></td>
+<td>Refused</td>
+<td>The repository claim</td>
+</tr>
+</tbody></table>
+</div><h2>4. Policies that look finished</h2>
+<p>Each was run through the check. Counts are mismatches out of sixteen outcomes. The starter as shipped stops at the first outcome, because it states no session maximum; the first row below is the starter with only a maximum filled in.</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Table; scroll horizontally on small screens"><table>
+<thead>
+<tr>
+<th>Policy</th>
+<th>Mismatches</th>
+<th>What it gets wrong</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Empty trust, no permissions, 900 s</td>
+<td>9</td>
+<td>Admits every workload the issuer signs for, and allows the job nothing</td>
+</tr>
+<tr>
+<td>Trust on repository only</td>
+<td>4</td>
+<td>Admits the manual run, the pull request run, <code>ci.yml</code> on <code>main</code>, and the feature branch</td>
+</tr>
+<tr>
+<td>Trust on repository and ref only</td>
+<td>2</td>
+<td>Admits the manual run and <code>ci.yml</code> on <code>main</code></td>
+</tr>
+<tr>
+<td><code>artifacts:*</code> on <code>artifacts:*</code></td>
+<td>2</td>
+<td>Allows deleting and publishing releases</td>
+</tr>
+<tr>
+<td>Correct trust and scope, one-hour session</td>
+<td>1</td>
+<td>Session alive thirty minutes after the job started</td>
+</tr>
+<tr>
+<td>Correct trust and scope, 1,800-second session</td>
+<td>0</td>
+<td>Meets the stated rule exactly; the review question is whether a session twice the job&#39;s length was needed</td>
+</tr>
+<tr>
+<td>Reference design (section 5)</td>
+<td>0</td>
+<td></td>
+</tr>
+</tbody></table>
+</div><p>An empty trust policy is the sharpest lesson in the table: with no conditions, the broker checks only that the issuer signed the token, so any job on the platform gets the role.</p>
+<h2>5. Reference evidence</h2>
+<p>Recorded while authoring. None of it is evidence of your attempt.</p>
+<ul>
+<li>Guided tests: 16 pass (3 static-key, 13 role design). Negative control <code>--broad</code>: 3 fail (pull request and <code>ci.yml</code> obtain the publisher role; the publisher can delete a release), 13 pass.</li>
+<li>Trace: static key allows all four requests now and a year later; publisher session allows the task and denies the other three; session dead at sixteen minutes; token refused at six minutes; preview, <code>ci.yml</code> and fork refused with the named claim; other-audience token and deployer role refused; retired issuer key refused after rotation, new key accepted.</li>
+<li>Private reference role: trust on <code>aud</code>, repository, ref, event, workflow reference; allow list/get/delete under the staging prefix and put under reports; explicit deny on releases, secrets and deployments; 900-second maximum. 0 mismatches. The variants above were derived from it by changing one thing each.</li>
+</ul>
+<h2>6. Limits</h2>
+<p>The broker and authorizer are a model of documented rules for one provider&#39;s exchange and evaluation order; the model omits the clock-skew window, session policies, permission boundaries, organisation policies, resource-based policies and session tags, any of which changes what a real policy must say. Subject claims use GitHub&#39;s earlier default format. The model has no metadata-only verb, so a role that must read release sizes grants <code>artifacts:get</code> on the whole artifact; a real provider&#39;s finer verbs would let the widening be narrower than this lab allows. The check judges sixteen outcomes; it cannot judge the reasons column, the tests, the widening decision or the limits note, and a policy can pass it with reasons that are wrong. Nothing here establishes that the job&#39;s code is safe, only which job the credential was issued to.</p>
+</article><div class="practice-actions"><button onclick="window.print()">Print this page</button><a href="../essays/16-workload-authority.html">Return to essay 16</a><a href="16-authority-worksheet.html">Back to worksheet</a></div></main><footer><span>Book 21 · Learn, practise, verify.</span><a href="https://github.com/AnthonyKot/book21">Source on GitHub</a></footer></body></html>

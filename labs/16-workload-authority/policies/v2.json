@@ -1,0 +1,34 @@
+{
+  "comment": "Version 2: no static keys. Each job exchanges its short-lived identity token for a role whose trust policy names the workload and whose permissions name the task.",
+  "static_keys": {},
+  "broker": {"audience": "lab-broker", "trusted_issuers": ["platform/issuer.pub"], "default_session_seconds": 900},
+  "roles": {
+    "release-publisher": {
+      "max_session_seconds": 900,
+      "trust": {
+        "aud": "lab-broker",
+        "repository": "doc-approval/service",
+        "ref": "refs/heads/main",
+        "event_name": "push",
+        "job_workflow_ref": "doc-approval/service/.github/workflows/release-v2.yml@refs/heads/main"
+      },
+      "permissions": [
+        {"effect": "allow", "actions": ["artifacts:put"], "resources": ["artifacts:releases/service/*"]}
+      ]
+    },
+    "production-deployer": {
+      "max_session_seconds": 900,
+      "trust": {
+        "aud": "lab-broker",
+        "repository": "doc-approval/service",
+        "environment": "production",
+        "job_workflow_ref": "doc-approval/service/.github/workflows/deploy.yml@refs/heads/main"
+      },
+      "permissions": [
+        {"effect": "allow", "actions": ["artifacts:get"], "resources": ["artifacts:releases/service/*"]},
+        {"effect": "allow", "actions": ["deploy:run"], "resources": ["deploy:production"]},
+        {"effect": "deny", "actions": ["secrets:*"], "resources": ["*"]}
+      ]
+    }
+  }
+}
